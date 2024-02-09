@@ -1,0 +1,13 @@
+Package: SeuratIntegrate
+Type: Package
+Title: Expands the set of integration methods available to Seurat
+Version: 0.1.0
+Authors@R: 
+    person("Florian", "Specque", , "florian.specque@u-bordeaux.fr",
+           role = c("aut", "cre"), comment = c(ORCID = "0000-0002-4449-6381"))
+Description: R package gathering a set of wrappers to apply various integration
+    methods to Seurat objects (and rate such methods). Intended to apply to
+    Seurat V5 objects bearing multiple layers.
+License: N/A
+Encoding: UTF-8
+LazyData: true
