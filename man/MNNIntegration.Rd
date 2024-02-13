@@ -11,7 +11,6 @@ MNNIntegration(
   layers = NULL,
   scale.layer = NULL,
   features = 2000,
-  reduction.key = "mnn_",
   reconstructed.assay = "mnn.reconstructed",
   verbose = TRUE,
   ...
@@ -26,14 +25,12 @@ not called by \code{\link[Seurat]{IntegrateLayers}})}
 directly when called with \code{\link[Seurat]{IntegrateLayers}}, use
 \code{orig.reduction} argument instead}
 
-\item{groups}{A one-column data frame with grouping information}
+\item{groups}{Ignored}
 
-\item{layers}{Layers to use}
+\item{layers}{Name of the layers to use in the integration}
 
 \item{features}{Either a list of features to use when calculating batch
 correction, or a number (2000 by default) of variable features to select.}
-
-\item{reduction.key}{Key for resulting DimReduc}
 
 \item{reconstructed.assay}{Name for the assay containing the low-rank
 reconstruction of the expression matrix.}
@@ -57,13 +54,13 @@ A wrapper to run \code{\link[batchelor]{mnnCorrect}} on multi-layered Seurat V5 
 }
 \note{
 This function requires the
-\href{https://rdrr.io/github/LTLA/batchelor/}{\pkg{batchelor}} package
+\href{https://bioconductor.org/packages/release/bioc/html/batchelor.html}{\pkg{batchelor}} package
 to be installed
 }
 \examples{
 \dontrun{
 # Preprocessing
-obj <- SeuratData::LoadData("pbmcsca")
+obj <- UpdateSeuratObject(SeuratData::LoadData("pbmcsca"))
 obj[["RNA"]] <- split(obj[["RNA"]], f = obj$Method)
 obj <- NormalizeData(obj)
 obj <- FindVariableFeatures(obj)
@@ -75,7 +72,8 @@ obj <- IntegrateLayers(object = obj, method = MNNIntegration,
   new.reduction = 'integrated.mnn', verbose = FALSE)
 
 # We can also add parameters specific to mnnCorrect.
-# Here we set `k` to specify the number of nearest neighbors to use when identifying MNNs:
+# Here we set `k` to specify the number of nearest neighbors
+# to use when identifying MNNs:
 obj <- IntegrateLayers(object = obj, method = MNNIntegration,
   new.reduction = 'integrated.mnn', k = 15, verbose = FALSE)
 }

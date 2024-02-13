@@ -3,12 +3,11 @@
 #' A wrapper to run \code{\link[batchelor]{mnnCorrect}} on multi-layered Seurat V5 object
 #'
 #' @inheritParams integration-method
-#' @param groups A one-column data frame with grouping information
-#' @param layers Layers to use
+#' @param groups Ignored
 #' @param features Either a list of features to use when calculating batch
 #' correction, or a number (2000 by default) of variable features to select.
 # @param reduction.name Name to store resulting DimReduc object
-#' @param reduction.key Key for resulting DimReduc
+# @param reduction.key Key for resulting DimReduc
 #' @param reconstructed.assay Name for the assay containing the low-rank
 #' reconstruction of the expression matrix.
 #' @param ... Extra parameters passed to \code{\link[batchelor]{mnnCorrect}}
@@ -25,7 +24,6 @@
 #' @importFrom SeuratObject Layers LayerData CreateAssayObject
 #' @importFrom Seurat DefaultAssay DefaultAssay<- SelectIntegrationFeatures VariableFeatures VariableFeatures<-
 #' as.SingleCellExperiment CreateDimReducObject Tool<- LogSeuratCommand CreateSeuratObject SelectIntegrationFeatures5
-#' @importFrom rlang check_installed
 #' @importFrom batchelor mnnCorrect
 #' @importFrom SummarizedExperiment assay
 #'
@@ -37,7 +35,7 @@
 #' @examples
 #' \dontrun{
 #' # Preprocessing
-#' obj <- SeuratData::LoadData("pbmcsca")
+#' obj <- UpdateSeuratObject(SeuratData::LoadData("pbmcsca"))
 #' obj[["RNA"]] <- split(obj[["RNA"]], f = obj$Method)
 #' obj <- NormalizeData(obj)
 #' obj <- FindVariableFeatures(obj)
@@ -65,7 +63,7 @@ MNNIntegration <- function(
     layers = NULL,
     scale.layer = NULL,
     features = 2000,
-    reduction.key = "mnn_",
+    # reduction.key = "mnn_",
     reconstructed.assay = "mnn.reconstructed",
     verbose = TRUE,
     ...

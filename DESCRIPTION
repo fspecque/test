@@ -18,3 +18,5 @@ Depends:
 Imports: 
     rlang,
     SeuratObject
+Suggests: 
+    SeuratData
