@@ -37,6 +37,11 @@
 #' \href{https://portals.broadinstitute.org/harmony/}{\pkg{harmony}} package
 #' to be installed
 #'
+#' @references Korsunsky, I., Millard, N., Fan, J., Slowikowski, K., Zhang, F.,
+#' Wei, K., Baglaenko, Y., Brenner, M., Loh, P. & Raychaudhuri, S. Fast,
+#' sensitive and accurate integration of single-cell data with Harmony.
+#' Nat Methods 16, 1289–1296 (2019). \href{https://doi.org/10.1038/s41592-019-0619-0}{DOI}
+#'
 #' @examples
 #' \dontrun{
 #' # Preprocessing
