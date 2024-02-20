@@ -73,7 +73,7 @@ contain the scipy python module)}
 \item{model.save.dir}{Path to a directory to save the model to. Uses
 \code{SCANVI.save()}. Does not save anndata. Note that neither the trainer
 optimizer state nor the trainer history are saved.
-\code{model.save.path = NULL} (default) disables saving the model.}
+\code{model.save.dir = NULL} (default) disables saving the model.}
 
 \item{ndims.out}{Number of dimensions for \code{new.reduction} output.
 Corresponds to \code{n_latent} argument in the original API of SCANVI}
