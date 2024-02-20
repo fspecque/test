@@ -20,3 +20,10 @@ Imports:
     SeuratObject
 Suggests: 
     SeuratData
+Collate: 
+    'Harmony.R'
+    'MNN.R'
+    'Scanorama.R'
+    'SeuratIntegrate-package.R'
+    'kwargs.R'
+    'scANVI.R'
