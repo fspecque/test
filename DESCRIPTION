@@ -27,3 +27,4 @@ Collate:
     'SeuratIntegrate-package.R'
     'kwargs.R'
     'scANVI.R'
+    'scVI.R'
