@@ -26,7 +26,7 @@ NULL
 #' contain the scipy python module)
 #' @param ncores Number of parallel threads PyTorch is allowed to use
 #' @param model.save.dir Path to a directory to save the model to. Uses
-#' \code{SCANVI.save()}. Does not save anndata. Not that neither the trainer
+#' \code{SCANVI.save()}. Does not save anndata. Note that neither the trainer
 #' optimizer state nor the trainer history are saved.
 #' \code{model.save.path = NULL} (default) disables saving the model.
 #' @param ndims.out Number of dimensions for \code{new.reduction} output.
