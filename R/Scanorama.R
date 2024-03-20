@@ -65,7 +65,7 @@
 #' @importFrom SeuratObject Layers LayerData Features
 #'
 #' @export
-#'@note This function requires the
+#' @note This function requires the
 #' \href{https://github.com/brianhie/scanorama}{\pkg{Scanorama}} package
 #' to be installed (along with \pkg{scipy})
 #'
