@@ -19,5 +19,7 @@ pb <- new.env(parent = emptyenv())
   message("Cache file ", w , " at ", cache.path, ". Loading...")
   invisible(capture.output(
     pb$pb <- utils::txtProgressBar(0, sum(needs.conda), width = 30, style = 3)))
+  pb$onLoad <- TRUE
   conda_status$current <- CondaManager(cache.path)
+  pb$onLoad <- FALSE
 }
