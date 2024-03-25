@@ -150,9 +150,11 @@ setMethod("checkCondaEnvName", "CondaEnv", function(x, ...) {
 })
 
 setMethod("checkCondaEnv", "CondaEnv", function(x, ...) {
-  tryCatch({
-    setTxtProgressBar(pb$pb, which(known.methods[needs.conda] == x@method))
-  }, error = function(e) NULL)
+  if (pb$onLoad) {
+    tryCatch({
+      setTxtProgressBar(pb$pb, which(known.methods[needs.conda] == x@method))
+    }, error = function(e) NULL)
+  }
   x <- checkCondaBin(x)
   x <- checkCondaEnvPath(x)#, conda = x@conda.bin@value)
   x <- checkCondaEnvName(x)#, conda = x@conda.bin@value)
