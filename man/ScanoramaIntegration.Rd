@@ -49,7 +49,8 @@ When \code{features = NULL} (default), the
 use the output of \code{\link[SeuratObject]{Features}()}}
 
 \item{conda_env}{Path to conda environment to run scanorama (should also
-contain the scipy python module)}
+contain the scipy python module). By default, uses the conda environment
+registered for scanorama in the conda environment manager}
 
 \item{new.reduction}{Name to store resulting
 \link[SeuratObject:DimReduc]{dimensional reduction} object. \code{NULL} or

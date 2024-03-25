@@ -59,7 +59,8 @@ use the output of \code{\link[SeuratObject]{Features}()}}
 \bold{'counts'} is highly recommended}
 
 \item{conda_env}{Path to conda environment to run scVI (should also
-contain the scipy python module)}
+contain the scipy python module).  By default, uses the conda environment
+registered for scVI in the conda environment manager}
 
 \item{new.reduction}{Name of the new integrated dimensional reduction}
 

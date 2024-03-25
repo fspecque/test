@@ -6,7 +6,8 @@
 #'
 #' @inheritParams integration-method
 #' @param conda_env Path to conda environment to run scanorama (should also
-#' contain the scipy python module)
+#' contain the scipy python module). By default, uses the conda environment
+#' registered for scanorama in the conda environment manager
 #' @param new.reduction Name to store resulting
 #' \link[SeuratObject:DimReduc]{dimensional reduction} object. \code{NULL} or
 #' \code{FALSE} disables the dimension reduction computation
@@ -120,12 +121,23 @@ ScanoramaIntegration <- function(
     verbose = TRUE,
     ...) {
   sketch_method <- match.arg(arg = sketch_method)
-  conda_env %||% abort(message = "'conda_env' cannot be NULL")
 
   ncores.old <- blas_get_num_procs()
   ncores %iff% blas_set_num_threads(ncores)
 
-  use_condaenv(conda_env, required = TRUE)
+  conda_bin <- "auto"
+  if (is.null(conda_env) || is.na(conda_env) || isFALSE(conda_env)) {
+    if (! isValid(conda_status$current[["scanorama"]], do.check = TRUE)) {
+      abort(message = paste("Scanorama conda environment is not valid. Either",
+                            "set", sQuote("conda_env"), "argument or create",
+                            "the environment via the conda manager"))
+    }
+    message("Using conda from conda environment manager\n"[verbose], appendLF = FALSE)
+    conda_env <- conda_status$current[["scanorama"]][["conda.env.path"]]$value
+    conda_bin <- conda_status$current[["scanorama"]][["conda.bin"]]$value
+  }
+
+  use_condaenv(conda_env, conda = conda_bin, required = TRUE)
   scano <- import('scanorama', convert = FALSE)
   scipy <- import('scipy', convert = FALSE)
 

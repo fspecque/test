@@ -23,7 +23,8 @@ NULL
 #' @param layers Name of the layers to use in the integration.
 #' \bold{'counts'} is highly recommended
 #' @param conda_env Path to conda environment to run scANVI (should also
-#' contain the scipy python module)
+#' contain the scipy python module).  By default, uses the conda environment
+#' registered for scANVI in the conda environment manager
 #' @param ncores Number of parallel threads PyTorch is allowed to use
 #' @param model.save.dir Path to a directory to save the model to. Uses
 #' \code{SCANVI.save()}. Does not save anndata. Note that neither the trainer
@@ -163,7 +164,19 @@ scANVIIntegration <- function(
   conda_env %||% abort(message = "'conda_env' cannot be NULL")
   varargs <- list(...)
 
-  use_condaenv(conda_env, required = TRUE)
+  conda_bin <- "auto"
+  if (is.null(conda_env) || is.na(conda_env) || isFALSE(conda_env)) {
+    if (! isValid(conda_status$current[["scanvi"]], do.check = TRUE)) {
+      abort(message = paste("scANVI conda environment is not valid. Either",
+                            "set", sQuote("conda_env"), "argument or create",
+                            "the environment via the conda manager"))
+    }
+    message("Using conda from conda environment manager\n"[verbose], appendLF = FALSE)
+    conda_env <- conda_status$current[["scanvi"]][["conda.env.path"]]$value
+    conda_bin <- conda_status$current[["scanvi"]][["conda.bin"]]$value
+  }
+
+  use_condaenv(conda_env, conda = conda_bin, required = TRUE)
   sc <-  import('scanpy', convert = FALSE)
   scvi <-  import('scvi', convert = FALSE)
   seed.use %iff% { scvi$settings$seed = as.integer(x = seed.use) }

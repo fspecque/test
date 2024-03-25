@@ -172,6 +172,7 @@ HarmonyIntegration <- function(
 attr(x = HarmonyIntegration, which = 'Seurat.method') <- 'integration'
 
 #' @rdname HarmonyIntegration
+#' @export
 HarmonyIntegration.fix <- function(...) {
   HarmonyIntegration(...)
 }
