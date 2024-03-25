@@ -220,6 +220,7 @@ scVIIntegration <- function(
 attr(x = scVIIntegration, which = 'Seurat.method') <- 'integration'
 
 #' @rdname scVIIntegration
+#' @export
 scVIIntegration.fix <- function(...) {
   scVIIntegration(...)
 }
