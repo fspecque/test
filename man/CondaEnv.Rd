@@ -17,7 +17,8 @@ CondaEnv(
 
 \item{conda.bin}{the path to the conda binary. If empty (\code{""}),
 \code{NULL} or \code{"conda"}, \code{"auto"} is passed to
-\link[reticulate]{conda_binary} to find path to conda binary in \code{PATH}}
+\link[reticulate]{conda_binary}() to find the path to the conda binary in
+\code{PATH}}
 
 \item{conda.env.name}{name of the conda environment}
 

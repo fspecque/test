@@ -21,7 +21,8 @@ NULL
 #' "scvi", "scanvi", "scanorama"
 #' @param conda.bin the path to the conda binary. If empty (\code{""}),
 #' \code{NULL} or \code{"conda"}, \code{"auto"} is passed to
-#' \link[reticulate]{conda_binary} to find path to conda binary in \code{PATH}
+#' \link[reticulate]{conda_binary}() to find the path to the conda binary in
+#' \code{PATH}
 #' @param conda.env.name name of the conda environment
 #' @param conda.env.path path to the conda environment
 #'
@@ -138,8 +139,8 @@ CondaManager <- function(cache) {
 #' Handy \code{CondaEnvManger} instance modifier
 #'
 #' @description
-#' Wrapper to update the \linkS4class{CondaEnvManager} object sotred in cache
-#' and used as configuration for conda environments for all known method
+#' Wrapper to update the \linkS4class{CondaEnvManager} object stored in cache
+#' and used as configuration for conda environments for all known methods
 #' (typically stored in the package's cache). A single method can be
 #' updated at the time. In most cases, this is the best way to modify the
 #' package's conda environments registry.
@@ -149,11 +150,10 @@ CondaManager <- function(cache) {
 #' "mnn", "bbknn", "scvi", "scanvi", "scanorama"
 #' @param conda.env Either the name of a conda environment or the path to such
 #' an environment. Must be reachable by provided \code{conda.bin}. \code{NULL}
-#' enable to use default environment names. (see \strong{Details} section)
+#' enable to use the default environment names. (see \strong{Details} section)
 #' @param conda.env.is.path Whether the \code{conda.env} is a path (\code{TRUE}),
 #' or a name (\code{FALSE}). The default ("\code{auto}") guesses. \strong{Be
-#' careful not to make a mistake if you switch the argument value to a
-#' non-default value}
+#' careful not to make a mistake if you switch to a non-default value}
 #' @param separate.scvi.envs By default, SCVI and SCANVI share the same conda
 #' environment, since they rely on the same python package. If you wish to have
 #' a distinct environment for each, set it to \code{TRUE}. Ignored if
@@ -162,7 +162,7 @@ CondaManager <- function(cache) {
 #' environment (same name or same path). When the provided \code{conda.env}
 #' already exists, the default behaviour is to update the package's registry
 #' with the existing environment as it is
-#' @param dry.run when \code{TRUE}, the package's current cache is not updated.
+#' @param dry.run When \code{TRUE}, the package's current cache is not updated.
 #' But the new conda environment (if any) will be created. \code{FALSE} by default.
 #'
 #' @return a \linkS4class{CondaEnvManager} object
@@ -308,7 +308,7 @@ CondaEnvFromDf <- function(cache) {
 #' Get path to package config cache file or directory
 #'
 #' @param include.file Set to \code{FALSE} to retrieve the directory containing
-#' the cache file. Return the path to file by default.
+#' the cache file. Return the path to the file by default.
 #'
 #' @return A single character, the path to the cache file or directory
 #'
@@ -323,7 +323,7 @@ getCachePath <- function(include.file = TRUE) {
 #' Get current cache of conda environments
 #'
 #' @description
-#' Get current cache of conda environments from package environment or disk cache
+#' Get current cache of conda environments from package environment or cache on disk
 #'
 #' @param from Either "env" or "cache". Where to load cache from.
 #'

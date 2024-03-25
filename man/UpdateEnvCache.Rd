@@ -20,16 +20,16 @@ UpdateEnvCache(
 
 \item{conda.bin}{the path to the conda binary. If empty (\code{""}),
 \code{NULL} or \code{"conda"}, \code{"auto"} is passed to
-\link[reticulate]{conda_binary} to find path to conda binary in \code{PATH}}
+\link[reticulate]{conda_binary}() to find the path to the conda binary in
+\code{PATH}}
 
 \item{conda.env}{Either the name of a conda environment or the path to such
 an environment. Must be reachable by provided \code{conda.bin}. \code{NULL}
-enable to use default environment names. (see \strong{Details} section)}
+enable to use the default environment names. (see \strong{Details} section)}
 
 \item{conda.env.is.path}{Whether the \code{conda.env} is a path (\code{TRUE}),
 or a name (\code{FALSE}). The default ("\code{auto}") guesses. \strong{Be
-careful not to make a mistake if you switch the argument value to a
-non-default value}}
+careful not to make a mistake if you switch to a non-default value}}
 
 \item{separate.scvi.envs}{By default, SCVI and SCANVI share the same conda
 environment, since they rely on the same python package. If you wish to have
@@ -41,15 +41,15 @@ environment (same name or same path). When the provided \code{conda.env}
 already exists, the default behaviour is to update the package's registry
 with the existing environment as it is}
 
-\item{dry.run}{when \code{TRUE}, the package's current cache is not updated.
+\item{dry.run}{When \code{TRUE}, the package's current cache is not updated.
 But the new conda environment (if any) will be created. \code{FALSE} by default.}
 }
 \value{
 a \linkS4class{CondaEnvManager} object
 }
 \description{
-Wrapper to update the \linkS4class{CondaEnvManager} object sotred in cache
-and used as configuration for conda environments for all known method
+Wrapper to update the \linkS4class{CondaEnvManager} object stored in cache
+and used as configuration for conda environments for all known methods
 (typically stored in the package's cache). A single method can be
 updated at the time. In most cases, this is the best way to modify the
 package's conda environments registry.

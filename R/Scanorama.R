@@ -33,8 +33,8 @@
 #' @param alpha  Minimum alignment score. Scanorama specific argument
 #' @param knn  Number of nearest neighbours used for matching. Scanorama
 #' specific argument
-#' @param hvg.scanorama A positive to turn scanorama's internal HVG selection on.
-#' Disabled by default. Scanorama specific argument
+#' @param hvg.scanorama A positive integer to turn scanorama's internal HVG
+#' selection on. Disabled by default. Scanorama specific argument
 #' @param union.features By default, scanorama uses the intersection of features
 #' to perform integration. Set this parameter to \code{TRUE} to use the union.
 #' Discouraged. Scanorama specific argument

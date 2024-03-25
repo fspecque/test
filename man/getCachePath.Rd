@@ -8,7 +8,7 @@ getCachePath(include.file = TRUE)
 }
 \arguments{
 \item{include.file}{Set to \code{FALSE} to retrieve the directory containing
-the cache file. Return the path to file by default.}
+the cache file. Return the path to the file by default.}
 }
 \value{
 A single character, the path to the cache file or directory

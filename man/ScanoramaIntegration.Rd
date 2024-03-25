@@ -88,8 +88,8 @@ specific argument}
 \item{knn}{Number of nearest neighbours used for matching. Scanorama
 specific argument}
 
-\item{hvg.scanorama}{A positive to turn scanorama's internal HVG selection on.
-Disabled by default. Scanorama specific argument}
+\item{hvg.scanorama}{A positive integer to turn scanorama's internal HVG
+selection on. Disabled by default. Scanorama specific argument}
 
 \item{union.features}{By default, scanorama uses the intersection of features
 to perform integration. Set this parameter to \code{TRUE} to use the union.

@@ -13,5 +13,5 @@ getCache(from = c("env", "cache"))
 a \linkS4class{CondaEnvManager} object
 }
 \description{
-Get current cache of conda environments from package environment or disk cache
+Get current cache of conda environments from package environment or cache on disk
 }
