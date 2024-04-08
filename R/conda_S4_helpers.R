@@ -189,10 +189,6 @@ UpdateEnvCache <- function(method = known.methods, conda.bin = "auto",
     message(sprintf("%s does not require a conda environment. Skipping", method))
     return(invisible(0))
   }
-  if (method == "bbknn") {
-    message(sprintf("bbknn not implemented. Skipping"))
-    return(invisible(0))
-  }
 
   conda.bin <- conda.bin %||% 'auto'
   if (conda.bin %in% c('', 'conda')) {
