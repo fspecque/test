@@ -126,7 +126,19 @@ bbknnIntegration <- function(
 
   varargs <- list(...)
 
-  reticulate::use_condaenv(conda_env, required = TRUE)
+  conda_bin <- "auto"
+  if (is.null(conda_env) || is.na(conda_env) || isFALSE(conda_env)) {
+    if (! isValid(conda_status$current[["bbknn"]], do.check = TRUE)) {
+      abort(message = paste("bbknn conda environment is not valid. Either",
+                            "set", sQuote("conda_env"), "argument or create",
+                            "the environment via the conda manager"))
+    }
+    message("Using conda from conda environment manager\n"[verbose], appendLF = FALSE)
+    conda_env <- conda_status$current[["bbknn"]][["conda.env.path"]]$value
+    conda_bin <- conda_status$current[["bbknn"]][["conda.bin"]]$value
+  }
+
+  use_condaenv(conda_env, conda = conda_bin, required = TRUE)
   anndata <- reticulate::import("anndata",convert=FALSE)
   bbknn <- reticulate::import("bbknn", convert=FALSE)
   sc <- reticulate::import("scanpy",convert=FALSE)
