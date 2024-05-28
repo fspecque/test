@@ -1,6 +1,6 @@
 # roxygen2::roxygenise()
 devtools::document()
-pkgload::dev_help("CombatIntegration")
+pkgload::dev_help("trVAEIntegration")
 
 DESCRIPTION <- readLines("DESCRIPTION")
 pkg.version <- gsub("\\s*", "", sub("^Version:", "", DESCRIPTION[grepl("^Version", DESCRIPTION)]))

@@ -17,7 +17,18 @@ Depends:
     Seurat (>= 5.0.0)
 Imports: 
     rlang,
-    SeuratObject
+    SeuratObject,
+    sva,
+    batchelor,
+    batchelor,
+    dplyr,
+    harmony,
+    Matrix,
+    reticulate,
+    RhpcBLASctl,
+    stats,
+    SummarizedExperiment,
+    tools
 Suggests: 
     SeuratData
 Collate: 
@@ -33,4 +44,5 @@ Collate:
     'kwargs.R'
     'scANVI.R'
     'scVI.R'
+    'trVAE.R'
     'zzz.R'

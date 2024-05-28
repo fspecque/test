@@ -81,5 +81,18 @@ args <- list(
     ),
     verbose = c("NOTSET"=0L, "DEBUG"=10L, "INFO"=20L, "WARNING"=30L,
                 "ERROR"=40L, "CRITICAL"=50L)
+  ),
+  trVAE = list(
+    TRVAE = c(),
+    train = c(
+      'batch_size', 'alpha_epoch_anneal', 'alpha_kl', 'alpha_iter_anneal',
+      'use_early_stopping', 'reload_best', 'early_stopping_kwargs', 'train_frac',
+      'n_samples', 'use_stratified_sampling', 'weight_decay', 'clip_value',
+      'n_workers', 'monitor', 'monitor_only_val', 'seed'
+    ),
+    load_query_data = c(
+      'freeze', 'freeze_expression', 'remove_dropout', 'map_location'
+    ),
+    get_latent = c('mean', 'mean_var')
   )
 )
