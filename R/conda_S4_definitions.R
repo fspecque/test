@@ -4,24 +4,34 @@
 ###                                                                          ###
 #                                                                              #
 
-known.methods <- c("combat", "harmony", "mnn", "bbknn", "scvi", "scanvi", "scanorama")
+known.methods <- c("combat", "harmony", "mnn", "bbknn", "scvi", "scanvi",
+                   "scanorama", "trvae")
 needs.conda <- sapply(known.methods, function(method) ifelse(
-  method %in% c("scanorama", "bbknn", "scvi", "scanvi"), T, F
+  method %in% c("scanorama", "bbknn", "scvi", "scanvi", "trvae"), T, F
 ))
 
 .conda_requirements <- list(
   bbknn = list(
     packages = c("python", "scipy", "scanpy", "bbknn"),
-    channels = c("conda-forge", "bioconda")
+    channels = c("conda-forge", "bioconda"),
+    pip = c()
   ),
   scvi = list(
     packages = c("python", "scipy", "scanpy", "scvi-tools", "mkl",
                  "mkl-include", "setuptools", "cmake"),
-    channels = c("conda-forge")
+    channels = c("conda-forge"),
+    pip = c()
   ),
   scanorama = list(
     packages = c("python", "scanorama", "scipy"),
-    channels = c("conda-forge", "bioconda")
+    channels = c("conda-forge", "bioconda"),
+    pip = c()
+  ),
+  trvae = list(
+    packages = c("python", "pip", "numpy", "pytorch", "torchaudio",
+                 "torchvision", "pytorch-cuda", "scvi-tools"),
+    channels = c("conda-forge", "bioconda", "pytorch", "nvidia"),
+    pip = c("scarches")
   )
 )
 .conda_requirements$scanvi <- .conda_requirements$scvi
@@ -29,7 +39,8 @@ needs.conda <- sapply(known.methods, function(method) ifelse(
 .conda_default_envname <- list(
   bbknn = "SeuratIntegrate_bbknn",
   scvi = "SeuratIntegrate_scvi-tools",
-  scanorama = "SeuratIntegrate_scanorama"
+  scanorama = "SeuratIntegrate_scanorama",
+  trvae = "SeuratIntegrate_trvae"
 )
 .conda_default_envname$scanvi <- .conda_default_envname$scvi
 ################################################################################
@@ -94,6 +105,7 @@ setClass(
 #' @slot scvi CondaEnv. For python-based SCVI method. Can be shared with SCANVI.
 #' @slot scanvi CondaEnv. For python-based SCANVI method. Can be shared with SCVI.
 #' @slot scanorama CondaEnv. For python-based Scanorama method
+#' @slot trvae CondaEnv. For python-based trVAE method
 #' @exportClass CondaEnvManager
 #' @keywords internal
 #' @seealso \linkS4class{CondaEnv}

@@ -8,7 +8,7 @@ resetCache(method = known.methods)
 }
 \arguments{
 \item{method}{the name of the method to update. One of "combat", "harmony",
-"mnn", "bbknn", "scvi", "scanvi", "scanorama"}
+"mnn", "bbknn", "scvi", "scanvi", "scanorama", "trvae"}
 }
 \value{
 a \linkS4class{CondaEnvManager} object (invisibly)

@@ -25,6 +25,8 @@ set up and modified via helper functions, not directly by the user.
 \item{\code{scanvi}}{CondaEnv. For python-based SCANVI method. Can be shared with SCVI.}
 
 \item{\code{scanorama}}{CondaEnv. For python-based Scanorama method}
+
+\item{\code{trvae}}{CondaEnv. For python-based trVAE method}
 }}
 
 \seealso{

@@ -1,5 +1,5 @@
 #' @include conda_S4_definitions.R
-#' @importFrom reticulate conda_binary condaenv_exists conda_list conda_create conda_remove
+#' @importFrom reticulate conda_binary condaenv_exists conda_list conda_create conda_remove conda_install
 NULL
 
 ################################################################################

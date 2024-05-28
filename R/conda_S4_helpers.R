@@ -97,20 +97,21 @@ CondaManager <- function(cache) {
     }
     rownames(cache) <- cache$method
     missing.methods <- setdiff(known.methods, cache$method)
-    if (length(missing.methods) == length(known.methods)) {
-      warning("None of the cached method is known, initializing blank object",
-              call. = TRUE, immediate. = TRUE)
-      return(.blankCondaManager())
-    }
-    if (length(missing.methods)) {
-      warning(paste(length(missing.methods), " of the cached methods is/are unknown, skipping"),
+    unknown.methods <- setdiff(cache$method, known.methods)
+    # if (length(missing.methods) == length(known.methods)) {
+    #   warning("None of the cached method is known, initializing blank object",
+    #           call. = TRUE, immediate. = TRUE)
+    #   return(.blankCondaManager())
+    # }
+    if (length(unknown.methods)) {
+      warning(paste(length(unknown.methods), " of the cached methods is/are unknown, skipping"),
               call. = TRUE, immediate. = TRUE)
     }
     cache.envs <- cache %>% group_by(method) %>%
       group_map(.f = .CondaEnvFromDf, .keep = TRUE)
     cache.envs <- append(cache.envs, lapply(missing.methods, CondaEnv))
     cache.envs <- setNames(cache.envs, sapply(cache.envs, function(obj) obj@method))
-    suppressWarnings(
+    conman <- suppressWarnings(
       new("CondaEnvManager",
           combat = checkCondaEnv(cache.envs$combat),
           harmony = checkCondaEnv(cache.envs$harmony),
@@ -118,8 +119,15 @@ CondaManager <- function(cache) {
           bbknn = checkCondaEnv(cache.envs$bbknn),
           scvi = checkCondaEnv(cache.envs$scvi),
           scanvi = checkCondaEnv(cache.envs$scanvi),
-          scanorama = checkCondaEnv(cache.envs$scanorama))
+          scanorama = checkCondaEnv(cache.envs$scanorama),
+          trvae = checkCondaEnv(cache.envs$trvae))
     )
+    if (length(missing.methods)) {
+      warning(paste(length(missing.methods), " method(s) missing, adding"),
+              call. = TRUE, immediate. = TRUE)
+      saveToCache(conman)
+    }
+    return(conman)
   }
 }
 
@@ -132,7 +140,8 @@ CondaManager <- function(cache) {
         bbknn = unsetSlot(CondaEnv("bbknn"), valid = FALSE),
         scvi = unsetSlot(CondaEnv("scvi"), valid = FALSE),
         scanvi = unsetSlot(CondaEnv("scanvi"), valid = FALSE),
-        scanorama = unsetSlot(CondaEnv("scanorama"), valid = FALSE))
+        scanorama = unsetSlot(CondaEnv("scanorama"), valid = FALSE),
+        trvae = unsetSlot(CondaEnv("trvae"), valid = FALSE))
   )
 }
 
@@ -147,7 +156,7 @@ CondaManager <- function(cache) {
 #'
 #' @inheritParams CondaEnv
 #' @param method the name of the method to update. One of "combat", "harmony",
-#' "mnn", "bbknn", "scvi", "scanvi", "scanorama"
+#' "mnn", "bbknn", "scvi", "scanvi", "scanorama", "trvae"
 #' @param conda.env Either the name of a conda environment or the path to such
 #' an environment. Must be reachable by provided \code{conda.bin}. \code{NULL}
 #' enable to use the default environment names. (see \strong{Details} section)
@@ -175,6 +184,7 @@ CondaManager <- function(cache) {
 #'   \item{\strong{SCVI}}: {\code{SeuratIntegrate_scvi-tools}}
 #'   \item{\strong{SCANVI}}: {\code{SeuratIntegrate_scvi-tools}}
 #'   \item{\strong{scanorama}}: {\code{SeuratIntegrate_scanorama}}
+#'   \item{\strong{trVAE}}: {\code{SeuratIntegrate_trvae}}
 #' }
 #'
 UpdateEnvCache <- function(method = known.methods, conda.bin = "auto",
@@ -225,13 +235,20 @@ UpdateEnvCache <- function(method = known.methods, conda.bin = "auto",
     }
   }
   if (create.env) {
-    conda.env <- conda_create(envname = conda.env,
+    conda.env_ <- conda.env
+    conda.env <- conda_create(envname = conda.env_,
                               packages = .conda_requirements[[method]]$packages,
                               forge = FALSE,
                               channel = .conda_requirements[[method]]$channels,
                               conda = conda.bin)
     conda.known.envs <- conda_list(conda = conda.bin)
     conda.known.envs$path <- sub("/bin/python[^/]*$", "", conda.known.envs$python)
+
+    .conda_requirements[[method]]$pip %iff% {
+      conda_install(packages = .conda_requirements[[method]]$pip,
+                    envname = conda.env_,
+                    pip = TRUE, conda = conda.bin)
+    }
   }
   if (conda.env.is.path) {
     conda.env.name <- conda.known.envs$name[which.min(adist(conda.env, conda.known.envs$path))]
@@ -295,7 +312,8 @@ CondaEnvFromDf <- function(cache) {
       bbknn = unsetSlot(CondaEnv("bbknn"), valid = FALSE),
       scvi = unsetSlot(CondaEnv("scvi"), valid = FALSE),
       scanvi = unsetSlot(CondaEnv("scanvi"), valid = FALSE),
-      scanorama = unsetSlot(CondaEnv("scanorama"), valid = FALSE))
+      scanorama = unsetSlot(CondaEnv("scanorama"), valid = FALSE),
+      trvae = unsetSlot(CondaEnv("trvae"), valid = FALSE))
 }
 
 #' Get path to package config cache

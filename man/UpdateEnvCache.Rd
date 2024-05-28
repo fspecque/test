@@ -16,7 +16,7 @@ UpdateEnvCache(
 }
 \arguments{
 \item{method}{the name of the method to update. One of "combat", "harmony",
-"mnn", "bbknn", "scvi", "scanvi", "scanorama"}
+"mnn", "bbknn", "scvi", "scanvi", "scanorama", "trvae"}
 
 \item{conda.bin}{the path to the conda binary. If empty (\code{""}),
 \code{NULL} or \code{"conda"}, \code{"auto"} is passed to
@@ -61,6 +61,7 @@ The conda environments default names are:
   \item{\strong{SCVI}}: {\code{SeuratIntegrate_scvi-tools}}
   \item{\strong{SCANVI}}: {\code{SeuratIntegrate_scvi-tools}}
   \item{\strong{scanorama}}: {\code{SeuratIntegrate_scanorama}}
+  \item{\strong{trVAE}}: {\code{SeuratIntegrate_trvae}}
 }
 }
 \seealso{
