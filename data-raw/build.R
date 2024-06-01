@@ -1,6 +1,7 @@
 # roxygen2::roxygenise()
 devtools::document()
-pkgload::dev_help("trVAEIntegration")
+pkgload::dev_help("ScoreRegressPC.CellCycle")
+# pkgload::dev_help("ScoreDensityPC")
 
 DESCRIPTION <- readLines("DESCRIPTION")
 pkg.version <- gsub("\\s*", "", sub("^Version:", "", DESCRIPTION[grepl("^Version", DESCRIPTION)]))

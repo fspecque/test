@@ -42,6 +42,7 @@ Collate:
     'conda_S4_methods.R'
     'conda_S4_helpers.R'
     'kwargs.R'
+    'metrics_pca.R'
     'scANVI.R'
     'scVI.R'
     'trVAE.R'
