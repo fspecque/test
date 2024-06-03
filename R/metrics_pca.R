@@ -123,14 +123,11 @@ ScoreDensityPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #' Score a corrected or uncorrected PCA to estimate batch mixing
 #'
 #' @description
-#' Linearly regresses principal components to predict batches as a proxy to
-#' batch mixing. The resulting R2 are then weighted by each dimension's
+#' Linearly regresses principal components with batch variable as a proxy to
+#' estimate batch mixing. The resulting R2 are then weighted by each dimension's
 #' contribution to variance.
 #'
 #' @inheritParams ScoreDensityPC
-#' @param all.at.once Whether to regress all the dimensions at once instead of
-#' regressing them separately. Note that enabling this behaviour doesn't allow
-#' to weight R2s by the contribution to variance
 #' @param adj.r2 Whether to use the adjusted R2 instead of the raw R2
 #'
 #' @inherit ScoreDensityPC return
@@ -139,13 +136,11 @@ ScoreDensityPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #'
 #' @export
 #' @details The linear regression is
-#' \deqn{Batch = PC_i} or
-#' \deqn{Batch = \sum_{i=1}^{p}PC_i} when \code{all.at.once = TRUE}
+#' \deqn{PC_i = Batch}
 #'
 #'
 #' The score is computed as follow :
-#' \deqn{\sum_{i=1}^{p} \left ( R^2_i * V_i \right )} or just
-#' \deqn{R^2} when \code{all.at.once = TRUE}
+#' \deqn{\sum_{i=1}^{p} \left ( R^2_i * V_i \right )}
 #'
 #' For a PCA with p dimensions, \eqn{PC_i} is the principal component i,
 #' \eqn{R^2_i} is the R squared coefficient of the linear regression for the
@@ -161,11 +156,11 @@ ScoreDensityPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #' obj <- ScaleData(obj)
 #' obj <- RunPCA(obj)
 #'
-#' score.each <- ScoreRegressPC(obj, "Method", "pca", dim = 1:30)
-#' score.all <- ScoreRegressPC(obj, "Method", "pca", dim = 1:30, all.at.once = TRUE)
+#' score.r2 <- ScoreRegressPC(obj, "Method", "pca", dim = 1:30)
+#' score.adj.r2 <- ScoreRegressPC(obj, "Method", "pca", dim = 1:30, adj.r2 = TRUE)
 #'
-#' score.each    # ~ 0.0257
-#' score.all     # ~ 0.7553
+#' score.r2    # ~ 0.1147
+#' score.adj.r2     # ~ 0.1145
 #' }
 #'
 #' @inherit ScoreDensityPC note
@@ -175,36 +170,22 @@ ScoreDensityPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #' for \code{...} arguments, \code{\link{ScoreDensityPC}} for an alternative and
 #' \code{\link{ScoreRegressPC.CellCycle}} to regresses PCs by cell cycle scores.
 
-# Note: regressing on batch (PC_ ~ batch) or on reduction (batch ~ PC_) results
-#       in same (adj.)r2
 ScoreRegressPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
-                           # regress.what = c('batch.var', 'reduction'),
-                           all.at.once = FALSE, adj.r2 = FALSE, ...) {
-
-  all.at.once <- all.at.once %||% FALSE
+                           adj.r2 = FALSE, ...) {
   adj.r2 <- adj.r2 %||% FALSE
   prep.list <- .prep_ScorePC(object = object, batch.var = batch.var,
                              reduction = reduction, dims = dims, ...)
-  # names(prep.list)[length(prep.list)] <- "df.lm"
   list2env(x = prep.list, envir = environment())
 
   # construct formula(s)
-  idx <- 1:length(dims)  # not all.at.once
-  if (all.at.once) {
-    idx <- rep(x = 1, times = length(dims))
-  }
-  formulas <- tapply(X = colnames(dimred), INDEX = idx, FUN = function(col.nm) {
-    Y_X <- c(batch.var, paste(col.nm, collapse = "+"))
-    # if (regress.what == 'batch.var') { Y_X <- rev(Y_X) }
-    as.formula(paste(Y_X, collapse = ' ~ '))
-  }, simplify = F)
+  formulas <- lapply(paste(colnames(dimred), batch.var, sep = " ~ "), as.formula)
 
   # compute linear regression per batch and collect (adj.)r.squared
   regs <- lapply(formulas, FUN = lm, data = df.score)
   r2get <- paste0("adj."[adj.r2], "r.squared")
   r2 <- sapply(lapply(regs, summary.lm), getElement, name = r2get, simplify = "numeric")
 
-  return(sum(r2 * proportions(dimvar)))  # if all.at.once, equivalent to return(r2)
+  return(sum(r2 * proportions(dimvar)))
 }
 
 #' Score a corrected or uncorrected PCA to estimate the contribution of S and G2M
@@ -226,8 +207,7 @@ ScoreRegressPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #' \deqn{PC_i = S_{score} + G2M_{score}}
 #'
 #' The score is computed as follow :
-#' \deqn{\sum_{i=1}^{p} \left ( R^2_i * V_i \right )} or just
-#' \deqn{R^2} when \code{all.at.once = TRUE}
+#' \deqn{\sum_{i=1}^{p} \left ( R^2_i * V_i \right )}
 #'
 #' For a PCA with p dimensions, \eqn{PC_i} is the principal component i,
 #' \eqn{R^2_i} is the R squared coefficient of the linear regression for the
@@ -246,9 +226,11 @@ ScoreRegressPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #'                        g2m.features = cc.genes.updated.2019$g2m.genes)[[]]
 #' so <- AddMetaData(so, cc[,c("S.Score", "G2M.Score", "Phase")])
 #'
-#' score.cc <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim = 1:30)
+#' score.cc.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim = 1:30)
+#' score.cc.adj.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim = 1:30, adj.r2 = TRUE)
 #'
-#' score.cc    # ~ 0.0249
+#' score.cc.r2        # ~ 0.0249
+#' score.cc.adj.r2    # ~ 0.0249
 #' }
 #'
 #' @inherit ScoreDensityPC note
@@ -269,11 +251,8 @@ ScoreRegressPC.CellCycle <- function(object, batch.var = NULL, reduction = "pca"
   list2env(x = prep.list, envir = environment())
 
   # construct formula(s)
-  idx <- 1:length(dims)
-  covar <- c(s.var, g2m.var)
-  formulas <- tapply(X = colnames(dimred), INDEX = idx,
-                     FUN = paste, "~", paste(covar, collapse = " + "),
-                     simplify = F)
+  covar <- paste(c(s.var, g2m.var), collapse = " + ")
+  formulas <- lapply(paste(colnames(dimred), covar, sep = " ~ "), as.formula)
 
   # compute linear regression per batch and collect (adj.)r.squared
   regs <- lapply(lapply(formulas, FUN = as.formula), lm, data = df.score)
@@ -330,7 +309,8 @@ ScoreRegressPC.CellCycle <- function(object, batch.var = NULL, reduction = "pca"
   if (! batch.var %in% colnames(df.score)) {
     abort(message = sprintf("%s not in colnames of metadata", sQuote(batch.var)))
   }
-  df.score[,batch.var] <- as.numeric(as.factor(df.score[,batch.var]))
+  df.score[,batch.var] <- as.factor(df.score[,batch.var])
+  # df.score[,batch.var] <- as.numeric(as.factor(df.score[,batch.var]))
   df.score <- df.score %>% left_join(
     as.data.frame(dimred) %>% rownames_to_column(var = idcol),
     by = idcol

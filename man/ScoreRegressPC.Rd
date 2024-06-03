@@ -9,7 +9,6 @@ ScoreRegressPC(
   batch.var = NULL,
   reduction = "pca",
   dims = NULL,
-  all.at.once = FALSE,
   adj.r2 = FALSE,
   ...
 )
@@ -23,10 +22,6 @@ ScoreRegressPC(
 
 \item{dims}{The dimensions to consider. All dimensions are used by default}
 
-\item{all.at.once}{Whether to regress all the dimensions at once instead of
-regressing them separately. Note that enabling this behaviour doesn't allow
-to weight R2s by the contribution to variance}
-
 \item{adj.r2}{Whether to use the adjusted R2 instead of the raw R2}
 
 \item{...}{Additional parameters ('assay', 'search' and 'scale.layer') to pass
@@ -36,19 +31,17 @@ to Seurat to automatically construct the \code{batch.var} when not provided.}
 A single float corresponding to the score of the given reduction
 }
 \description{
-Linearly regresses principal components to predict batches as a proxy to
-batch mixing. The resulting R2 are then weighted by each dimension's
+Linearly regresses principal components with batch variable as a proxy to
+estimate batch mixing. The resulting R2 are then weighted by each dimension's
 contribution to variance.
 }
 \details{
 The linear regression is
-\deqn{Batch = PC_i} or
-\deqn{Batch = \sum_{i=1}^{p}PC_i} when \code{all.at.once = TRUE}
+\deqn{PC_i = Batch}
 
 
 The score is computed as follow :
-\deqn{\sum_{i=1}^{p} \left ( R^2_i * V_i \right )} or just
-\deqn{R^2} when \code{all.at.once = TRUE}
+\deqn{\sum_{i=1}^{p} \left ( R^2_i * V_i \right )}
 
 For a PCA with p dimensions, \eqn{PC_i} is the principal component i,
 \eqn{R^2_i} is the R squared coefficient of the linear regression for the
@@ -68,11 +61,11 @@ obj <- FindVariableFeatures(obj)
 obj <- ScaleData(obj)
 obj <- RunPCA(obj)
 
-score.each <- ScoreRegressPC(obj, "Method", "pca", dim = 1:30)
-score.all <- ScoreRegressPC(obj, "Method", "pca", dim = 1:30, all.at.once = TRUE)
+score.r2 <- ScoreRegressPC(obj, "Method", "pca", dim = 1:30)
+score.adj.r2 <- ScoreRegressPC(obj, "Method", "pca", dim = 1:30, adj.r2 = TRUE)
 
-score.each    # ~ 0.0257
-score.all     # ~ 0.7553
+score.r2    # ~ 0.1147
+score.adj.r2     # ~ 0.1145
 }
 
 }

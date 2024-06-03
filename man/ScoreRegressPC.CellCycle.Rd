@@ -46,8 +46,7 @@ The linear regression is
 \deqn{PC_i = S_{score} + G2M_{score}}
 
 The score is computed as follow :
-\deqn{\sum_{i=1}^{p} \left ( R^2_i * V_i \right )} or just
-\deqn{R^2} when \code{all.at.once = TRUE}
+\deqn{\sum_{i=1}^{p} \left ( R^2_i * V_i \right )}
 
 For a PCA with p dimensions, \eqn{PC_i} is the principal component i,
 \eqn{R^2_i} is the R squared coefficient of the linear regression for the
@@ -70,9 +69,11 @@ cc <- CellCycleScoring(JoinLayers(so), s.features = cc.genes.updated.2019$s.gene
                        g2m.features = cc.genes.updated.2019$g2m.genes)[[]]
 so <- AddMetaData(so, cc[,c("S.Score", "G2M.Score", "Phase")])
 
-score.cc <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim = 1:30)
+score.cc.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim = 1:30)
+score.cc.adj.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim = 1:30, adj.r2 = TRUE)
 
-score.cc    # ~ 0.0249
+score.cc.r2        # ~ 0.0249
+score.cc.adj.r2    # ~ 0.0249
 }
 
 }
