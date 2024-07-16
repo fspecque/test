@@ -1,7 +1,7 @@
 #' @export
 conda_status <- new.env(parent = emptyenv())
 
-pb <- new.env(parent = emptyenv())
+pb <- new.env(parent = parent.frame())
 
 .onLoad <- function(libname = find.package(.packageName), pkgname = .packageName) {
   cache.path <- getCachePath(include.file = FALSE)
@@ -22,4 +22,5 @@ pb <- new.env(parent = emptyenv())
   message("Cache file ", w , " at ", cache.path, ". Loading...")
   conda_status$current <- CondaManager(cache.path)
   pb$onLoad <- FALSE
+  pb$print.lisi.msg <- FALSE
 }
