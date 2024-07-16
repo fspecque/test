@@ -11,7 +11,7 @@ Description: R package gathering a set of wrappers to apply various integration
 License: N/A
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Depends:
     R (>= 3.5.0),
     Seurat (>= 5.0.0)
@@ -41,7 +41,10 @@ Collate:
     'conda_S4_definitions.R'
     'conda_S4_methods.R'
     'conda_S4_helpers.R'
+    'utils.R'
+    'convert_distances.R'
     'kwargs.R'
+    'metrics_lisi.R'
     'metrics_pca.R'
     'scANVI.R'
     'scVI.R'
