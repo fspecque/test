@@ -55,7 +55,7 @@ setGeneric("checkCondaEnv", function(x, ..., verbose = getOption("verbose"))
 #' \linkS4class{CondaEnv} object.
 #'
 #' @param x a \linkS4class{CondaEnvManager}, a
-#' \linkS4class{CondaEnv} object or a sub element of it of- class
+#' \linkS4class{CondaEnv} object or a sub element of it of class
 #' \code{CondaEnvSlot}.
 #' @param do.check whether to call \link[=checkCondaEnv]{check functions}. Does
 #' not apply when \code{x} is a \code{CondaEnvSlot} object.

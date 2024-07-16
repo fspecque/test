@@ -87,7 +87,7 @@ NULL
 #' @importFrom SeuratObject JoinLayers GetAssayData
 #'
 #' @export
-#'@note This function requires the
+#' @note This function requires the
 #' \href{https://scvi-tools.org/}{\pkg{scvi-tools}} package
 #' to be installed (along with \pkg{scipy})
 #'

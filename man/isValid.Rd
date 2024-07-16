@@ -8,7 +8,7 @@ isValid(x, ...)
 }
 \arguments{
 \item{x}{a \linkS4class{CondaEnvManager}, a
-\linkS4class{CondaEnv} object or a sub element of it of- class
+\linkS4class{CondaEnv} object or a sub element of it of class
 \code{CondaEnvSlot}.}
 
 \item{...}{ignored when \code{x} is a \code{CondaEnvSlot} object. Otherwise,
