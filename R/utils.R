@@ -86,7 +86,8 @@ colSort <- function(mat, by = NULL, ncol = NULL, decreasing = FALSE) {
 #' @keywords internal
 .sort.mat <- function(mat, by, byrow, ncol, decreasing) {
   oby <- c(col, row)[[byrow+1]]
-  return(matrix(mat[order(oby(by), by, decreasing = decreasing)], byrow = byrow, ncol = ncol))
+  decreasing <- c(FALSE, decreasing)   # c(row or col indices, values)
+  return(matrix(mat[order(oby(by), by, decreasing = decreasing, method = "radix")], byrow = byrow, ncol = ncol))
 }
 
 #' @rdname matrix-sorting
@@ -120,12 +121,11 @@ colSorted <- function(mat, decreasing = FALSE) {
 #' @inheritParams matrix-indexing
 #' @param i row indices (1-based)
 #' @param j column indices (1-based)
-#' @param x values such as \code{m[i,j] = x}
-#' @param by matrix to sort by. If \code{NULL}, sort \code{mat} by itself (default)
+#' @param x values such that \code{m[i,j] = x}
 #'
 #' @return a symmetric sparse dgCMatrix of size height x height
-#' @note If \code{mat} and \code{by} have different dimensions, results might be
-#' incorrect
+#'
+#' @seealso \code{\link{SymmetrizeKnn}}
 #' @name matrix-symmetrize
 #' @export
 
@@ -140,6 +140,7 @@ symmetrize.pmin.sparse <- function(i, j, x, height) {
 }
 
 #' @keywords internal
+#' @noRd
 .symmetrize.sparse <- function(i, j, x, height, p.min.max) {
   # remove any zero
   i.not.zero <- which(x > 0)
@@ -195,6 +196,8 @@ symmetrize.pmin.sparse <- function(i, j, x, height) {
 #' @param object a \code{Seurat}, \code{Graph} or \code{Neighbor} object
 #' @param graph.name name of a \code{Graph} or \code{Neighbor} instance stored in
 #' the \code{Seurat object}.
+#' @param use.max by default, use the maximum value in case of discrepancy
+#' between m[i,j] and m[j,i]. Set to \code{FALSE} to use the minimum value.
 #' @param assay name of the assay to store in the output \code{Graph}
 #'
 #' @return the Seurat object with a new \code{Graph} instance or a
@@ -207,15 +210,16 @@ symmetrize.pmin.sparse <- function(i, j, x, height) {
 #' \code{\link{symmetrize.pmax.sparse}}
 
 setGeneric("SymmetrizeKnn",
-           function(object, graph.name = "RNA_nn", assay = NULL)
+           function(object, graph.name = "RNA_nn", use.max = TRUE, assay = NULL)
              standardGeneric("SymmetrizeKnn"))
 
 #' @export
 #' @rdname SymmetrizeKnn
 setMethod("SymmetrizeKnn", "Seurat",
-          function(object, graph.name = "RNA_nn", assay = NULL) {
+          function(object, graph.name = "RNA_nn", use.max = TRUE, assay = NULL) {
             assay <- assay %||% DefaultAssay(object)
-            knnmat <- SymmetrizeKnn(object = object[[graph.name]])
+            use.max <- use.max %||% FALSE
+            knnmat <- SymmetrizeKnn(object = object[[graph.name]], use.max = use.max)
             if (inherits(object[[graph.name]], "Neighbor")) {
               cells <- slot(object = object[[graph.name]], "cell.names") %||% Cells(object)
             } else {
@@ -231,13 +235,15 @@ setMethod("SymmetrizeKnn", "Seurat",
 #' @export
 #' @rdname SymmetrizeKnn
 setMethod("SymmetrizeKnn", "Matrix",
-          function(object) {
+          function(object, use.max = TRUE) {
             i <- slot(object = object, name = "i") + 1
             x <- slot(object = object, name = "x")
             p <- slot(object = object, name = "p")
             j <- findInterval(seq(x)-1,p[-1]) + 1
+            symmetrize <- c(symmetrize.pmin.sparse,
+                            symmetrize.pmax.sparse)[use.max + 1]
             return(
-              symmetrize.pmax.sparse(i = i, j = j, x = x, height = ncol(object))
+              symmetrize(i = i, j = j, x = x, height = ncol(object))
             )
           })
 
@@ -255,16 +261,16 @@ setMethod("SymmetrizeKnn", "Graph", getMethod("SymmetrizeKnn", "Matrix"))
 #' @export
 #' @rdname SymmetrizeKnn
 setMethod("SymmetrizeKnn", "Neighbor",
-          function(object) {
+          function(object, use.max = TRUE) {
             knn.idx  <- slot(object = object, name = "nn.idx")
             knn.dist <- slot(object = object, name = "nn.dist")
             n <- nrow(knn.idx)
             k <- ncol(knn.idx)
+            symmetrize <- c(symmetrize.pmin.sparse,
+                            symmetrize.pmax.sparse)[use.max + 1]
             return(
-              symmetrize.pmax.sparse(i = rep(1:n, k),
-                                     j = as.vector(knn.idx),
-                                     x = as.vector(knn.dist),
-                                     height = n)
+              symmetrize(i = rep(1:n, k), j = as.vector(knn.idx),
+                         x = as.vector(knn.dist), height = n)
             )
           })
 
