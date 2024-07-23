@@ -416,3 +416,50 @@ GetPropInterBatch <- function(object, batch.var, graph.name = "RNA_nn",
                                         per.batch = per.batch)
   return(1 - prop.intra.batch)
 }
+
+################################################################################
+#################################    Checks    #################################
+#' Check whether a knn Graph or Neighbor has a constant k value
+#'
+#' @keywords internal
+#' @noRd
+is.kconstant <- function(object) {
+  UseMethod(generic = "is.kconstant", object = object)
+}
+#' @keywords internal
+#' @noRd
+is.kconstant.Neighbor <- function(object) {
+  return(TRUE)
+}
+#' @keywords internal
+#' @noRd
+is.kconstant.Matrix <- function(object) {
+  return(length(unique(rowSums(object > 0))) == 1)
+}
+
+#' Check whether a Graph or Neighbor
+#'
+#' @keywords internal
+#' @noRd
+could.be.connectivity <- function(object, check.symmetry = T) {
+  UseMethod(generic = "could.be.connectivity", object = object)
+}
+#' @importFrom SeuratObject as.Graph
+#' @importFrom Matrix isSymmetric
+#' @keywords internal
+#' @noRd
+could.be.connectivity.Neighbor <- function(object, check.symmetry = T) {
+  cat(check.symmetry, "\n")
+  knn.dist <- slot(object = object, name = "nn.dist")
+  res <- min(knn.dist) >= 0 & max(knn.dist) <= 1 &
+    (! check.symmetry || isSymmetric(as.Graph(object)))
+  return(res)
+}
+#' @keywords internal
+#' @noRd
+could.be.connectivity.Matrix <- function(object, check.symmetry = T) {
+  cat(check.symmetry, "\n")
+  res <- min(object) >= 0 & max(object) <= 1 &
+    (! check.symmetry || isSymmetric(object))
+  return(res)
+}
