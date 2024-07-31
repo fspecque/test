@@ -241,7 +241,7 @@ setMethod("SymmetrizeKnn", "Matrix",
             p <- slot(object = object, name = "p")
             j <- findInterval(seq(x)-1,p[-1]) + 1
             symmetrize <- c(symmetrize.pmin.sparse,
-                            symmetrize.pmax.sparse)[use.max + 1]
+                            symmetrize.pmax.sparse)[[use.max + 1]]
             return(
               symmetrize(i = i, j = j, x = x, height = ncol(object))
             )
@@ -267,7 +267,7 @@ setMethod("SymmetrizeKnn", "Neighbor",
             n <- nrow(knn.idx)
             k <- ncol(knn.idx)
             symmetrize <- c(symmetrize.pmin.sparse,
-                            symmetrize.pmax.sparse)[use.max + 1]
+                            symmetrize.pmax.sparse)[[use.max + 1]]
             return(
               symmetrize(i = rep(1:n, k), j = as.vector(knn.idx),
                          x = as.vector(knn.dist), height = n)
@@ -431,6 +431,7 @@ is.kconstant <- function(object) {
 is.kconstant.Neighbor <- function(object) {
   return(TRUE)
 }
+#' @importFrom Matrix rowSums
 #' @keywords internal
 #' @noRd
 is.kconstant.Matrix <- function(object) {
@@ -455,6 +456,7 @@ could.be.connectivity.Neighbor <- function(object, check.symmetry = T) {
     (! check.symmetry || isSymmetric(as.Graph(object)))
   return(res)
 }
+#' @importFrom Matrix isSymmetric
 #' @keywords internal
 #' @noRd
 could.be.connectivity.Matrix <- function(object, check.symmetry = T) {

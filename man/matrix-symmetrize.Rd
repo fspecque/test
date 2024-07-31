@@ -15,11 +15,9 @@ symmetrize.pmin.sparse(i, j, x, height)
 
 \item{j}{column indices (1-based)}
 
-\item{x}{values such as \code{m[i,j] = x}}
+\item{x}{values such that \code{m[i,j] = x}}
 
 \item{height}{height of the matrix (number of rows)}
-
-\item{by}{matrix to sort by. If \code{NULL}, sort \code{mat} by itself (default)}
 }
 \value{
 a symmetric sparse dgCMatrix of size height x height
@@ -31,7 +29,6 @@ values respectively) then symmetrizes it with low memory footprint\cr
 \code{symmetrize.pmax.sparse} symmetrize matrix with max(m[i,j], m[j,i])\cr
 \code{symmetrize.pmin.sparse} symmetrize matrix with min(m[i,j], m[j,i])
 }
-\note{
-If \code{mat} and \code{by} have different dimensions, results might be
-incorrect
+\seealso{
+\code{\link{SymmetrizeKnn}}
 }

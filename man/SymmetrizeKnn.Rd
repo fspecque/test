@@ -8,21 +8,24 @@
 \alias{SymmetrizeKnn,Neighbor-method}
 \title{Symmetrize a nearest neighbours graph}
 \usage{
-SymmetrizeKnn(object, graph.name = "RNA_nn", assay = NULL)
+SymmetrizeKnn(object, graph.name = "RNA_nn", use.max = TRUE, assay = NULL)
 
-\S4method{SymmetrizeKnn}{Seurat}(object, graph.name = "RNA_nn", assay = NULL)
+\S4method{SymmetrizeKnn}{Seurat}(object, graph.name = "RNA_nn", use.max = TRUE, assay = NULL)
 
-\S4method{SymmetrizeKnn}{Matrix}(object)
+\S4method{SymmetrizeKnn}{Matrix}(object, use.max = TRUE)
 
-\S4method{SymmetrizeKnn}{Graph}(object)
+\S4method{SymmetrizeKnn}{Graph}(object, use.max = TRUE)
 
-\S4method{SymmetrizeKnn}{Neighbor}(object)
+\S4method{SymmetrizeKnn}{Neighbor}(object, use.max = TRUE)
 }
 \arguments{
 \item{object}{a \code{Seurat}, \code{Graph} or \code{Neighbor} object}
 
 \item{graph.name}{name of a \code{Graph} or \code{Neighbor} instance stored in
 the \code{Seurat object}.}
+
+\item{use.max}{by default, use the maximum value in case of discrepancy
+between m[i,j] and m[j,i]. Set to \code{FALSE} to use the minimum value.}
 
 \item{assay}{name of the assay to store in the output \code{Graph}}
 }
