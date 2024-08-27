@@ -43,6 +43,7 @@ Collate:
     'conda_S4_helpers.R'
     'utils.R'
     'convert_distances.R'
+    'expand_knn_graph.R'
     'kwargs.R'
     'metrics_lisi.R'
     'metrics_pca.R'

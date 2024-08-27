@@ -94,6 +94,4 @@ One can choose to keep the graph as it is and consider it as a directed graph
 The alternative solution is to use all computed distances to extend the knn
 graph by making the matrix symmetric. Note that connectivity graphs are
 already symmetric, so the argument value should have no effect on the result.
-
-Regarding
 }

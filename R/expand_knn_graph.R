@@ -45,11 +45,10 @@ NULL
 #' graph by making the matrix symmetric. Note that connectivity graphs are
 #' already symmetric, so the argument value should have no effect on the result.
 #'
-#' Regarding
-#'
-#'
+#' @importFrom SeuratObject DefaultAssay Cells as.Graph
 #'
 #' @export
+
 setGeneric("ExpandNeighbours",
            function(object, graph.name = "RNA_nn", new.graph.name = NULL,
                     graph.type = c("distances", "connectivities"),
@@ -89,6 +88,7 @@ setMethod("ExpandNeighbours", "Seurat",
                 tol = dijkstra.tol, verbose = verbose
               )
 
+
             } else {
               if (! could.be.connectivity(object[[graph.name]])) {
                 abort("diffusion method requires a connectivity matrix")
@@ -106,7 +106,6 @@ setMethod("ExpandNeighbours", "Seurat",
             }
 
             rownames(expanded.mat) <- colnames(expanded.mat) <- cells
-            print(new.graph.name)
             object[[new.graph.name]] <- as.Graph(expanded.mat)
             slot(object = object[[new.graph.name]], name = "assay.used") <- assay
             return(object)
@@ -121,6 +120,8 @@ setGeneric("expand_neighbours_dijkstra",
                     ncores = 1L, tol = 1L, verbose = TRUE)
              standardGeneric("expand_neighbours_dijkstra"))
 
+#' @importFrom SeuratObject as.Neighbor
+#' @importFrom Matrix sparseMatrix drop0
 #' @keywords internal
 #' @noRd
 setMethod("expand_neighbours_dijkstra", "Matrix",
@@ -129,8 +130,6 @@ setMethod("expand_neighbours_dijkstra", "Matrix",
                    which.dijkstra = c("auto", "igraph", "fast", "slow"),
                    ncores = 1L, tol = 1L, verbose = TRUE) {
             n <- ncol(object)
-            print(n)
-            print(class(object))
             const.k <- is.kconstant(object)
 
             vals <- unique(slot(object = object, name = "x"))
@@ -151,8 +150,6 @@ setMethod("expand_neighbours_dijkstra", "Matrix",
             }
             object.symmetry <- const.k.symmetry <- NULL
             igraph.mode <- "directed"
-            print(do.symmetrize)
-            print(isSymmetric(object))
             if (do.symmetrize && !isSymmetric(object)) {
               if (which.dijkstra == "igraph") {
                 igraph.mode <- "undirected"
@@ -219,16 +216,24 @@ setMethod("expand_neighbours_dijkstra", "Matrix",
             dh <- floor(d / 60^2)
             dm <- floor(d / 60 - dh * 60)
             ds <- d - dh * 60^2 - dm * 60
-            msg_time <- sprintf('done  |  Elapsed time: %.2d:%.2d:%.2f',
-                                dh, dm, ds)
+            msg_time <- sprintf('done  |  Elapsed time: %.2d:%.2d:%s%.2f\n',
+                                dh, dm, ifelse(ds < 10, '0', ''), ds)
             message(msg_time[verbose], appendLF = F)
-            print(names(res))
-            head(res$knn.idx)
-            head(res$knn.dist)
+
             i <- rep(1:nrow(res$knn.idx), k.target)
             j <- as.vector(res$knn.idx)
             x <- as.vector(res$knn.dist)
+            # correct igraph output when not enough neighbours
+            infs <- which(is.infinite(x))
+            if (length(infs) > 0) {
+              x[is.infinite(x)] <- 0
+              warning('Dijkstra (igraph) : could not find enough neighbours',
+                      ' for ', length(infs), ' cell(s) ',
+                      paste0(infs, collapse = ', '),
+                      call. = F, immediate. = F)
+            }
             expanded.mat <- sparseMatrix(i = i, j = j, x = x)
+            expanded.mat <- drop0(expanded.mat)
             if(do.symmetrize && which.dijkstra == "fast") {
               expanded.mat <- SymmetrizeKnn(expanded.mat, use.max = FALSE)
             }
@@ -278,7 +283,6 @@ expand.neighbours.diffusion <- function(conmat, k.min, max.iter) {
 #' @keywords internal
 #' @noRd
 dijkstra.igraph <- function(knnmat, k.target, mode = "undirected", weighted = T, diag = F) {
-  # print("here")
   g <- graph_from_adjacency_matrix(knnmat, mode = mode, weighted = weighted,
                                    diag = diag)
   distmat <- distances(g , algorithm = "dijkstra", mode = "out")
@@ -316,9 +320,8 @@ dijkstra.fast <- function(knn.neighbors, k.target, knn.symmetric = NULL,
     roots.idx  <- split(knn.idx,  f = f)
     roots.dist <- split(knn.dist, f = f)
   }
-  print(ncores)
+
   if (ncores > 1) {
-    print("parallel")
     res <- mcmapply(dijkstra.fast_single, roots.idx = roots.idx,
                     roots.dist = roots.dist, MoreArgs = fix.args,
                     SIMPLIFY = T, USE.NAMES = T, mc.cores = ncores)
@@ -372,28 +375,38 @@ dijkstra.fast_single <- function(roots.idx, roots.dist, knn.idx, knn.dist,
   roots.idx <- roots.idx[-1]
   roots.dist <- roots.dist[-1]
 
-  roots.idx <- roots.idx[roots.idx <= nrow(roots.idx)]
-  roots.dist <- roots.dist[!is.infinite(roots.dist)]
+  # roots.idx <- roots.idx[roots.idx <= nrow(roots.idx)]
+  # roots.dist <- roots.dist[!is.infinite(roots.dist)]
 
   no.change.since <- 0L
-  tol = max(1L, tol)
+  tol <- max(1L, tol)
+  tol.max <- tol * 50L
   iter <- 0L
   o <- order(reached.nodes.dist)[2:k.target]
   o <- o[!is.na(o)]
   reached.nodes.idx_best <- reached.nodes.idx[o]
   reached.nodes.dist_best <- reached.nodes.dist[o]
   # is.over <- (length(reached.nodes.idx_best) >= k.target && no.change.since >= tol) || no.change.since >= tol + 5
-  while ((length(reached.nodes.idx_best) < (k.target - 1) || no.change.since < tol) &&
-         iter < tol * 50) {
+  while (length(reached.nodes.idx_best) < (k.target - 1) || no.change.since < tol) {
     iter <- iter + 1L
 
-    if (iter == 49) {
-      cat(sprintf('node %d\n', self))
+    if (iter > tol.max) {
+      cond <- length(reached.nodes.idx_best) < (k.target - 1)
+      reached.nodes.dist_best <- c(reached.nodes.dist_best,
+                                   rep(0, k.target - length(reached.nodes.idx_best) - 1))
+      reached.nodes.idx_best <- rep(reached.nodes.idx_best, length.out = k.target - 1)
+      s1 <- c('a stable solution', 'enough neighbours')[[cond + 1]]
+      s2 <- c('increase `tol` to obtain a more accurate result',
+              'reduce `k.target` to obtain a constant k for all cells')[[cond + 1]]
+      warn_msg <- sprintf('Dijkstra (fast) : could not find %s for cell %d (%s)',
+                          s1, self, s2)
+      warning(warn_msg, call. = FALSE, immediate. = FALSE)
+      break
     }
 
 
     roots.nn.idx  <- knn.idx[roots.idx,]
-    roots.nn.dist <- sweep(knn.dist[roots.idx,], 1, reached.nodes.dist[match(roots.idx, reached.nodes.idx)], `+`)
+    roots.nn.dist <- knn.dist[roots.idx,] + reached.nodes.dist[match(roots.idx, reached.nodes.idx)]
     idx <- !is.infinite(roots.nn.dist)
     roots.nn.idx  <- roots.nn.idx[idx]
     roots.nn.dist <- roots.nn.dist[idx]
@@ -416,9 +429,9 @@ dijkstra.fast_single <- function(roots.idx, roots.dist, knn.idx, knn.dist,
       reached.nodes.dist_best <- reached.nodes.dist[o]
       no.change.since <- 0L
     }
-    idx <- which(! (reached.nodes.idx %in% roots.idx | reached.nodes.idx == self))
-    roots.idx  <- reached.nodes.idx[idx]
-    roots.dist <- reached.nodes.dist[idx]
+    # idx <- which(! (reached.nodes.idx %in% roots.idx | reached.nodes.idx == self))
+    roots.idx  <- reached.nodes.idx#[idx]
+    roots.dist <- reached.nodes.dist#[idx]
   }
   return(list(idx = c(self, reached.nodes.idx_best),
               dist = c(0, reached.nodes.dist_best)))
@@ -427,7 +440,8 @@ dijkstra.fast_single <- function(roots.idx, roots.dist, knn.idx, knn.dist,
 #' @keywords internal
 #' @noRd
 dijkstra.slow_single <- function(self.idx, i, j, x, v, k.target, tol = 1L) {
-  tol = max(1L, tol)
+  tol <- max(1L, tol)
+  tol.max <- tol * 50L
 
   v[self.idx] <- 0
 
@@ -445,12 +459,21 @@ dijkstra.slow_single <- function(self.idx, i, j, x, v, k.target, tol = 1L) {
   iter <- 0L
   no.change.since <- 0L
 
-  while ((length(reached.nodes.idx_best) < k.target || no.change.since < tol) &&
-         iter < tol * 50)  {
+  while (length(reached.nodes.idx_best) < k.target || no.change.since < tol) {
     iter <- iter + 1L
 
-    if (iter == 49) {
-      cat(sprintf('node %d\n', self.idx))
+    if (iter > tol.max) {
+      cond <- length(reached.nodes.idx_best) < k.target
+      reached.nodes.dist_best <- c(reached.nodes.dist_best,
+                                   rep(0, k.target - length(reached.nodes.idx_best)))
+      reached.nodes.idx_best <- rep(reached.nodes.idx_best, length.out = k.target)
+      s1 <- c('a stable solution', 'enough neighbours')[[cond + 1]]
+      s2 <- c('increase `tol` to obtain a more accurate result',
+              'reduce `k.target` to obtain a constant k for all cells')[[cond + 1]]
+      warn_msg <- sprintf('Dijkstra (slow) : could not find %s for cell %d (%s)',
+                          s1, self.idx, s2)
+      warning(warn_msg, call. = FALSE, immediate. = FALSE)
+      break
     }
 
     idx3 <- which(i %in% idx2)
