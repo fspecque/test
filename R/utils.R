@@ -185,6 +185,153 @@ symmetrize.pmin.sparse <- function(i, j, x, height) {
 
 }
 ################################################################################
+################################     NN cut     ################################
+#' Remove excessive number of neighbours in a knn graph
+#'
+#' @description
+#' Ensure that each cell's number of neighbours does not exceed a cutoff
+#'
+#' @param object A \code{\link[SeuratObject]{Seurat}} object
+#' @param graph.name name of a \code{Graph} or \code{Neighbor} instance stored in
+#' the \code{Seurat object}.
+#' @param new.graph name of the trimmed graph to save in the \code{Seurat object}
+#' @param k.max maximum number of neigbours allowed per cell
+#' @param assay name of the assay to use. Ignored when graph object is a
+#' \code{Neighbor} object. If not specified (default), the default assay is used
+#' @param verbose whether to print messages. Set to \code{FALSE} to disable
+#'
+#' @return the Seurat object with a new \code{Graph} or \code{Neighbor} instance
+#'
+#' @importFrom SeuratObject DefaultAssay
+#'
+#' @export
+
+CutKnn <- function(object, graph.name, new.graph = NULL, k.max, assay = NULL,
+                   verbose = TRUE) {
+  graph.name %||% abort("graph.name cannot be null")
+  new.graph <- new.graph %||% sprintf('%s_cut%dk', graph.name, k.max)
+  k.max <- k.max %iff% max(2L, as.integer(k.max)) %||% abort("k.max cannot be null")
+  assay <- assay %||% DefaultAssay(object)
+  knn.obj <- object[[graph.name]]
+
+  cut.knn <- .CutKnn(knn.obj, k.max = k.max, assay = assay, verbose = verbose)
+  object[[new.graph]] <- cut.knn
+  return(object)
+}
+
+#' @keywords internal
+#' @noRd
+setGeneric(".CutKnn",
+           function(object, k.max, assay = NULL, verbose = TRUE)
+             standardGeneric(".CutKnn"))
+
+#' @importFrom Matrix diag drop0 rowSums
+#' @importFrom SeuratObject as.Graph
+#' @keywords internal
+#' @noRd
+setMethod(".CutKnn", "Matrix",
+          function(object, k.max, assay = NULL, verbose = TRUE) {
+            diag(object) <- 0
+            object <- drop0(object)
+            k.max <- k.max - 1      # remove self since diag <- 0
+            k.const <- is.kconstant(object)
+            if (k.const) {
+              k <- rowSums(object[1,,drop = FALSE] > 0)
+              k_msg <- k + 1
+            } else {
+              k <- max(rowSums(object > 0))
+              k_msg <- 'k'
+            }
+
+            if (k > k.max) {
+              message(sprintf('Selecting %d best neighbours in a %snn graph\n',
+                              k.max + 1, k_msg)[verbose], appendLF = FALSE)
+              if (k.const) {
+                # :::as.Neighbor.Graph => avoid error when object is Matrix
+                object <- SeuratObject:::as.Neighbor.Graph(object) # faster
+              }
+              object <- .cut.knn(object, k.max = k.max, assay = assay)
+            }
+            return(as.Graph(object))
+          })
+
+#' @keywords internal
+#' @noRd
+setMethod(".CutKnn", "Neighbor",
+          function(object, k.max, assay = NULL, verbose = TRUE) {
+            k <- ncol(slot(object, 'nn.idx'))
+            if (k > k.max) {
+              message(sprintf('Selecting %d best neighbours in a %dnn graph\n',
+                              k.max, k)[verbose], appendLF = FALSE)
+              object <- .cut.knn(object, k.max = k.max, assay = assay)
+            }
+            return(object)
+          })
+
+#' @keywords internal
+#' @noRd
+setGeneric(".cut.knn",
+           function(object, k.max, ...)
+             standardGeneric(".cut.knn"))
+
+#' @importFrom Matrix diag drop0 sparseMatrix
+#' @importFrom SeuratObject as.Graph
+#' @keywords internal
+#' @noRd
+setMethod(".cut.knn", "Matrix",
+          function(object, k.max, assay = NULL) {
+            assay <- assay %||% "RNA"
+            # assumed that self-to-self edges are not taken into account and
+            # that k.max <- k.max - 1
+
+            # pull sparse matrix skeleton
+            i <- slot(object = object, name = "i") + 1
+            x <- slot(object = object, name = "x")
+            p <- slot(object = object, name = "p")
+            j <- findInterval(seq(x)-1,p[-1]) + 1
+
+            # order objects by row first, then by increasing distances
+            o <- order(i, x)
+            i <- i[o]
+            j <- j[o]
+            x <- x[o]
+
+            # number of neighbours per cell (works because ordered by row first)
+            n <- rle(i)$lengths
+            # amount to add to get true indices (of i, j and x)
+            idx.increment <- c(0, cumsum(n)[-length(n)])
+            # for each cell, maximum index value to keep
+            # (n if n < k.max, i.e not enough neighbours)
+            idx.max <- n
+            idx.max[idx.max > k.max] <- k.max
+            # generate one `seq()` for each cell (from=1, to=idx.max)
+            idx.per.row <- sequence(nvec = idx.max, from = 1L, by = 1L)
+            idx <- idx.per.row + rep(idx.increment, idx.max)  # true indices
+
+            # Generate the sparse matrix, then the Graph
+            cut.knn <- sparseMatrix(i = i[idx],j = j[idx], x = x[idx])
+            rownames(cut.knn) <- rownames(object)
+            colnames(cut.knn) <- colnames(object)
+            cut.knn <- as.Graph(cut.knn)
+            slot(cut.knn, "assay.used") <- assay
+            return(cut.knn)
+          })
+
+#' @keywords internal
+#' @noRd
+setMethod(".cut.knn", "Neighbor",
+          function(object, k.max, ...) {
+            knn.idx <- slot(object, 'nn.idx')
+            knn.dist <- slot(object, 'nn.dist')
+
+            knn.idx <- rowSort(knn.idx, knn.dist)
+            knn.dist <- rowSort(knn.dist)
+            slot(object, 'nn.idx') <- knn.idx[,1:k.max, drop = FALSE]
+            slot(object, 'nn.dist') <- knn.dist[,1:k.max, drop = FALSE]
+
+            return(object)
+          })
+################################################################################
 #############################    NN symmetrize     #############################
 #' Symmetrize a nearest neighbours graph
 #'

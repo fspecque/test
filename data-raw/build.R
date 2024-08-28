@@ -1,6 +1,6 @@
 # roxygen2::roxygenise()
 devtools::document()
-pkgload::dev_help("ExpandNeighbours")
+pkgload::dev_help("CutKnn")
 
 DESCRIPTION <- readLines("DESCRIPTION")
 pkg.version <- gsub("\\s*", "", sub("^Version:", "", DESCRIPTION[grepl("^Version", DESCRIPTION)]))
