@@ -30,7 +30,8 @@ Imports:
     SummarizedExperiment,
     tools
 Suggests: 
-    SeuratData
+    SeuratData,
+    lisi
 Collate: 
     'Combat.R'
     'Harmony.R'
