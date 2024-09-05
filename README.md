@@ -17,7 +17,7 @@ The installation process encompasses two steps, namely:
 First off, go to `some/path/to/download/the/repository`. Then, clone or download the repository or a release.
 ```shell
 # Example: clone
-git clone git@github.com:fspecque/Seurat-Integrate.git
+git clone git@github.com:cbib/Seurat-Integrate.git
 ```
 Depending on what you chose to download, you can either obtain the source code in a `Seurat-Integrate/` folder or a compressed version ending with `.targ.gz`. Regardless, you can use the command below:
 ```R
