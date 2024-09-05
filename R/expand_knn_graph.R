@@ -237,6 +237,7 @@ setMethod("expand_neighbours_dijkstra", "Matrix",
             if(do.symmetrize && which.dijkstra == "fast") {
               expanded.mat <- SymmetrizeKnn(expanded.mat, use.max = FALSE)
             }
+            dimnames(expanded.mat) <- list(rownames(object), colnames(object))
             return(expanded.mat)
           })
 
