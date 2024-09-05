@@ -22,7 +22,7 @@ git clone git@github.com:fspecque/Seurat-Integrate.git
 Depending on what you chose to download, you can either obtain the source code in a `Seurat-Integrate/` folder or a compressed version ending with `.targ.gz`. Regardless, you can use the command below:
 ```R
 install.packages(c("remotes", "BiocManager"))
-path <- 'Seurat-Integrate/'   # or Seurat-Integrate_X.X.X.tar.gz (X.X.X being the version)
+path <- 'Seurat-Integrate/'   # or SeuratIntegrate_X.X.X.tar.gz (X.X.X being the version)
 remotes::install_local(path = path, dependencies = NA, repos = BiocManager::repositories())
 ```
 Done ! Open a R session and try it out !
