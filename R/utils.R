@@ -389,9 +389,9 @@ setMethod("SymmetrizeKnn", "Matrix",
             j <- findInterval(seq(x)-1,p[-1]) + 1
             symmetrize <- c(symmetrize.pmin.sparse,
                             symmetrize.pmax.sparse)[[use.max + 1]]
-            return(
-              symmetrize(i = i, j = j, x = x, height = ncol(object))
-            )
+            object_sym <- symmetrize(i = i, j = j, x = x, height = ncol(object))
+            dimnames(object_sym) <- dimnames(object)
+            return(object_sym)
           })
 
 #' @export
@@ -585,7 +585,50 @@ is.kconstant.Matrix <- function(object) {
   return(length(unique(rowSums(object > 0))) == 1)
 }
 
-#' Check whether a Graph or Neighbor
+#' Check whether a knn Graph or Neighbor has a constant k value
+#'
+#' @keywords internal
+#' @noRd
+get.k <- function(object, FUN = c('max', 'min', 'range', 'all')) {
+  UseMethod(generic = "get.k", object = object)
+}
+#' @keywords internal
+#' @noRd
+get.k.Neighbor <- function(object, FUN = c('max', 'min', 'range', 'all')) {
+  k <- ncol(slot(object = object, name = 'nn.idx'))
+  k <- switch(FUN, range = rep(k, 2), all = rep(k, nrow(object)), k)
+  return(k)
+}
+#' @importFrom Matrix rowSums
+#' @keywords internal
+#' @noRd
+get.k.Matrix <- function(object, FUN = c('max', 'min', 'range', 'all')) {
+  FUN <- tolower(FUN)
+  FUN <- match.arg(FUN)
+  diag(object) <- 0
+  object <- drop0(object)
+  FUN <- switch(FUN, max = max, min = min, range = range, all = c)
+  k <- FUN(rowSums(object > 0))
+  return(k + 1)  #diag
+}
+
+# get.k.Matrix <- function(object, FUN = c('max', 'min', 'range', 'all')) {
+#   FUN <- tolower(FUN)
+#   FUN <- match.arg(FUN)
+#   diag(object) <- 0
+#   object <- drop0(object)
+#   if (is.kconstant(object)) {
+#     k <- rowSums(object[1,,drop = FALSE] > 0)
+#     k <- switch(FUN, range = rep(k, 2), all = rep(k, nrow(object)), k)
+#   } else {
+#     FUN <- switch(FUN, max = max, min = min, range = range, all = c)
+#     k <- FUN(rowSums(object > 0))
+#   }
+#   return(k + 1)  #diag
+# }
+
+#' Check whether a Graph or Neighbor object violates any property of a
+#' connectivity matrix
 #'
 #' @keywords internal
 #' @noRd
@@ -597,7 +640,6 @@ could.be.connectivity <- function(object, check.symmetry = T) {
 #' @keywords internal
 #' @noRd
 could.be.connectivity.Neighbor <- function(object, check.symmetry = T) {
-  cat(check.symmetry, "\n")
   knn.dist <- slot(object = object, name = "nn.dist")
   res <- min(knn.dist) >= 0 & max(knn.dist) <= 1 &
     (! check.symmetry || isSymmetric(as.Graph(object)))
@@ -607,7 +649,6 @@ could.be.connectivity.Neighbor <- function(object, check.symmetry = T) {
 #' @keywords internal
 #' @noRd
 could.be.connectivity.Matrix <- function(object, check.symmetry = T) {
-  cat(check.symmetry, "\n")
   res <- min(object) >= 0 & max(object) <= 1 &
     (! check.symmetry || isSymmetric(object))
   return(res)
