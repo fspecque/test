@@ -8,7 +8,7 @@ Install SeuratIntegrate from github directly:
 install.packages(c("remotes", "BiocManager"))
 remotes::install_github("cbib/Seurat-Integrate", dependancies = NA, repos = BiocManager::repositories()) 
 ```
-If you prefer, or if it does not work, you can use the alternative ways described below.
+If you prefer, or if it does not work, you can use the alternative way described below.
 ### 2) From a local copy using the remotes R package
 The installation process encompasses two steps, namely:
  - Clone or download the repository or the [latest release](https://github.com/cbib/Seurat-Integrate/releases/tag/0.3.0)
