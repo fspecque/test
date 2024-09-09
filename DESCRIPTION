@@ -31,7 +31,9 @@ Imports:
     tools
 Suggests: 
     SeuratData,
-    lisi
+    lisi,
+    knitr,
+    rmarkdown
 Collate: 
     'Combat.R'
     'Harmony.R'
@@ -52,3 +54,4 @@ Collate:
     'scVI.R'
     'trVAE.R'
     'zzz.R'
+VignetteBuilder: knitr

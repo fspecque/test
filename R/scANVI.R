@@ -161,7 +161,6 @@ scANVIIntegration <- function(
   gene_likelihood <- match.arg(arg = gene_likelihood)
   verbose.scvi <- toupper(verbose.scvi)
   verbose.scvi <- match.arg(arg = verbose.scvi)
-  conda_env %||% abort(message = "'conda_env' cannot be NULL")
   varargs <- list(...)
 
   conda_bin <- "auto"
