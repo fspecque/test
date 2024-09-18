@@ -19,8 +19,13 @@
 #' @param bw.kernel Bandwidth selector to use for Gaussian kernel density estimation.
 #' One of 'nrd0', 'nrd', 'ucv','bcv' or 'sj' (see \link[stats:bw.nrd]{bandwidths}).
 #' nrd0 is the default
-#' @param ... Additional parameters ('assay', 'search' and 'scale.layer') to pass
-#' to Seurat to automatically construct the \code{batch.var} when not provided.
+#' @param weight.by one of 'var' (default) or 'stdev' (standing for variance and
+#' standard deviation respectively). Use the variance or the standard deviation
+#' explained by the principal components to weight the each PC's score.
+#' @param assay assay to use. Passed to Seurat to automatically construct the
+#' \code{batch.var} when not provided. Useless otherwise
+#' @param layer layer to use. Passed to Seurat to automatically construct the
+#' \code{batch.var} when not provided. Useless otherwise
 #'
 #' @return A single float corresponding to the score of the given reduction
 #'
@@ -68,13 +73,14 @@
 #' single-cell genomics. Nat Methods 19, 41–50 (2021).
 #' \href{https://doi.org/10.1038/s41592-021-01336-8}{DOI}
 #'
-#' @seealso \code{\link[Seurat]{Layers}} and \code{\link[Seurat]{DefaultAssay}}
-#' for \code{...} arguments and \code{\link{ScoreRegressPC}} to compute the PCR
+#' @seealso \code{\link{ScoreRegressPC}} to compute the PCR
 #' score
 
 ScoreDensityPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
                            use.union = TRUE, bw.join = mean,
-                           bw.kernel = c('nrd0', 'nrd', 'ucv','bcv', 'sj'), ...) {
+                           bw.kernel = c('nrd0', 'nrd', 'ucv','bcv', 'sj'),
+                           weight.by = c("var", "stdev"),
+                           assay = NULL, layer = NULL) {
   bw.kernel <- tolower(bw.kernel)
   bw.kernel <- match.arg(bw.kernel)
   bw.kernel <- switch (bw.kernel, 'nrd0' = bw.nrd0, 'nrd' = bw.nrd,
@@ -84,9 +90,13 @@ ScoreDensityPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
     abort(message = sprintf("%s is not a function", sQuote("bw.join")))
   }
 
-  prep.list <- .prep_ScorePC(object = object, batch.var = batch.var,
-                             reduction = reduction, dims = dims, ...)
-  list2env(x = prep.list, envir = environment())
+  assay <- assay %||% DefaultAssay(object)
+  DefaultAssay(object) <- assay
+  .prep_MetaDataBatch(object = object, batch.var = batch.var, assay = assay,
+                      layer = layer)
+  .prep_MetadataPC(object = object, df.mtdt = df.mtdt, idcol = idcol,
+                   batch.var = batch.var, reduction = reduction, dims = dims,
+                   weight.by = weight.by)
 
   # compute joint bandwidth
   dimred_cols <- colnames(dimred)
@@ -166,16 +176,20 @@ ScoreDensityPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #' @inherit ScoreDensityPC note
 #' @inherit ScoreDensityPC references
 #'
-#' @seealso \code{\link[Seurat]{Layers}} and \code{\link[Seurat]{DefaultAssay}}
-#' for \code{...} arguments, \code{\link{ScoreDensityPC}} for an alternative and
+#' @seealso \code{\link{ScoreDensityPC}} for an alternative and
 #' \code{\link{ScoreRegressPC.CellCycle}} to regresses PCs by cell cycle scores.
 
 ScoreRegressPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
-                           adj.r2 = FALSE, ...) {
+                           adj.r2 = FALSE,  weight.by = c("var", "stdev"),
+                           assay = NULL, layer = NULL) {
   adj.r2 <- adj.r2 %||% FALSE
-  prep.list <- .prep_ScorePC(object = object, batch.var = batch.var,
-                             reduction = reduction, dims = dims, ...)
-  list2env(x = prep.list, envir = environment())
+  assay <- assay %||% DefaultAssay(object)
+  DefaultAssay(object) <- assay
+  .prep_MetaDataBatch(object = object, batch.var = batch.var, assay = assay,
+                      layer = layer)
+  .prep_MetadataPC(object = object, df.mtdt = df.mtdt, idcol = idcol,
+                   batch.var = batch.var, reduction = reduction, dims = dims,
+                   weight.by = weight.by)
 
   # construct formula(s)
   formulas <- lapply(paste(colnames(dimred), batch.var, sep = " ~ "), as.formula)
@@ -194,13 +208,34 @@ ScoreRegressPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #' @description
 #' Linearly regresses S and G2M scores to predict principal components. The
 #' resulting R2 are then weighted by each dimension's contribution to variance.
+#' Cell cycles scores and PCAs are computed for each batch independently.
 #'
 #' @inheritParams ScoreRegressPC
-#' @param s.var The name of the S phase score variable (must be in the object metadata)
-#' @param g2m.var The name of the G2M phase score variable (must be in the object metadata)
+#' @inheritParams Seurat::RunPCA
+#' @inheritParams Seurat::CellCycleScoring
+#' @param what the slot from Seurat to score. Can be a layer or a reduction.
+#' @param dims.use The dimensions from \code{what} to consider. All dimensions
+#' are used by default
+#' @param s.var The name of the S phase score variable (must be in the object
+#' metadata)
+#' @param g2m.var The name of the G2M phase score variable (must be in the
+#' object metadata)
+#' @param compute.cc whether to (re-)compute the cell cycle scores. Should be
+#' \code{TRUE} (default), unless you have run
+#' \code{\link{CellCycleScoringPerBatch}} beforehand because cell cycles scores
+#' are expected to be computed per batch
 #'
-#' @inherit ScoreDensityPC return
+#' @return A 2-columns data frame with the batch variable in the first one and
+#' the corresponding score in the second one. It has as many rows as batches.
+#'
 #' @importFrom stats lm summary.lm
+#' @importFrom SeuratObject Layers DefaultAssay DefaultAssay<- GetAssayData Reductions Embeddings
+#' @importFrom Seurat CellCycleScoring RunPCA
+#' @importFrom dplyr group_by group_modify left_join summarize pick
+#' @importFrom tidyr pivot_longer
+#' @importFrom broom glance
+#' @importFrom rlang data_sym
+#'
 #'
 #' @export
 #' @details The linear regression is
@@ -222,12 +257,9 @@ ScoreRegressPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #' obj <- FindVariableFeatures(obj)
 #' obj <- ScaleData(obj)
 #' obj <- RunPCA(obj)
-#' cc <- CellCycleScoring(JoinLayers(so), s.features = cc.genes.updated.2019$s.genes,
-#'                        g2m.features = cc.genes.updated.2019$g2m.genes)[[]]
-#' so <- AddMetaData(so, cc[,c("S.Score", "G2M.Score", "Phase")])
 #'
-#' score.cc.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim = 1:30)
-#' score.cc.adj.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim = 1:30, adj.r2 = TRUE)
+#' score.cc.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim.use = 1:30)
+#' score.cc.adj.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim.use = 1:30, adj.r2 = TRUE)
 #'
 #' score.cc.r2        # ~ 0.0249
 #' score.cc.adj.r2    # ~ 0.0249
@@ -236,40 +268,107 @@ ScoreRegressPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #' @inherit ScoreDensityPC note
 #' @inherit ScoreDensityPC references
 #'
-#' @seealso \code{\link[Seurat]{Layers}} and \code{\link[Seurat]{DefaultAssay}}
-#' for \code{...} arguments and \code{\link{ScoreRegressPC}} to regresses PCs by
-#' batch.
+#' @seealso \code{\link{CellCycleScoringPerBatch}} to compute cc scores per
+#' batch. \code{\link{ScoreRegressPC}} to regresses PCs by batch.
 
-ScoreRegressPC.CellCycle <- function(object, batch.var = NULL, reduction = "pca",
-                                     dims = NULL, s.var = "S.Score",
-                                     g2m.var = "G2M.Score", adj.r2 = FALSE, ...) {
-  s.var <- s.var %||% "S.Score"
-  g2m.var <- g2m.var %||% "G2M.Score"
-  prep.list <- .prep_ScorePC(object = object, batch.var = batch.var,
-                             s.var = s.var, g2m.var = g2m.var,
-                             reduction = reduction, dims = dims, ...)
-  list2env(x = prep.list, envir = environment())
+ScoreRegressPC.CellCycle <- function(object, batch.var = NULL,
+                                     what = NULL,
+                                     dims.use = NULL, npcs = 50L,
+                                     s.var = "S.Score", g2m.var = "G2M.Score",
+                                     compute.cc = TRUE,
+                                     s.features = NULL, g2m.features = NULL,
+                                     assay = NULL, weight.by = c("var", "stdev"),
+                                     adj.r2 = FALSE) {
+  assay <- assay %||% DefaultAssay(object)
+  weight.by <- tolower(weight.by)
+  weight.by <- match.arg(weight.by)
+  what <- what %||% 'scale.data'
+  DefaultAssay(object) <- assay
 
-  # construct formula(s)
-  covar <- paste(c(s.var, g2m.var), collapse = " + ")
-  formulas <- lapply(paste(colnames(dimred), covar, sep = " ~ "), as.formula)
+  if (what %in% Layers(object)) {
+    ref <- GetAssayData(object, assay = assay, layer = what)
+  } else if (what %in% Reductions(object)) {
+    ref <- t(Embeddings(object, what))
+  } else {
+    abort(sprintf('%s not found in the Seurat object\'s layers and reductions',
+                  sQuote(what)))
+  }
+  dims.use <- dims.use %||% 1:nrow(ref)
+  if (max(dims.use) > nrow(ref)) {
+    l <- length(dims.use)
+    dims.use <- intersect(dims.use, 1:nrow(ref))
+    if (length(dims.use) == 0) {
+      abort("All provided dimensions are out of range")
+    }
+    if (length(dims.use) == 1) {
+      abort("A single dimension is not enough to compute a PCA.")
+    }
+    warning(sprintf('dropping %d out of range dimensions (%d retained)',
+                    l - length(dims.use), length(dims.use)),
+            call. = FALSE, immediate. = TRUE)
+  }
+  if (npcs > length(dims.use)) {
+    npcs <- length(dims.use) - 1
+    warning(sprintf('npcs to compute reduced to %d (number of dims - 1)', npcs),
+            call. = FALSE, immediate. = TRUE)
+  }
 
-  # compute linear regression per batch and collect (adj.)r.squared
-  regs <- lapply(lapply(formulas, FUN = as.formula), lm, data = df.score)
+  .prep_MetaDataBatch(object = object, batch.var = batch.var,
+                      assay = assay, layer = layer)
 
+  cols.cc <- c('S.Score', 'G2M.Score', 'Phase')
   r2get <- paste0("adj."[adj.r2], "r.squared")
-  r2 <- sapply(lapply(regs, summary.lm), getElement, name = r2get, simplify = "numeric")
+  df.scores.all <- data.frame(
+    setNames(list(character(0), character(0), numeric(0), numeric(0)),
+             c(batch.var, 'dimred_col', r2get, 'var')))
+  for (batch in unique(df.mtdt[, batch.var])) {
+    cells <- df.mtdt[df.mtdt[,batch.var] == batch, idcol, drop = TRUE]
+    sub.object <- JoinLayers(subset(object, cells = cells))
+    DefaultAssay(sub.object) <- assay
+    if (compute.cc) {
+      sub.object <- CellCycleScoring(sub.object, s.features = s.features,
+                                     g2m.features = g2m.features, ctrl = NULL,
+                                     set.ident = FALSE)
+    }
+    sub.object[['pca.batch']] <- RunPCA(ref[dims.use, cells, drop=F], assay = assay,
+                                        npcs = npcs, verbose = FALSE,
+                                        reduction.key = "boulgiboulga_")
 
-  return(sum(r2 * proportions(dimvar)))
+    s.var <- s.var %||% "S.Score"
+    g2m.var <- g2m.var %||% "G2M.Score"
+    sub.df.mtdt <- sub.object[[]][cells, , drop = FALSE] %>% rownames_to_column(idcol)
+    .prep_MetadataPC(object = sub.object, df.mtdt = sub.df.mtdt, idcol = idcol,
+                     batch.var = batch.var, s.var = s.var, g2m.var = g2m.var,
+                     reduction = 'pca.batch', dims = NULL)
+
+    covar <- paste(c(s.var, g2m.var), collapse = " + ")
+    formula_ <- as.formula(paste('dimred_val', covar, sep = " ~ "))
+
+    df.score <- df.score %>% pivot_longer(colnames(dimred),
+                                          names_to = "dimred_col",
+                                          values_to = "dimred_val") %>%
+      group_by(pick({{ batch.var }}, "dimred_col")) %>%
+      group_modify(~ glance(lm(formula_, data = .x))) %>%
+      left_join(data.frame(list('dimred_col' = colnames(sub.object[['pca.batch']]),
+                                'var' = dimvar)), by = "dimred_col")
+
+    df.scores.all <- rbind(df.scores.all,
+                           df.score[,c(batch.var, 'dimred_col', r2get, 'var')])
+  }
+  return(df.scores.all %>% group_by(pick({{ batch.var }})) %>%
+           summarize(score = sum(!!data_sym(r2get) * proportions(var))))
 }
 
 #' @importFrom SeuratObject Reductions Embeddings DefaultAssay Layers
 #' @importFrom tibble rownames_to_column
 #' @importFrom dplyr left_join
-.prep_ScorePC <- function(object, batch.var = NULL, reduction = "pca",
-                          dims = NULL, s.var = NULL, g2m.var = NULL, ...) {
+#' @keywords internal
+#' @noRd
+.prep_MetadataPC <- function(object, df.mtdt, idcol, batch.var = NULL,
+                          reduction = "pca", dims = NULL,
+                          weight.by = c("var", "stdev"),
+                          s.var = NULL, g2m.var = NULL) {
   reduction <- reduction %||% "pca"
-  varargs <- list(...)
   if (! reduction %in% Reductions(object)) {
     abort(message = sprintf("%s reduction not in object", sQuote(reduction)))
   }
@@ -279,42 +378,121 @@ ScoreRegressPC.CellCycle <- function(object, batch.var = NULL, reduction = "pca"
     abort(message = "some dims are out of range")
   }
   dimred <- dimred[, dims, drop=FALSE]
-  dimvar <- Reductions(object = object, slot = reduction)@stdev[dims]^2
+  dimvar <- Reductions(object = object, slot = reduction)@stdev[dims]
+  dimvar %||% abort(sprintf("Reduction %s has no standard deviations associated. Run PCA first.",
+                            sQuote(reduction)))
+  if (grepl('^var', tolower(weight.by[1]))) {
+    dimvar <- dimvar^2
+  }
 
-  idcol <- "cellid"
-  df.score <- object[[]] %>% rownames_to_column(var = idcol)
-  if ((s.var %iff% ! all(s.var %in% colnames(df.score))) %||% FALSE) {
+  if ((s.var %iff% ! all(s.var %in% colnames(df.mtdt))) %||% FALSE) {
     rlang::abort(
       message = sprintf("%s with S phase score not in colnames of metadata",
                         sQuote(s.var)))
   }
-  if ((g2m.var %iff% ! all(g2m.var %in% colnames(df.score))) %||% FALSE) {
+  if ((g2m.var %iff% ! all(g2m.var %in% colnames(df.mtdt))) %||% FALSE) {
     abort(
       message = sprintf("%s with G2M phase score not in colnames of metadata",
                         sQuote(g2m.var)))
   }
+
+  df.mtdt[, batch.var] <- as.factor(df.mtdt[, batch.var])
+  df.mtdt <- df.mtdt %>% left_join(
+    as.data.frame(dimred) %>% rownames_to_column(var = idcol),
+    by = idcol
+  )
+  list2env(list(batch.var = batch.var, dimred = dimred, dimvar = dimvar,
+              dims = dims, df.score = df.mtdt), envir = parent.frame())
+}
+
+#' Score cell cycle phases per batch
+#'
+#' @description
+#' Assign cell cycle scores to cells. Scores are computed for each batch
+#' independantly.
+#'
+#' @inheritParams ScoreRegressPC
+#' @inheritParams Seurat::CellCycleScoring
+#'
+#' @inherit Seurat::CellCycleScoring return
+#' @importFrom stats lm summary.lm
+#' @importFrom SeuratObject DefaultAssay DefaultAssay<- JoinLayers AddMetaData
+#' @importFrom Seurat CellCycleScoring
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' obj <- SeuratData::LoadData("pbmcsca")
+#' obj[["RNA"]] <- split(obj[["RNA"]], f = obj$Method)
+#' obj <- NormalizeData(obj)
+#' obj <- FindVariableFeatures(obj)
+#' obj <- ScaleData(obj)
+#' obj <- CellCycleScoringPerBatch(obj, batch.var = 'Method',
+#'                                 s.features = cc.genes.updated.2019$s.genes,
+#'                                 g2m.features = cc.genes.updated.2019$g2m.genes)
+#'
+#' head(obj[[]])
+#' }
+#' @seealso \code{\link{CellCycleScoring}} to compute cc scores on the whole
+#' dataset.
+
+CellCycleScoringPerBatch <- function(object, batch.var = NULL,
+                                     s.features,
+                                     g2m.features,
+                                     ctrl = NULL,
+                                     assay = NULL,
+                                     layer = NULL) {
+  assay <- assay %||% DefaultAssay(object)
+  assay.old <- DefaultAssay(object)
+  DefaultAssay(object) <- assay
+  idcol <- "cellbarcodeid"
+  #list2env(batch.var, df.mtdt)
+  .prep_MetaDataBatch(object = object, batch.var = batch.var,
+                      assay = assay, layer = layer, idcol = idcol)
+
+  cols.cc <- c('S.Score', 'G2M.Score', 'Phase')
+  df.cc <- data.frame(setNames(list(numeric(0), numeric(0), character(0)), cols.cc))
+  for (batch in unique(df.mtdt[,batch.var])) {
+    cells <- df.mtdt[df.mtdt[,batch.var] == batch, idcol]
+    sub.object <- JoinLayers(subset(object, cells = cells))
+    DefaultAssay(sub.object) <- assay
+    sub.object <- CellCycleScoring(sub.object, s.features = s.features,
+                                   g2m.features = g2m.features, ctrl = ctrl,
+                                   set.ident = FALSE)
+    df.cc <- rbind(df.cc, sub.object[[]][,cols.cc])
+  }
+
+  object <- AddMetaData(object, metadata = df.cc)
+  DefaultAssay(object) <- assay.old
+  return(object)
+}
+
+#' @importFrom SeuratObject DefaultAssay Layers
+#' @importFrom tibble rownames_to_column
+#' @importFrom dplyr left_join
+#' @keywords internal
+#' @noRd
+.prep_MetaDataBatch <- function(object, batch.var = NULL, assay = NULL,
+                                layer = "data", scale.layer = NULL,
+                                idcol = NULL) {
+  assay <- assay %||% DefaultAssay(object)
+  idcol <- idcol %||% 'cellbarcodeid'
+  df.mtdt <- object[[]] %>% rownames_to_column(var = idcol)
+
   batch.var <- batch.var %||% {
-    assay <- varargs[["assay"]] %||% DefaultAssay(object) %||% "RNA"
-    search <- varargs[["search"]] %||% varargs[["layer"]] %||%
-      varargs[["layers"]] %||% "count"
-    scale.layer <- varargs[["scale.layer"]] %||% "scale.data"
-    df.score <- df.score %>% left_join(
+    layers <- Layers(object, search = layer, assay = assay)
+    df.mtdt <- df.mtdt %>% left_join(
       Seurat:::CreateIntegrationGroups(object = object[[assay]],
-                                       layers = Layers(object, search = search),
+                                       layers = layers,
                                        scale.layer = scale.layer) %>%
         rownames_to_column(idcol), by = idcol
     )
     "group"
   }
-  if (! batch.var %in% colnames(df.score)) {
+  if (! batch.var %in% colnames(df.mtdt)) {
     abort(message = sprintf("%s not in colnames of metadata", sQuote(batch.var)))
   }
-  df.score[,batch.var] <- as.factor(df.score[,batch.var])
-  # df.score[,batch.var] <- as.numeric(as.factor(df.score[,batch.var]))
-  df.score <- df.score %>% left_join(
-    as.data.frame(dimred) %>% rownames_to_column(var = idcol),
-    by = idcol
-  )
-  return(list(batch.var = batch.var, dimred = dimred, dimvar = dimvar,
-              dims = dims, df.score = df.score))
+  list2env(list(batch.var = batch.var, df.mtdt = df.mtdt, idcol = idcol),
+                  envir = parent.frame())
 }
