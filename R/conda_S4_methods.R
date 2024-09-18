@@ -265,7 +265,7 @@ setMethod("show", "CondaEnvSlot", function(object) {
 setMethod("show", "CondaEnv", function(object) {
   # header1 <- cli::bg_blue(cli::ansi_align(cli::col_br_white(cli::style_bold("Conda environment")), align="center"))
   header2 <- cli::rule(left = cli::style_bold("Conda environment"),
-                       right = sprintf("%s (v%s)", "SeuratIntegrate", as.character(0.1)),
+                       right = sprintf("%s (v%s)", "SeuratIntegrate", getNamespaceVersion(.packageName)[[1]]),
                        line_col = "gray60", col= "royalblue")
   good_tick <- cli::col_green(cli::symbol$tick)
   bad_cross <- cli::col_red(cli::symbol$cross)
@@ -309,7 +309,7 @@ setMethod("show", "CondaEnvManager", function(object) {
   #                      line = " ", line_col = "black", col = "gray30")
   header1 <- cli::bg_blue(cli::ansi_align(cli::col_br_white(cli::style_bold("Conda environments manager")), align="center"))
   header2 <- cli::rule(left = cli::style_bold("Integration methods"),
-                       right = sprintf("%s (v%s)", "SeuratIntegrate", as.character(0.1)),
+                       right = sprintf("%s (v%s)", "SeuratIntegrate", getNamespaceVersion(.packageName)[[1]]),
                        line_col = "gray60", col= "royalblue")
   cat(header1, "\n", header2, "\n\n ", current.status, sep = "")
 })
