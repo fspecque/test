@@ -12,7 +12,9 @@ ScoreDensityPC(
   use.union = TRUE,
   bw.join = mean,
   bw.kernel = c("nrd0", "nrd", "ucv", "bcv", "sj"),
-  ...
+  weight.by = c("var", "stdev"),
+  assay = NULL,
+  layer = NULL
 )
 }
 \arguments{
@@ -35,8 +37,15 @@ use a distinct bandwidth for each batch, just set \code{bw.join = c} (not recomm
 One of 'nrd0', 'nrd', 'ucv','bcv' or 'sj' (see \link[stats:bw.nrd]{bandwidths}).
 nrd0 is the default}
 
-\item{...}{Additional parameters ('assay', 'search' and 'scale.layer') to pass
-to Seurat to automatically construct the \code{batch.var} when not provided.}
+\item{weight.by}{one of 'var' (default) or 'stdev' (standing for variance and
+standard deviation respectively). Use the variance or the standard deviation
+explained by the principal components to weight the each PC's score.}
+
+\item{assay}{assay to use. Passed to Seurat to automatically construct the
+\code{batch.var} when not provided. Useless otherwise}
+
+\item{layer}{layer to use. Passed to Seurat to automatically construct the
+\code{batch.var} when not provided. Useless otherwise}
 }
 \value{
 A single float corresponding to the score of the given reduction
@@ -92,7 +101,6 @@ single-cell genomics. Nat Methods 19, 41–50 (2021).
 \href{https://doi.org/10.1038/s41592-021-01336-8}{DOI}
 }
 \seealso{
-\code{\link[Seurat]{Layers}} and \code{\link[Seurat]{DefaultAssay}}
-for \code{...} arguments and \code{\link{ScoreRegressPC}} to compute the PCR
+\code{\link{ScoreRegressPC}} to compute the PCR
 score
 }

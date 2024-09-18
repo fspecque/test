@@ -8,12 +8,17 @@ scores to variance}
 ScoreRegressPC.CellCycle(
   object,
   batch.var = NULL,
-  reduction = "pca",
-  dims = NULL,
+  what = NULL,
+  dims.use = NULL,
+  npcs = 50L,
   s.var = "S.Score",
   g2m.var = "G2M.Score",
-  adj.r2 = FALSE,
-  ...
+  compute.cc = TRUE,
+  s.features = NULL,
+  g2m.features = NULL,
+  assay = NULL,
+  weight.by = c("var", "stdev"),
+  adj.r2 = FALSE
 )
 }
 \arguments{
@@ -21,25 +26,45 @@ ScoreRegressPC.CellCycle(
 
 \item{batch.var}{The name of the batch variable (must be in the object metadata)}
 
-\item{reduction}{The name of the reduction to score}
+\item{what}{the slot from Seurat to score. Can be a layer or a reduction.}
 
-\item{dims}{The dimensions to consider. All dimensions are used by default}
+\item{dims.use}{The dimensions from \code{what} to consider. All dimensions
+are used by default}
 
-\item{s.var}{The name of the S phase score variable (must be in the object metadata)}
+\item{npcs}{Total Number of PCs to compute and store (50 by default)}
 
-\item{g2m.var}{The name of the G2M phase score variable (must be in the object metadata)}
+\item{s.var}{The name of the S phase score variable (must be in the object
+metadata)}
+
+\item{g2m.var}{The name of the G2M phase score variable (must be in the
+object metadata)}
+
+\item{compute.cc}{whether to (re-)compute the cell cycle scores. Should be
+\code{TRUE} (default), unless you have run
+\code{\link{CellCycleScoringPerBatch}} beforehand because cell cycles scores
+are expected to be computed per batch}
+
+\item{s.features}{A vector of features associated with S phase}
+
+\item{g2m.features}{A vector of features associated with G2M phase}
+
+\item{assay}{assay to use. Passed to Seurat to automatically construct the
+\code{batch.var} when not provided. Useless otherwise}
+
+\item{weight.by}{one of 'var' (default) or 'stdev' (standing for variance and
+standard deviation respectively). Use the variance or the standard deviation
+explained by the principal components to weight the each PC's score.}
 
 \item{adj.r2}{Whether to use the adjusted R2 instead of the raw R2}
-
-\item{...}{Additional parameters ('assay', 'search' and 'scale.layer') to pass
-to Seurat to automatically construct the \code{batch.var} when not provided.}
 }
 \value{
-A single float corresponding to the score of the given reduction
+A 2-columns data frame with the batch variable in the first one and
+the corresponding score in the second one. It has as many rows as batches.
 }
 \description{
 Linearly regresses S and G2M scores to predict principal components. The
 resulting R2 are then weighted by each dimension's contribution to variance.
+Cell cycles scores and PCAs are computed for each batch independently.
 }
 \details{
 The linear regression is
@@ -65,12 +90,9 @@ obj <- NormalizeData(obj)
 obj <- FindVariableFeatures(obj)
 obj <- ScaleData(obj)
 obj <- RunPCA(obj)
-cc <- CellCycleScoring(JoinLayers(so), s.features = cc.genes.updated.2019$s.genes,
-                       g2m.features = cc.genes.updated.2019$g2m.genes)[[]]
-so <- AddMetaData(so, cc[,c("S.Score", "G2M.Score", "Phase")])
 
-score.cc.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim = 1:30)
-score.cc.adj.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim = 1:30, adj.r2 = TRUE)
+score.cc.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim.use = 1:30)
+score.cc.adj.r2 <- ScoreRegressPC.CellCycle(obj, "Method", "pca", dim.use = 1:30, adj.r2 = TRUE)
 
 score.cc.r2        # ~ 0.0249
 score.cc.adj.r2    # ~ 0.0249
@@ -85,7 +107,6 @@ single-cell genomics. Nat Methods 19, 41–50 (2021).
 \href{https://doi.org/10.1038/s41592-021-01336-8}{DOI}
 }
 \seealso{
-\code{\link[Seurat]{Layers}} and \code{\link[Seurat]{DefaultAssay}}
-for \code{...} arguments and \code{\link{ScoreRegressPC}} to regresses PCs by
-batch.
+\code{\link{CellCycleScoringPerBatch}} to compute cc scores per
+batch. \code{\link{ScoreRegressPC}} to regresses PCs by batch.
 }

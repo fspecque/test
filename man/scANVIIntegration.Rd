@@ -16,7 +16,8 @@ scANVIIntegration(
   conda_env = NULL,
   new.reduction = "integrated.scANVI",
   reduction.key = "scANVIlatent_",
-  ncores = NULL,
+  torch.intraop.threads = 4L,
+  torch.interop.threads = NULL,
   model.save.dir = NULL,
   ndims.out = 10,
   n_hidden = 128L,
@@ -69,7 +70,12 @@ registered for scANVI in the conda environment manager}
 
 \item{reduction.key}{Key for the new integrated dimensional reduction}
 
-\item{ncores}{Number of parallel threads PyTorch is allowed to use}
+\item{torch.intraop.threads}{Number of intra-op threads available to torch
+when training on CPU instead of GPU. Set via \code{torch.set_num_threads()}.}
+
+\item{torch.interop.threads}{Number of intra-op threads available to torch
+when training on CPU instead of GPU. Set via \code{torch.set_num_interop_threads()}.
+Can only be changed once, on first call.}
 
 \item{model.save.dir}{Path to a directory to save the model to. Uses
 \code{SCANVI.save()}. Does not save anndata. Note that neither the trainer
@@ -119,6 +125,8 @@ CRITICAL, ERROR, WARNING, INFO (default), DEBUG, NOTSET}
 
 \item{...}{Additional arguments to be passed to \code{scvi.model.SCANVI},
 \code{SCANVI.setup_anndata} or \code{SCANVI.train} (see \strong{Details} section)}
+
+\item{cuda.cores}{Number of parallel threads PyTorch is allowed to use}
 }
 \value{
 A list containing:
