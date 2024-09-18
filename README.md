@@ -11,7 +11,7 @@ remotes::install_github("cbib/Seurat-Integrate", dependancies = NA, repos = Bioc
 If you prefer, or if it does not work, you can use the alternative way described below.
 ### 2) From a local copy using the remotes R package
 The installation process encompasses two steps, namely:
- - Clone or download the repository or the [latest release](https://github.com/cbib/Seurat-Integrate/releases/tag/0.3.0)
+ - Clone or download the repository or the [latest release](https://github.com/cbib/Seurat-Integrate/releases/tag/0.3.1)
  - Install the package
 
 First off, go to `some/path/to/download/the/repository`. Then, clone or download the repository or a release.
