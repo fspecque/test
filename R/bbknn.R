@@ -183,9 +183,9 @@ bbknnIntegration <- function(
     abort(message = "'groups.name' not in 'groups' data frame")
   }
   if (length(x = groups.name) > 1) {
+    groups.name <- groups.name
     warning(paste("more 'groups.name' that expected. Using the first one",
-                  sQuote(x = groups.name[1])), call. = FALSE, immediate. = TRUE)
-    groups.name <- groups.name[1]
+                  sQuote(x = groups.name)), call. = FALSE, immediate. = TRUE)
   }
   message("Preparing adata object..."[verbose], appendLF = FALSE)
   scaled.mat <- GetAssayData(object = object, layer = scale.layer)
@@ -272,6 +272,9 @@ bbknnIntegration <- function(
     )
     bbknn_graph <- as.Graph(x = bbknn_conn)
     bbknn_graph@assay.used <- reconstructed.assay
+    # avoid later error when converting to graph
+    # invalid class “Neighbor” object: invalid object for slot "cell.names" in class "Neighbor": got class "array", should be or extend class "character"
+    bbknn_graph@Dimnames <- lapply(bbknn_graph@Dimnames, as.character)
     if (return.new.assay) {
       output.list[[reconstructed.assay]] <- bbknn_assay
     }

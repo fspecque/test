@@ -107,9 +107,9 @@ CombatIntegration <- function(
     abort(message = "'groups.name' not in 'groups' data frame")
   }
   if (length(x = groups.name) > 1) {
+    groups.name <- groups.name
     warning(paste("more 'groups.name' that expected. Using the first one",
-                  sQuote(x = groups.name[1])), call. = FALSE, immediate. = TRUE)
-    groups.name <- groups.name[1]
+                  sQuote(x = groups.name)), call. = FALSE, immediate. = TRUE)
   }
 
   if (use.scaled) {

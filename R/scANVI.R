@@ -25,7 +25,12 @@ NULL
 #' @param conda_env Path to conda environment to run scANVI (should also
 #' contain the scipy python module).  By default, uses the conda environment
 #' registered for scANVI in the conda environment manager
-#' @param ncores Number of parallel threads PyTorch is allowed to use
+#' @param torch.intraop.threads Number of intra-op threads available to torch
+#' when training on CPU instead of GPU. Set via \code{torch.set_num_threads()}.
+#' @param torch.interop.threads Number of intra-op threads available to torch
+#' when training on CPU instead of GPU. Set via \code{torch.set_num_interop_threads()}.
+#' Can only be changed once, on first call.
+#' @param cuda.cores Number of parallel threads PyTorch is allowed to use
 #' @param model.save.dir Path to a directory to save the model to. Uses
 #' \code{SCANVI.save()}. Does not save anndata. Note that neither the trainer
 #' optimizer state nor the trainer history are saved.
@@ -139,7 +144,9 @@ scANVIIntegration <- function(
     conda_env = NULL,
     new.reduction = 'integrated.scANVI',
     reduction.key = "scANVIlatent_",
-    ncores = NULL,
+    torch.intraop.threads = 4L,
+    torch.interop.threads = NULL,
+    # cuda.cores = NULL,
     model.save.dir = NULL,
     # scvi.model.SCANVI
     ndims.out = 10,
@@ -177,28 +184,68 @@ scANVIIntegration <- function(
 
   use_condaenv(conda_env, conda = conda_bin, required = TRUE)
   sc <-  import('scanpy', convert = FALSE)
+  torch <- import("torch", convert=FALSE)
   scvi <-  import('scvi', convert = FALSE)
   seed.use %iff% { scvi$settings$seed = as.integer(x = seed.use) }
-  ncores %iff% { scvi$settings$num_threads = as.integer(x = ncores) }
+  # cuda.cores %iff% { scvi$settings$num_threads = as.integer(x = cuda.cores) }
   scvi$settings$verbosity = args$scANVI$verbose[verbose.scvi]
   scipy <-  import('scipy', convert = FALSE)
 
-  groups <- groups %||% Seurat:::CreateIntegrationGroups(object = object,
-                                                         layers = layers,
-                                                         scale.layer = scale.layer)
+  ncores.blas.old <- blas_get_num_procs()
+  ncores.omp.old <- omp_get_num_procs()
+  if ((torch.intraop.threads %iff% !is.na(as.integer(torch.intraop.threads))) %||% FALSE) {
+    blas_set_num_threads(1L)
+    omp_set_num_threads(1L)
+    torch$set_num_threads(as.integer(torch.intraop.threads))
+  }
+  if ((torch.interop.threads %iff% !is.na(as.integer(torch.interop.threads))) %||% FALSE) {
+    blas_set_num_threads(1L)
+    omp_set_num_threads(1L)
+    tryCatch({torch$set_num_interop_threads(as.integer(torch.threads))},
+             error = function(e) {
+               warning("Number of inter-op threads was already set to ",
+                       torch$get_num_interop_threads(),
+                       "or parallel work has started. Cannot be changed, passing",
+                       call. = FALSE, immediate. = TRUE)
+             })
+  }
+  message(sprintf("%d intra-op and %d inter-op threads available to torch\n",
+                  py_to_r(torch$get_num_threads()),
+                  py_to_r(torch$get_num_interop_threads()))[verbose],
+          appendLF = FALSE)
+
+  groups <- groups %||% abort('A metadata table with cell type annotations is required')
+
   if (! inherits(x = groups, what = "data.frame")) {
     # groups is supposedly a vector, a matrix or a list
     groups <- as.data.frame(groups)
   }
-  groups.name <- groups.name %||% colnames(groups)[1]
-  if(! length(intersect(colnames(groups), groups.name))) {
+  groups.name %||% {
+    groups <- cbind(groups,
+                    Seurat:::CreateIntegrationGroups(object = object,
+                                                     layers = layers,
+                                                     scale.layer = scale.layer))
+    groups.name <- colnames(groups)[ncol(groups)]
+  }
+  groups.name <- intersect(colnames(groups), groups.name)
+  labels.name <- intersect(colnames(groups), labels.name)
+  if(! length(groups.name)) {
     abort(message="'groups.name' not in 'groups' data frame")
   }
-  if(length(intersect(colnames(groups), groups.name)) > 1) {
-    warning(paste("more 'groups.name' that expected. Using the first one",
-                  sQuote(x = groups.name[1])), call. = FALSE, immediate. = TRUE)
-    groups.name <- groups.name[1]
+  if(! length(labels.name)) {
+    abort(message="'labels.name' not in 'groups' data frame")
   }
+  if(length(groups.name) > 1) {
+    groups.name <- groups.name[1]
+    warning(paste("more 'groups.name' that expected. Using the first one",
+                  sQuote(x = groups.name)), call. = FALSE, immediate. = TRUE)
+  }
+  if(length(labels.name) > 1) {
+    labels.name <- labels.name[1]
+    warning(paste("more 'labels.name' that expected. Using the first one",
+                  sQuote(x = labels.name)), call. = FALSE, immediate. = TRUE)
+  }
+
   layer <- unique(sub("\\..*", "", layers %||% "counts"))
   if(length(layer) > 1) {
     abort(message="cannot find a consensus layer")
@@ -221,9 +268,7 @@ scANVIIntegration <- function(
                       batch_key = r_to_py(groups.name)),
                  varargs[intersect(names(varargs), args$scANVI$setup_anndata)])
   do.call(scvi$model$SCANVI$setup_anndata, args.call)
-  # scvi$model$SCANVI$setup_anndata(adata, labels_key = r_to_py(labels_key),
-  #                                 unlabeled_category = r_to_py(unlabeled_category),
-  #                                 layer, batch_key = groups.name %||% colnames(groups)[1])
+
   args.call <- c(list(adata = adata, n_hidden = r_to_py(as.integer(n_hidden)),
                       n_latent = r_to_py(as.integer(ndims.out)),
                       n_layers = r_to_py(as.integer(n_layers)),

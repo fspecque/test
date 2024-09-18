@@ -238,7 +238,8 @@ trVAEIntegration <- function(
              })
   }
   message(sprintf("%d intra-op and %d inter-op threads available to torch\n",
-                  torch.intraop.threads, torch.interop.threads)[verbose],
+                  py_to_r(torch$get_num_threads()),
+                  py_to_r(torch$get_num_interop_threads()))[verbose],
           appendLF = FALSE)
   seed.use %iff% { torch$manual_seed(seed.use) ;
     message(sprintf("Set torch's manual seed to %d\n", seed.use)[verbose],
@@ -259,9 +260,9 @@ trVAEIntegration <- function(
     abort(message = "'groups.name' not in 'groups' data frame")
   }
   if (length(x = groups.name) > 1) {
-    warning(paste("more 'groups.name' that expected. Using the first one",
-                  sQuote(x = groups.name[1])), call. = FALSE, immediate. = TRUE)
     groups.name <- groups.name[1]
+    warning(paste("more 'groups.name' that expected. Using the first one",
+                  sQuote(x = groups.name)), call. = FALSE, immediate. = TRUE)
   }
 
   surgery.name %||% {
@@ -273,9 +274,9 @@ trVAEIntegration <- function(
     abort(message = "'surgery.name' not in 'groups' data frame")
   }
   if (length(x = surgery.name) > 1) {
-    warning(paste("more 'surgery.name' that expected. Using the first one",
-                  sQuote(x = surgery.name[1])), call. = FALSE, immediate. = TRUE)
     surgery.name <- surgery.name[1]
+    warning(paste("more 'surgery.name' that expected. Using the first one",
+                  sQuote(x = surgery.name)), call. = FALSE, immediate. = TRUE)
   }
   surgery.groups <- unique(as.vector(groups[, surgery.name, drop = TRUE]))
   surgery.sort <- surgery.sort %||% FALSE
