@@ -21,6 +21,7 @@ pb <- new.env(parent = parent.frame())
   }
   message("Cache file ", w , " at ", cache.path, ". Loading...")
   conda_status$current <- CondaManager(cache.path)
+  close(pb$pb)
   pb$onLoad <- FALSE
   pb$print.lisi.msg <- FALSE
 }
