@@ -6,7 +6,7 @@ pb <- new.env(parent = parent.frame())
 .onLoad <- function(libname = find.package(.packageName), pkgname = .packageName) {
   cache.path <- getCachePath(include.file = FALSE)
   if (!dir.exists(cache.path)) {
-    dir.create(cache.path)
+    dir.create(cache.path, recursive = TRUE)
     message("Cache directory created at ", cache.path)
   }
 
