@@ -309,7 +309,8 @@ setMethod(".cut.knn", "Matrix",
             idx <- idx.per.row + rep(idx.increment, idx.max)  # true indices
 
             # Generate the sparse matrix, then the Graph
-            cut.knn <- sparseMatrix(i = i[idx],j = j[idx], x = x[idx])
+            cut.knn <- sparseMatrix(i = i[idx],j = j[idx], x = x[idx],
+                                    dims = rep(ncol(object), 2))
             rownames(cut.knn) <- rownames(object)
             colnames(cut.knn) <- colnames(object)
             cut.knn <- as.Graph(cut.knn)

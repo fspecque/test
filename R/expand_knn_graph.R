@@ -232,7 +232,7 @@ setMethod("expand_neighbours_dijkstra", "Matrix",
                       paste0(infs, collapse = ', '),
                       call. = F, immediate. = F)
             }
-            expanded.mat <- sparseMatrix(i = i, j = j, x = x)
+            expanded.mat <- sparseMatrix(i = i, j = j, x = x, dims = rep(n, 2))
             expanded.mat <- drop0(expanded.mat)
             if(do.symmetrize && which.dijkstra == "fast") {
               expanded.mat <- SymmetrizeKnn(expanded.mat, use.max = FALSE)
