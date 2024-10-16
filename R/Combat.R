@@ -9,7 +9,9 @@
 #' expression matrix
 #' @param key.assay Optional key for the new combat assay. Format: "[:alnum:]*_"
 #' @param combat.function ComBat implementation to use. One of
-#' \link[sva:ComBat]{cobmat}, \link[sva:ComBat_seq]{combat_seq}.
+#' \link[sva:ComBat]{combat}, \link[sva:ComBat_seq]{combat_seq}. Note that
+#' ComBat_seq is an improved model from ComBat but requires a dense matrix.
+#' Sparse to dense matrix conversion can be memory-intensive.
 #' @param use.scaled By default the layer passed to the \code{layer} argument is
 #' used. When \code{use.scaled = TRUE}, the \code{scale.layer} is input to ComBat.
 #' @param ... Additional arguments passed on to \link[sva:ComBat]{ComBat} or
@@ -138,7 +140,7 @@ CombatIntegration <- function(
     args <- c(args, list(dat = data, mean.only = FALSE),
               varargs[intersect(names(varargs), args.combat)])
   } else {
-    args <- c(args, list(counts = data),
+    args <- c(args, list(counts = as.matrix(data)),
               varargs[intersect(names(varargs), args.combat_seq)])
     .ComBat <- ComBat_seq
   }
