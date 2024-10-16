@@ -88,9 +88,6 @@ CombatIntegration <- function(
 ) {
   combat.function <- tolower(combat.function)
   combat.function <- match.arg(arg = combat.function)
-  print(length(features))
-  print(layers)
-  print(scale.layer)
 
   args.combat <- c('mod', 'par.prior', 'prior.plots', 'ref.batch', 'BBPARAM')
   args.combat_seq <- c('group', 'covar_mod', 'full_mod', 'shrink', 'shrink.disp',
@@ -130,7 +127,6 @@ CombatIntegration <- function(
     object <- JoinLayers(object = object, layers = layer.use)
   }
   data <- GetAssayData(object = object, layer = layer.use)
-  print(length(features))
   data <- data[features %||% rownames(data), ]
   message(sprintf("Using %d features\n", nrow(data))[verbose], appendLF = FALSE)
 
@@ -156,7 +152,6 @@ CombatIntegration <- function(
       object = output.list[[reconstructed.assay]],
       new.data = corrected.mat,layer = "scale.data")
   }
-  print("END")
   return(output.list)
 
 }
