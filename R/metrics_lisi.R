@@ -247,6 +247,7 @@ ScoreLISI <- function(object, batch.var = NULL, cell.var = NULL,
   mtdt <- mtdt %>% mutate(across({{ found.vars }}, ~ as.integer(as.factor(.x)) -
                                    as.integer(lisi.installed)))
   if (! lisi.installed) {
+    FUN.LSI <- .compute.lsi
     if (pb$print.lisi.msg) {
       message("To benefit from the original and much faster implementation of ",
               "the Local Inverse Simpson’s Index (LISI), you can install the ",
@@ -259,6 +260,7 @@ ScoreLISI <- function(object, batch.var = NULL, cell.var = NULL,
     }
     message("Computing LISI scores..."[verbose], appendLF = F)
   } else {
+    FUN.LSI <- lisi::compute_simpson_index
     message("Computing LISI scores with lisi package..."[verbose], appendLF = F)
   }
 
@@ -266,7 +268,6 @@ ScoreLISI <- function(object, batch.var = NULL, cell.var = NULL,
     nn.idx  <- t(slot(graph.object, 'nn.idx')[,-1]) - as.integer(lisi.installed)
     nn.dist <- t(slot(graph.object, 'nn.dist')[,-1])
     cell.names <- slot(graph.object, 'cell.names')
-    FUN.LSI <- c(.compute.lsi, lisi::compute_simpson_index)[[lisi.installed + 1]]
     si <- lapply(asplit(mtdt[, found.vars, drop = FALSE], 2), function(v) {
       FUN.LSI(nn.dist, nn.idx, v[cell.names], perplexity = perplexity, tol = tol,
               n_batches = length(unique(v)))
