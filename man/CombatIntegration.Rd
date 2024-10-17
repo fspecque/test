@@ -48,7 +48,9 @@ expression matrix}
 \item{key.assay}{Optional key for the new combat assay. Format: "[:alnum:]*_"}
 
 \item{combat.function}{ComBat implementation to use. One of
-\link[sva:ComBat]{cobmat}, \link[sva:ComBat_seq]{combat_seq}.}
+\link[sva:ComBat]{combat}, \link[sva:ComBat_seq]{combat_seq}. Note that
+ComBat_seq is an improved model from ComBat but requires a dense matrix.
+Sparse to dense matrix conversion can be memory-intensive.}
 
 \item{use.scaled}{By default the layer passed to the \code{layer} argument is
 used. When \code{use.scaled = TRUE}, the \code{scale.layer} is input to ComBat.}
