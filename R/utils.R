@@ -538,7 +538,7 @@ GetPropIntraBatch <- function(object, batch.var, graph.name = "RNA_nn",
     nn.intra.batch <- sum(nn.intra.batch)
     nn.total <- sum(nn.total)
   }
-  return(nn.intra.batch / sum(nn.per.batch))
+  return(nn.intra.batch / nn.total)
 }
 
 
