@@ -6,3 +6,6 @@
 ^\.Rhistory$
 ^\.git$
 ^data-raw$
+^.*\.html$
+^vignettes/img$
+^TODO$
