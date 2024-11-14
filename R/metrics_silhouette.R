@@ -35,8 +35,11 @@ NULL
 #' @param ... additional parameters to pass to the distance computation
 #' functions
 #'
-#' @return a single float between 0 and 1, corresponding to the scaled average
-#' silhouette score.
+#' @return \code{ScoreASW} and \code{ScoreASWBatch}: a single float between 0
+#' and 1, corresponding to the scaled average silhouette score.
+#'
+#' \code{AddScoreASW} and \code{AddScoreASWBatch}:  the updated Seurat
+#' \code{object} with the ASW score(s) set for the integration.
 #'
 #' @importFrom SeuratObject DefaultAssay Reductions Embeddings Layers LayerData JoinLayers GetAssayData
 #' @importFrom Matrix t
@@ -150,6 +153,24 @@ ScoreASW <- function(object, cell.var,  what, assay = NULL,
   sil <- silhouette(x = cell.var, dist = dist.mat)[,'sil_width']
   score <- (mean(sil) + 1) / 2
   return(score)
+}
+
+#' @param integration name of the integration to score
+#' @export
+#' @rdname score-asw
+AddScoreASW <- function(object, integration,
+                        cell.var,  what, assay = NULL,
+                        metric = c('euclidean', 'cosine', 'angular', 'manhattan', 'hamming'),
+                        dist.package = c('distances', 'Rfast' ,'parallelDist', 'stats'),
+                        verbose = TRUE, ...) {
+  scores <- ScoreASW(object, cell.var = cell.var, what = what, assay = assay,
+                     metric = metric, dist.package = dist.package,
+                     verbose = verbose, ...)
+  object <- check_misc(object)
+  object <- SetMiscScore(object, integration = integration,
+                         score.name = "ASW",
+                         score.value = scores)
+  return(object)
 }
 
 #' @inheritParams ScoreASW
@@ -280,4 +301,25 @@ ScoreASWBatch <- function(object, batch.var = NULL, cell.var = NULL,  what,
 
   sils <- unlist(sils, use.names = FALSE) %||% NA
   return(mean(1 - sils))
+}
+
+#' @param integration name of the integration to score
+#' @export
+#' @rdname score-asw
+AddScoreASWBatch <- function(object, integration,
+                             batch.var = NULL, cell.var = NULL,  what,
+                             per.cell.var = TRUE, assay = NULL,
+                             metric = c('euclidean', 'cosine', 'angular', 'manhattan', 'hamming'),
+                             dist.package = c('distances', 'Rfast' ,'parallelDist', 'stats'),
+                             verbose = TRUE, ...) {
+  scores <- ScoreASWBatch(object, batch.var = batch.var, cell.var = cell.var,
+                          what = what, per.cell.var = per.cell.var,
+                          assay = assay, metric = metric,
+                          dist.package = dist.package, verbose = verbose, ...)
+
+  object <- check_misc(object)
+  object <- SetMiscScore(object, integration = integration,
+                         score.name = "ASW.batch",
+                         score.value = scores)
+  return(object)
 }

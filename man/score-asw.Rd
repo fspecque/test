@@ -3,7 +3,9 @@
 \name{score-asw}
 \alias{score-asw}
 \alias{ScoreASW}
+\alias{AddScoreASW}
 \alias{ScoreASWBatch}
+\alias{AddScoreASWBatch}
 \title{Score an embedding or a count matrix with the average silhouette width}
 \usage{
 ScoreASW(
@@ -17,8 +19,34 @@ ScoreASW(
   ...
 )
 
+AddScoreASW(
+  object,
+  integration,
+  cell.var,
+  what,
+  assay = NULL,
+  metric = c("euclidean", "cosine", "angular", "manhattan", "hamming"),
+  dist.package = c("distances", "Rfast", "parallelDist", "stats"),
+  verbose = TRUE,
+  ...
+)
+
 ScoreASWBatch(
   object,
+  batch.var = NULL,
+  cell.var = NULL,
+  what,
+  per.cell.var = TRUE,
+  assay = NULL,
+  metric = c("euclidean", "cosine", "angular", "manhattan", "hamming"),
+  dist.package = c("distances", "Rfast", "parallelDist", "stats"),
+  verbose = TRUE,
+  ...
+)
+
+AddScoreASWBatch(
+  object,
+  integration,
   batch.var = NULL,
   cell.var = NULL,
   what,
@@ -58,6 +86,8 @@ available ones is picked. See \strong{Note} for details.}
 \item{...}{additional parameters to pass to the distance computation
 functions}
 
+\item{integration}{name of the integration to score}
+
 \item{batch.var}{The name of the column with batch variable.
 (must be in the object metadata). Required by \code{ScoreASWBatch}.}
 
@@ -67,8 +97,11 @@ variable for each cell-type separately (default behaviour). Setting to
 data directly.}
 }
 \value{
-a single float between 0 and 1, corresponding to the scaled average
-silhouette score.
+\code{ScoreASW} and \code{ScoreASWBatch}: a single float between 0
+and 1, corresponding to the scaled average silhouette score.
+
+\code{AddScoreASW} and \code{AddScoreASWBatch}:  the updated Seurat
+\code{object} with the ASW score(s) set for the integration.
 }
 \description{
 Compute scores based on the average silhouette width (ASW) metric.
