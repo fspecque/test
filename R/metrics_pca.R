@@ -27,7 +27,11 @@
 #' @param layer layer to use. Passed to Seurat to automatically construct the
 #' \code{batch.var} when not provided. Useless otherwise
 #'
-#' @return A single float corresponding to the score of the given reduction
+#' @return \code{ScoreDensityPC}: A single float corresponding to the score of
+#' the given reduction
+#'
+#' \code{AddScoreDensityPC}: the updated Seurat \code{object} with the density
+#' PCA score set for the integration.
 #'
 #' @importFrom stats bw.nrd0 bw.nrd bw.ucv bw.bcv bw.SJ density
 #' @importFrom dplyr `%>%` group_by summarise across all_of ungroup mutate pick
@@ -74,6 +78,7 @@
 #' \href{https://doi.org/10.1038/s41592-021-01336-8}{DOI}
 #'
 #' @seealso \code{\link{ScoreRegressPC}} to compute the PCR score
+#' @rdname score-densityPC
 
 ScoreDensityPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
                            use.union = TRUE, bw.join = mean,
@@ -128,6 +133,25 @@ ScoreDensityPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
   return(sum(prop.area * proportions(dimvar)))
 }
 
+#' @param integration name of the integration to score
+#' @export
+#' @rdname score-densityPC
+AddScoreDensityPC <- function(object, integration,
+                              batch.var=NULL, reduction = "pca", dims=NULL,
+                              use.union = TRUE, bw.join = mean,
+                              bw.kernel = c('nrd0', 'nrd', 'ucv','bcv', 'sj'),
+                              weight.by = c("var", "stdev"),
+                              assay = NULL, layer = NULL) {
+  scores <- ScoreDensityPC(object, batch.var = batch.var, reduction = reduction,
+                           dims = dims, use.union = use.union, bw.join = bw.join,
+                           bw.kernel = bw.kernel, weight.by = weight.by,
+                           assay = assay, layer = layer)
+
+  object <- check_misc(object)
+  object <- SetMiscScore(object, integration = integration,
+                         score.name = "PCA.density", score.value = scores)
+  return(object)
+}
 
 #' Score a corrected or uncorrected PCA to estimate batch mixing
 #'
@@ -139,7 +163,12 @@ ScoreDensityPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #' @inheritParams ScoreDensityPC
 #' @param adj.r2 Whether to use the adjusted R2 instead of the raw R2
 #'
-#' @inherit ScoreDensityPC return
+#' @return \code{ScoreRegressPC}: A single float corresponding to the score of
+#' the given reduction
+#'
+#' \code{AddScoreRegressPC}: the updated Seurat \code{object} with the regression
+#' PCA score set for the integration.
+#'
 #' @importFrom stats lm summary.lm
 #' @importFrom dplyr %>% group_by summarise across all_of ungroup mutate pick
 #'
@@ -177,6 +206,7 @@ ScoreDensityPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #'
 #' @seealso \code{\link{ScoreDensityPC}} for an alternative and
 #' \code{\link{ScoreRegressPC.CellCycle}} to regresses PCs by cell cycle scores.
+#' @rdname score-regressPC
 
 ScoreRegressPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
                            adj.r2 = FALSE,  weight.by = c("var", "stdev"),
@@ -199,6 +229,23 @@ ScoreRegressPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
   r2 <- sapply(lapply(regs, summary.lm), getElement, name = r2get, simplify = "numeric")
 
   return(sum(r2 * proportions(dimvar)))
+}
+
+#' @param integration name of the integration to score
+#' @export
+#' @rdname score-regressPC
+AddScoreRegressPC <- function(object, integration,
+                              batch.var=NULL, reduction = "pca", dims=NULL,
+                              adj.r2 = FALSE,  weight.by = c("var", "stdev"),
+                              assay = NULL, layer = NULL) {
+  scores <- ScoreRegressPC(object, batch.var = batch.var, reduction = reduction,
+                           dims = dims, adj.r2 = adj.r2, weight.by = weight.by,
+                           assay = assay, layer = layer)
+
+  object <- check_misc(object)
+  object <- SetMiscScore(object, integration = integration,
+                         score.name = "PCA.regression", score.value = scores)
+  return(object)
 }
 
 #' Score a corrected or uncorrected PCA to estimate the contribution of S and G2M
@@ -224,8 +271,12 @@ ScoreRegressPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #' \code{\link{CellCycleScoringPerBatch}} beforehand because cell cycles scores
 #' are expected to be computed per batch
 #'
-#' @return A 2-columns data frame with the batch variable in the first one and
-#' the corresponding score in the second one. It has as many rows as batches.
+#' @return \code{ScoreRegressPC.CellCycle}: A 2-columns data frame with the
+#' batch variable in the first one and the corresponding score in the second
+#' one. It has as many rows as batches.
+#'
+#' \code{AddScoreRegressPC.CellCycle}: the updated Seurat \code{object} with the
+#' cell cycle conservation score set for the integration.
 #'
 #' @importFrom stats lm summary.lm
 #' @importFrom SeuratObject Layers DefaultAssay DefaultAssay<- GetAssayData Reductions Embeddings
@@ -269,6 +320,7 @@ ScoreRegressPC <- function(object, batch.var=NULL, reduction = "pca", dims=NULL,
 #'
 #' @seealso \code{\link{CellCycleScoringPerBatch}} to compute cc scores per
 #' batch. \code{\link{ScoreRegressPC}} to regresses PCs by batch.
+#' @rdname score-cc
 
 ScoreRegressPC.CellCycle <- function(object, batch.var = NULL,
                                      what = NULL,
@@ -356,6 +408,33 @@ ScoreRegressPC.CellCycle <- function(object, batch.var = NULL,
   }
   return(df.scores.all %>% group_by(pick({{ batch.var }})) %>%
            summarize(score = sum(!!data_sym(r2get) * proportions(var))))
+}
+
+#' @param integration name of the integration to score
+#' @export
+#' @rdname score-cc
+AddScoreRegressPC.CellCycle <- function(object, integration,
+                                        batch.var = NULL,
+                                        what = NULL,
+                                        dims.use = NULL, npcs = 50L,
+                                        s.var = "S.Score", g2m.var = "G2M.Score",
+                                        compute.cc = TRUE,
+                                        s.features = NULL, g2m.features = NULL,
+                                        assay = NULL,
+                                        weight.by = c("var", "stdev"),
+                                        adj.r2 = FALSE) {
+  scores <- ScoreRegressPC.CellCycle(
+    object, batch.var = batch.var, what = what, dims.use = dims.use, npcs = npcs,
+    s.var = s.var, g2m.var = g2m.var, compute.cc = compute.cc,
+    s.features = s.features, g2m.features = g2m.features, assay = assay,
+    weight.by = weight.by, adj.r2 = adj.r2)
+
+  object <- check_misc(object)
+  object <- SetMiscScore(object, integration = integration,
+                         score.name = "cell.cycle.conservation",
+                         score.value = scores,
+                         class = "list")
+  return(object)
 }
 
 #' @importFrom SeuratObject Reductions Embeddings DefaultAssay Layers

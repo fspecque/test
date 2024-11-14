@@ -2,10 +2,23 @@
 % Please edit documentation in R/metrics_pca.R
 \name{ScoreRegressPC}
 \alias{ScoreRegressPC}
+\alias{AddScoreRegressPC}
 \title{Score a corrected or uncorrected PCA to estimate batch mixing}
 \usage{
 ScoreRegressPC(
   object,
+  batch.var = NULL,
+  reduction = "pca",
+  dims = NULL,
+  adj.r2 = FALSE,
+  weight.by = c("var", "stdev"),
+  assay = NULL,
+  layer = NULL
+)
+
+AddScoreRegressPC(
+  object,
+  integration,
   batch.var = NULL,
   reduction = "pca",
   dims = NULL,
@@ -35,9 +48,15 @@ explained by the principal components to weight the each PC's score.}
 
 \item{layer}{layer to use. Passed to Seurat to automatically construct the
 \code{batch.var} when not provided. Useless otherwise}
+
+\item{integration}{name of the integration to score}
 }
 \value{
-A single float corresponding to the score of the given reduction
+\code{ScoreRegressPC}: A single float corresponding to the score of
+the given reduction
+
+\code{AddScoreRegressPC}: the updated Seurat \code{object} with the regression
+PCA score set for the integration.
 }
 \description{
 Linearly regresses principal components with batch variable as a proxy to

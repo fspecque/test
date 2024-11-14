@@ -2,10 +2,25 @@
 % Please edit documentation in R/metrics_pca.R
 \name{ScoreDensityPC}
 \alias{ScoreDensityPC}
+\alias{AddScoreDensityPC}
 \title{Score a corrected or uncorrected PCA to estimate batch mixing}
 \usage{
 ScoreDensityPC(
   object,
+  batch.var = NULL,
+  reduction = "pca",
+  dims = NULL,
+  use.union = TRUE,
+  bw.join = mean,
+  bw.kernel = c("nrd0", "nrd", "ucv", "bcv", "sj"),
+  weight.by = c("var", "stdev"),
+  assay = NULL,
+  layer = NULL
+)
+
+AddScoreDensityPC(
+  object,
+  integration,
   batch.var = NULL,
   reduction = "pca",
   dims = NULL,
@@ -46,9 +61,15 @@ explained by the principal components to weight the each PC's score.}
 
 \item{layer}{layer to use. Passed to Seurat to automatically construct the
 \code{batch.var} when not provided. Useless otherwise}
+
+\item{integration}{name of the integration to score}
 }
 \value{
-A single float corresponding to the score of the given reduction
+\code{ScoreDensityPC}: A single float corresponding to the score of
+the given reduction
+
+\code{AddScoreDensityPC}: the updated Seurat \code{object} with the density
+PCA score set for the integration.
 }
 \description{
 A batch-wise kernel density estimate is computed for each dimension of the PCA.

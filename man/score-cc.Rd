@@ -2,11 +2,29 @@
 % Please edit documentation in R/metrics_pca.R
 \name{ScoreRegressPC.CellCycle}
 \alias{ScoreRegressPC.CellCycle}
+\alias{AddScoreRegressPC.CellCycle}
 \title{Score a corrected or uncorrected PCA to estimate the contribution of S and G2M
 scores to variance}
 \usage{
 ScoreRegressPC.CellCycle(
   object,
+  batch.var = NULL,
+  what = NULL,
+  dims.use = NULL,
+  npcs = 50L,
+  s.var = "S.Score",
+  g2m.var = "G2M.Score",
+  compute.cc = TRUE,
+  s.features = NULL,
+  g2m.features = NULL,
+  assay = NULL,
+  weight.by = c("var", "stdev"),
+  adj.r2 = FALSE
+)
+
+AddScoreRegressPC.CellCycle(
+  object,
+  integration,
   batch.var = NULL,
   what = NULL,
   dims.use = NULL,
@@ -56,10 +74,16 @@ standard deviation respectively). Use the variance or the standard deviation
 explained by the principal components to weight the each PC's score.}
 
 \item{adj.r2}{Whether to use the adjusted R2 instead of the raw R2}
+
+\item{integration}{name of the integration to score}
 }
 \value{
-A 2-columns data frame with the batch variable in the first one and
-the corresponding score in the second one. It has as many rows as batches.
+\code{ScoreRegressPC.CellCycle}: A 2-columns data frame with the
+batch variable in the first one and the corresponding score in the second
+one. It has as many rows as batches.
+
+\code{AddScoreRegressPC.CellCycle}: the updated Seurat \code{object} with the
+cell cycle conservation score set for the integration.
 }
 \description{
 Linearly regresses S and G2M scores to predict principal components. The
