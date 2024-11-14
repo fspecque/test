@@ -23,5 +23,5 @@ pb <- new.env(parent = parent.frame())
   conda_status$current <- CondaManager(cache.path)
   close(pb$pb)
   pb$onLoad <- FALSE
-  pb$print.lisi.msg <- FALSE
+  pb$print.lisi.msg <- TRUE
 }
