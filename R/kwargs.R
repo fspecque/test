@@ -1,4 +1,10 @@
 args <- list(
+  combat = list(
+    mnnCorrect = c(
+      'restrict', 'k', 'prop.k', 'sigma', 'cos.norm.in', 'cos.norm.out',
+      'svd.dim', 'var.adj', 'subset.row', 'correct.all', 'merge.order',
+      'auto.merge', 'assay.type', 'BSPARAM', 'BNPARAM', 'BPPARAM')
+  ),
   scANVI = list(
     scANVI = c(
       # scvi.model.SCANVI

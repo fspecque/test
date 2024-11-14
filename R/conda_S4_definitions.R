@@ -29,7 +29,8 @@ needs.conda <- sapply(known.methods, function(method) ifelse(
   ),
   trvae = list(
     packages = c("python", "pip", "numpy", "pytorch", "torchaudio",
-                 "torchvision", "pytorch-cuda", "scvi-tools"),
+                 "torchvision", "pytorch-cuda", "scipy<1.14.0", "scvi-tools",
+                 "gcc", "gxx", "nomkl"),
     channels = c("conda-forge", "bioconda", "pytorch", "nvidia"),
     pip = c("scarches")
   )

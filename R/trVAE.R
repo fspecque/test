@@ -213,6 +213,8 @@ trVAEIntegration <- function(
     warnings$simplefilter(action='ignore', category=builtins$FutureWarning)
     warnings$simplefilter(action='ignore', category=builtins$UserWarning)
 
+    logging <- import("logging", convert = FALSE)
+    logging$basicConfig(level=logging$ERROR)
   }
   sc <- import("scanpy", convert=FALSE)
   torch <- import("torch", convert=FALSE)
@@ -248,7 +250,7 @@ trVAEIntegration <- function(
 
   message(sprintf("Using %d features\n"[verbose], length(features)), appendLF = F)
 
-  layers <- layers %||% expected.layer
+  layers <- Layers(object = object, search = layers %||% expected.layer)
   scale.layer <- scale.layer %||% "scale.data"
 
   groups <- groups %||% Seurat:::CreateIntegrationGroups(object = object,
@@ -321,9 +323,7 @@ trVAEIntegration <- function(
   latents <- list()
   latents_var <- list()
   add_var <- varargs[["mean_var"]] %||% FALSE
-  print(n_epochs)
-  print(lr)
-  print(eps)
+
   for (surgery.group in surgery.groups) {
     iter <- iter + 1
     print(iter)
@@ -379,7 +379,6 @@ trVAEIntegration <- function(
         latent <- latent[0]
       }
       latent <- py_to_r(latent)
-      print(head(latent))
       # latent <- py_to_r(trvae$get_latent(adata$X, adata$obs[groups.name]))
       colnames(latent) <- paste0(sub("_$", "Full_", reduction.key), 1:ncol(latent))
       # colnames(latent) <- paste0("trVAE.latent.full-", 1:ncol(latent))

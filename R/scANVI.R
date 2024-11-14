@@ -214,6 +214,8 @@ scANVIIntegration <- function(
                   py_to_r(torch$get_num_interop_threads()))[verbose],
           appendLF = FALSE)
 
+  layers <- Layers(object = object, search = layers %||% "counts")
+  scale.layer <- scale.layer %||% "scale.data"
   groups <- groups %||% abort('A metadata table with cell type annotations is required')
 
   if (! inherits(x = groups, what = "data.frame")) {

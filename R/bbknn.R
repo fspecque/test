@@ -168,7 +168,7 @@ bbknnIntegration <- function(
                     ndims.use), call. = T)
     ndims <- ndims.use
   }
-  layers <- layers %||% "data"
+  layers <- Layers(object = object, search = layers %||% "data")
   scale.layer <- scale.layer %||% "scale.data"
   if (! scale.layer %in% Layers(object = object, search = scale.layer)) {
     abort(message = paste(sQuote(x = scale.layer), "not in object layers"))
@@ -223,7 +223,7 @@ bbknnIntegration <- function(
   output.list[[graph.name]] <- bbknn_graph
 
   if (ridge_regression) {
-    message("Computing clusters...\n"[verbose], appendLF = FALSE)
+    message("Computing clusters..."[verbose], appendLF = FALSE)
     args <- c(list(object = bbknn_graph, verbose = verbose,
                    random.seed = seed.use),
               varargs[intersect(names(varargs), args.findCluster)])
@@ -245,10 +245,10 @@ bbknnIntegration <- function(
     rownames(x = new.data) <- features
     bbknn_assay <- SetAssayData(object = bbknn_assay, layer = scale.layer,
                                 new.data = new.data)
-    message("Computing PCA...\n"[verbose], appendLF = FALSE)
+    message("Computing PCA..."[verbose], appendLF = FALSE)
     args <- c(list(object = bbknn_assay, assay = reconstructed.assay,
                    reduction.name = new.reduction, reduction.key = reduction.key,
-                   npcs = ndims, verbose = verbose, seed.use = seed.use),
+                   npcs = ndims, verbose = FALSE, seed.use = seed.use),
               varargs[intersect(names(varargs), args.runPCA)])
     bbknn_ridgePCA <- do.call(RunPCA, args)
     message("done.\n"[verbose], appendLF = FALSE)

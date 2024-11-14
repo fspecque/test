@@ -112,7 +112,7 @@ HarmonyIntegration <- function(
     dims <- 1:ncol(data_mat)
   }
 
-
+  layers <- Layers(object = object, search = layers %||% 'counts')
   groups <- groups %||% Seurat:::CreateIntegrationGroups(object = object,
                                                          layers = layers,
                                                          scale.layer = scale.layer)

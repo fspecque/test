@@ -72,6 +72,9 @@ MNNIntegration <- function(
     pkg = "batchelor",
     reason = "for running integration with mnnCorrect"
   )
+
+  varargs <- list(...)
+
   object <- CreateSeuratObject(object)
   if (is.numeric(x = features)) {
 
@@ -80,7 +83,7 @@ MNNIntegration <- function(
 
     features <- SelectIntegrationFeatures5(object = object, features = features)
   }
-  layers <- layers %||% Layers(object, search = 'data')
+  layers <- Layers(object, search = layers %||% 'data')
   message("Converting layers to SingleCellExperiment\n"[verbose], appendLF = F)
 
   objects.sce <- lapply(
@@ -101,7 +104,7 @@ MNNIntegration <- function(
     what = mnnCorrect,
     args = c(
       objects.sce,
-      list(...)
+      varargs[intersect(names(varargs), args$combat$mnnCorrect)]
     )
   )
   message("Done MNN correction\n"[verbose], appendLF = F)

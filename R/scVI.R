@@ -172,6 +172,8 @@ scVIIntegration <- function(
                   py_to_r(torch$get_num_interop_threads()))[verbose],
           appendLF = FALSE)
 
+  layers <- Layers(object = object, search = layers %||% "counts")
+  scale.layer <- scale.layer %||% "scale.data"
   groups <- groups %||% Seurat:::CreateIntegrationGroups(object = object,
                                                          layers = layers,
                                                          scale.layer = scale.layer)

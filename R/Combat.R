@@ -94,7 +94,7 @@ CombatIntegration <- function(
                        'gene.subset.n')
   varargs <- list(...)
 
-  layers <- layers %||% "data"
+  layers <- Layers(object = object, search = layers %||% "data")
   scale.layer <- scale.layer %||% "scale.data"
 
   groups <- groups %||% Seurat:::CreateIntegrationGroups(object = object,
