@@ -20,7 +20,6 @@ Imports:
     SeuratObject,
     sva,
     batchelor,
-    batchelor,
     dplyr,
     harmony,
     Matrix,
@@ -28,12 +27,17 @@ Imports:
     RhpcBLASctl,
     stats,
     SummarizedExperiment,
-    tools
+    tools,
+    cluster
 Suggests: 
     SeuratData,
     lisi,
+    future,
     knitr,
-    rmarkdown
+    rmarkdown,
+    distances,
+    Rfast,
+    parallelDist
 Collate: 
     'Combat.R'
     'Harmony.R'
@@ -46,12 +50,19 @@ Collate:
     'conda_S4_helpers.R'
     'utils.R'
     'convert_distances.R'
+    'do_integrate.R'
     'expand_knn_graph.R'
     'kwargs.R'
+    'metrics_ari.R'
+    'metrics_connectivity.R'
     'metrics_lisi.R'
+    'metrics_nmi.R'
     'metrics_pca.R'
+    'metrics_silhouette.R'
+    'numeric_lisi_class.R'
     'scANVI.R'
     'scVI.R'
+    'scores.R'
     'trVAE.R'
     'zzz.R'
 VignetteBuilder: knitr
