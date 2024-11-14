@@ -15,9 +15,12 @@
 #' 'max', namely 'arithmetic mean of', 'geometric mean of', 'minimum' and
 #' 'maximum' entropy respectively.
 #'
-#' @return a named array with as many values as there are common strings between
-#' cell.var and the column names of the object's metadata. Names are cell.var
-#' and values are NMI scores.
+#' @return \code{ScoreNMI}: a named array with as many values as there are
+#' common strings between cell.var and the column names of the object's
+#' metadata. Names are cell.var and values are NMI scores.
+#'
+#' \code{AddScoreNMI}: the updated Seurat \code{object} with the NMI score(s)
+#' set for the integration.
 #'
 #' @export
 #' @details
@@ -40,7 +43,7 @@
 #' Colomé-Tatché, M. & Theis, F. J. Benchmarking atlas-level data integration in
 #' single-cell genomics. Nat Methods 19, 41–50 (2021).
 #' \href{https://doi.org/10.1038/s41592-021-01336-8}{DOI}
-#'
+#' @rdname score-nmi
 
 ScoreNMI <- function(object, cell.var, clust.var = "seurat_clusters",
                      average.entropy = c('mean', 'geom', 'min', 'max')) {
@@ -71,6 +74,26 @@ ScoreNMI <- function(object, cell.var, clust.var = "seurat_clusters",
                    average.entropy = average.entropy,
                    simplify = "numeric", USE.NAMES = TRUE)
   return(scores)
+}
+
+#' @param integration name of the integration to score
+#' @export
+#' @rdname score-nmi
+AddScoreNMI <- function(object, integration,
+                        cell.var, clust.var = "seurat_clusters",
+                        average.entropy = c('mean', 'geom', 'min', 'max')) {
+  scores <- ScoreNMI(object, cell.var = cell.var, clust.var = clust.var,
+                     average.entropy = average.entropy)
+
+  score.names <- paste("NMI", names(scores), sep = '_')
+  object <- check_misc(object)
+  for (i in 1:length(scores)) {
+    object <- SetMiscScore(object, integration = integration,
+                           score.name = score.names[i],
+                           score.value = scores[[i]],
+                           class = "numeric")
+  }
+  return(object)
 }
 
 #' MI: Mutual Information between two categorical variables

@@ -2,10 +2,19 @@
 % Please edit documentation in R/metrics_nmi.R
 \name{ScoreNMI}
 \alias{ScoreNMI}
+\alias{AddScoreNMI}
 \title{Score a clustering result with normalised mutual information}
 \usage{
 ScoreNMI(
   object,
+  cell.var,
+  clust.var = "seurat_clusters",
+  average.entropy = c("mean", "geom", "min", "max")
+)
+
+AddScoreNMI(
+  object,
+  integration,
   cell.var,
   clust.var = "seurat_clusters",
   average.entropy = c("mean", "geom", "min", "max")
@@ -24,11 +33,16 @@ cell (must be in the object metadata). Only one column name is accepted}
 denominator from each variable's entropy. one of 'mean', 'geom', 'min' and
 'max', namely 'arithmetic mean of', 'geometric mean of', 'minimum' and
 'maximum' entropy respectively.}
+
+\item{integration}{name of the integration to score}
 }
 \value{
-a named array with as many values as there are common strings between
-cell.var and the column names of the object's metadata. Names are cell.var
-and values are NMI scores.
+\code{ScoreNMI}: a named array with as many values as there are
+common strings between cell.var and the column names of the object's
+metadata. Names are cell.var and values are NMI scores.
+
+\code{AddScoreNMI}: the updated Seurat \code{object} with the NMI score(s)
+set for the integration.
 }
 \description{
 Compute a score based on normalised mutual information between a clustering
