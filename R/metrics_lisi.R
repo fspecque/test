@@ -60,7 +60,7 @@ NULL
 #'
 #' @importFrom rlang maybe_missing
 #' @importFrom SeuratObject AddMetaData Misc<-
-#' @importFrom dplyr %>% rename all_of summarize across n_distinct
+#' @importFrom dplyr %>% rename all_of summarize across n_distinct cur_column
 #'
 #' @export
 #' @details
@@ -101,10 +101,10 @@ NULL
 #'
 #' @seealso \code{\link[Seurat]{FindNeighbors}}, \code{\link{ExpandNeighbors}}
 #' and \code{\link{CutKnn}}
-#' @rdname lisi
-#' @name lisi
+#' @rdname score-lisi
 
-AddLISIScore <- function(object, batch.var = NULL, cell.var = NULL,
+AddScoreLISI <- function(object, integration,
+                         batch.var = NULL, cell.var = NULL,
                          # DimReduc
                          reduction, dims = NULL,
                          # Graph | Neighbor
@@ -124,42 +124,63 @@ AddLISIScore <- function(object, batch.var = NULL, cell.var = NULL,
   graph.name <- if(isFALSE(graph.name)) NULL else graph.name
   object.name <- reduction %||% graph.name
 
-  i <- c(batch.var %iff% T %||% F, cell.var %iff% T %||% F)
+  # i <- c(batch.var %iff% T %||% F, cell.var %iff% T %||% F)
   v <- c(batch.var, cell.var)
-  new.names <- paste0(c("LISIbatch_", "LISIcell_"), v, "_", object.name)[i]
+  # new.names <- paste0(c("LISIbatch_", "LISIcell_"), v, "_", object.name)[i]
+  nb <- length(batch.var)
+  nc <- length(cell.var)
+  new.names <- paste0(rep(c("iLISI_", "cLISI_"), times = c(nb, nc)),
+                      v)[seq_len(nb + nc)]
 
   lisi.out <- ScoreLISI(object = object, batch.var = batch.var,
                         cell.var = cell.var, reduction = reduction,
                         dims = dims, graph.name = graph.name,
                         graph.type = graph.type, do.symmetrize = do.symmetrize,
-                        return.graph = save.graph, perplexity = perplexity,
+                        return.graph = TRUE, perplexity = perplexity,
                         tol = tol,
                         largest.component.only = largest.component.only,
                         assay = assay, verbose = verbose, ...)
 
   new.names <- setNames(v, new.names)
-  new.names <- new.names[new.names %in% colnames(lisi.out$lisi)]
+  new.names <- new.names[v %in% colnames(lisi.out$lisi)]
+  v <- unname(new.names)
+  n <- object[[]] %>% summarize(across({{ v }}, n_distinct))
+  lisi.score <- lisi.out$lisi %>%
+    mutate(across({{ v }}, ~ numeric_lisi(.x, N = n[[cur_column()]])))
 
   object <- AddMetaData(object = object,
-                        metadata = lisi.out$lisi %>% rename(all_of(new.names)))
-  v <- unname(new.names)
+                        metadata = lisi.score %>% rename(all_of(new.names)))
   if (save.graph) {
     new.graph <- new.graph %||%
       paste0(object.name, '_', 'symmetric_'[do.symmetrize],
              sprintf('dijkstra_%dk_', as.integer(3 * perplexity))[graph.name %iff% 1 %||% 0],
             'LISI_perp.', perplexity)
     object[[new.graph]] <- lisi.out$graph
+    message(sprintf('New graph used for LISI saved as %s\n',
+                    sQuote(new.graph))[verbose], appendLF = F)
   }
-  lisi.score <- lisi.out$lisi %>% summarise(across({{ v }}, median))
 
-  n <- object[[]] %>% summarize(across({{ v }}, n_distinct)) %>% unlist()
-  if (do.scale) {
-    lisi.score[batch.var] <- (lisi.score[batch.var] - 1) / (n[batch.var] - 1)
-    lisi.score[cell.var] <- (n[cell.var] - lisi.score[cell.var]) / (n[cell.var] - 1)
+  n <- n %>% rename(all_of(new.names)) %>% unlist()
+  lisi.score <- lisi.score %>%
+    summarize(across({{ v }}, ~ median(.x))) %>%
+    rename(all_of(new.names)) %>% unlist()
+  object <- check_misc(object)
+  for (idx in 1:length(lisi.score)) {
+    object <- SetMiscScore(object, integration = integration,
+                           score.name = names(lisi.score)[idx],
+                           score.value = lisi.score[[idx]],
+                           class = "numeric_lisi")
+    # N(object@misc$si_scores[[names(lisi.score)[idx]]]) <- n[[idx]]
   }
-  slot <- sprintf("LISI_perp.%s_%s_%s", as.integer(perplexity),
-                  reduction %||% graph.name, c("unscaled", "scaled")[do.scale + 1])
-  Misc(object = object, slot = slot) <- lisi.score %>% rename(all_of(new.names))
+
+  # if (do.scale) {
+  #   lisi.score[batch.var] <- (lisi.score[batch.var] - 1) / (n[batch.var] - 1)
+  #   lisi.score[cell.var] <- (n[cell.var] - lisi.score[cell.var]) / (n[cell.var] - 1)
+  # }
+  # slot <- sprintf("LISI_perp.%s_%s_%s", as.integer(perplexity),
+  #                 reduction %||% graph.name, c("unscaled", "scaled")[do.scale + 1])
+  # Misc(object = object, slot = slot) <- lisi.score %>% rename(all_of(new.names))
+
   object
 }
 
@@ -167,8 +188,7 @@ AddLISIScore <- function(object, batch.var = NULL, cell.var = NULL,
 #' @importFrom SeuratObject Embeddings Graphs Neighbors
 #' @importFrom dplyr %>% mutate across
 #' @export
-#' @rdname lisi
-#' @name lisi
+#' @rdname score-lisi
 
 ScoreLISI <- function(object, batch.var = NULL, cell.var = NULL,
                       # DimReduc
@@ -211,15 +231,15 @@ ScoreLISI <- function(object, batch.var = NULL, cell.var = NULL,
   }
   vars <- c("batch" = batch.var, "cell" = cell.var)
   mtdt <- object[[]]
-  found.vars <- intersect(vars[has.vars[names(vars)]], colnames(mtdt))
+  found.vars <- intersect(vars, colnames(mtdt))
   if (length(found.vars) == 0) {
     abort(message = sprintf("neither %s were found in the colnames of the metadata",
-                            paste(sQuote(vars[has.vars[names(vars)]]),
+                            paste(sQuote(vars),
                                   collapse = " nor ")))
   }
-  if (length(found.vars) < sum(has.vars)) {
+  if (length(found.vars) < length(vars)) {
     warning(sprintf("%s was not found in the colnames of the metadata, skipping",
-                    sQuote(setdiff(vars[has.vars[names(vars)]], found.vars))),
+                    sQuote(setdiff(vars, found.vars))),
             call. = FALSE, immediate. = TRUE)
   }
   if (reduction %iff% TRUE %||% FALSE) {
