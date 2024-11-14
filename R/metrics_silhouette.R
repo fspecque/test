@@ -43,6 +43,7 @@ NULL
 #'
 #' @importFrom SeuratObject DefaultAssay Reductions Embeddings Layers LayerData JoinLayers GetAssayData
 #' @importFrom Matrix t
+#' @importFrom rlang is_installed
 #' @importFrom cluster silhouette
 #'
 #' @export
@@ -181,6 +182,11 @@ AddScoreASW <- function(object, integration,
 #' \code{FALSE} causes the silhouette coefficients to be computed on the whole
 #' data directly.
 #'
+#' @importFrom SeuratObject DefaultAssay Reductions Embeddings Layers LayerData JoinLayers GetAssayData
+#' @importFrom Matrix t
+#' @importFrom rlang is_installed
+#' @importFrom cluster silhouette
+#'
 #' @export
 #' @details
 #' \code{ScoreAWSBatch}: The default parameters (\code{per.cell.var = TRUE})
@@ -244,9 +250,9 @@ ScoreASWBatch <- function(object, batch.var = NULL, cell.var = NULL,  what,
     }
   }
 
-  if (dist.package != 'stats' && ! rlang::is_installed(dist.package)) {
+  if (dist.package != 'stats' && ! is_installed(dist.package)) {
     possible.pkg <- c('distances', 'Rfast' ,'parallelDist', 'stats')
-    installed.pkg <- sapply(possible.pkg, rlang::is_installed)
+    installed.pkg <- sapply(possible.pkg, is_installed)
     warning(sQuote(dist.package), ' not installed, using ',
             sQuote(possible.pkg[installed.pkg][[1]]), ' instead.',
             call. = F, immediate. = T)
@@ -292,8 +298,8 @@ ScoreASWBatch <- function(object, batch.var = NULL, cell.var = NULL,  what,
           dist.mat <- dist.mat**2 / 2
         }
 
-        sil <- cluster::silhouette(x = df.mtdt.sub[, batch.var, drop = TRUE],
-                                   dist = dist.mat)[,'sil_width']
+        sil <- silhouette(x = df.mtdt.sub[, batch.var, drop = TRUE],
+                          dist = dist.mat)[,'sil_width']
         return(mean(abs(sil)))
       }
     )
