@@ -25,8 +25,11 @@ NULL
 #' cells. By default (\code{FALSE}), the overall score is computed as the mean
 #' of scores computed per label. Ignored when \code{per.component = TRUE}
 #'
-#' @return a single float between 0 and 1, corresponding to the connectivity
-#' score.
+#' @return \code{ScoreConnectivity}: a single float between 0 and 1,
+#' corresponding to the connectivity score.
+#'
+#' \code{AddScoreConnectivity}: the updated Seurat \code{object} with the Graph
+#' connectivity score set for the integration.
 #'
 #' @importFrom SeuratObject Neighbors Graphs
 #'
@@ -68,6 +71,7 @@ NULL
 #' \href{https://doi.org/10.1038/s41592-021-01336-8}{DOI}
 #'
 #' @seealso \code{\link[Seurat]{FindNeighbors}}
+#' @rdname score-connectivity
 
 ScoreConnectivity <- function(object, graph.name, cell.var, do.symmetrize = TRUE,
                               per.component = TRUE, count.self = FALSE,
@@ -91,6 +95,27 @@ ScoreConnectivity <- function(object, graph.name, cell.var, do.symmetrize = TRUE
     scores <- mean(scores)
   }
   return(scores)
+}
+
+#' @param integration name of the integration to score
+#' @export
+#' @rdname score-connectivity
+AddScoreConnectivity <- function(object, integration,
+                                 graph.name, cell.var, do.symmetrize = TRUE,
+                                 per.component = TRUE, count.self = FALSE,
+                                 weight.by.ncells = FALSE) {
+  scores <- ScoreConnectivity(object, graph.name = graph.name,
+                              cell.var = cell.var,
+                              do.symmetrize = do.symmetrize,
+                              per.component = per.component,
+                              count.self = count.self,
+                              weight.by.ncells = weight.by.ncells)
+
+  object <- check_misc(object)
+  object <- SetMiscScore(object, integration = integration,
+                         score.name = "Graph.connectivty",
+                         score.value = scores)
+  return(object)
 }
 
 #' @keywords internal

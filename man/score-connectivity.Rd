@@ -2,10 +2,22 @@
 % Please edit documentation in R/metrics_connectivity.R
 \name{ScoreConnectivity}
 \alias{ScoreConnectivity}
+\alias{AddScoreConnectivity}
 \title{Score a knn graph based on cell-type label connectivity}
 \usage{
 ScoreConnectivity(
   object,
+  graph.name,
+  cell.var,
+  do.symmetrize = TRUE,
+  per.component = TRUE,
+  count.self = FALSE,
+  weight.by.ncells = FALSE
+)
+
+AddScoreConnectivity(
+  object,
+  integration,
   graph.name,
   cell.var,
   do.symmetrize = TRUE,
@@ -34,10 +46,15 @@ themselves). \code{FALSE} by default}
 computed on each cell type label by their relative proportion in number of
 cells. By default (\code{FALSE}), the overall score is computed as the mean
 of scores computed per label. Ignored when \code{per.component = TRUE}}
+
+\item{integration}{name of the integration to score}
 }
 \value{
-a single float between 0 and 1, corresponding to the connectivity
-score.
+\code{ScoreConnectivity}: a single float between 0 and 1,
+corresponding to the connectivity score.
+
+\code{AddScoreConnectivity}: the updated Seurat \code{object} with the Graph
+connectivity score set for the integration.
 }
 \description{
 Compute scores based on the connectivity between cells sharing the same label.
