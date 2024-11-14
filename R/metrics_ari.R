@@ -12,9 +12,12 @@
 #' @param clust.var The name of the column with cluster id assignment for each
 #' cell (must be in the object metadata). Only one column name is accepted
 #'
-#' @return a named array with as many values as there are common strings between
-#' cell.var and the column names of the object's metadata. Names are cell.var
-#' and values are ARI.
+#' @return \code{ScoreARI}: a named array with as many values as there are
+#' common strings between cell.var and the column names of the object's
+#' metadata. Names are cell.var and values are ARI.
+#'
+#' \code{AddScoreARI}: the updated Seurat \code{object} with the ARI score(s)
+#' set for the integration.
 #'
 #' @export
 #' @details
@@ -36,6 +39,7 @@
 #' Colomé-Tatché, M. & Theis, F. J. Benchmarking atlas-level data integration in
 #' single-cell genomics. Nat Methods 19, 41–50 (2021).
 #' \href{https://doi.org/10.1038/s41592-021-01336-8}{DOI}
+#' @rdname score-ari
 
 ScoreARI <- function(object, cell.var, clust.var = "seurat_clusters") {
   df.mtdt <- object[[]]
@@ -64,6 +68,24 @@ ScoreARI <- function(object, cell.var, clust.var = "seurat_clusters") {
   scores <- sapply(cell.var, .ari, vec2 = clust.var,
                    simplify = "numeric", USE.NAMES = TRUE)
   return(scores)
+}
+
+#' @param integration name of the integration to score
+#' @export
+#' @rdname score-ari
+AddScoreARI <- function(object, integration,
+                        cell.var, clust.var = "seurat_clusters") {
+  scores <- ScoreARI(object, cell.var = cell.var, clust.var = clust.var)
+
+  score.names <- paste("ARI", names(scores), sep = '_')
+  object <- check_misc(object)
+  for (i in 1:length(scores)) {
+    object <- SetMiscScore(object, integration = integration,
+                           score.name = score.names[i],
+                           score.value = scores[[i]],
+                           class = "numeric")
+  }
+  return(object)
 }
 
 #' ARI: Adjusted Rand Index between two categorical variables

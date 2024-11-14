@@ -2,9 +2,12 @@
 % Please edit documentation in R/metrics_ari.R
 \name{ScoreARI}
 \alias{ScoreARI}
+\alias{AddScoreARI}
 \title{Score a clustering result with adjusted rand index}
 \usage{
 ScoreARI(object, cell.var, clust.var = "seurat_clusters")
+
+AddScoreARI(object, integration, cell.var, clust.var = "seurat_clusters")
 }
 \arguments{
 \item{object}{A Seurat object}
@@ -14,11 +17,16 @@ ScoreARI(object, cell.var, clust.var = "seurat_clusters")
 
 \item{clust.var}{The name of the column with cluster id assignment for each
 cell (must be in the object metadata). Only one column name is accepted}
+
+\item{integration}{name of the integration to score}
 }
 \value{
-a named array with as many values as there are common strings between
-cell.var and the column names of the object's metadata. Names are cell.var
-and values are ARI.
+\code{ScoreARI}: a named array with as many values as there are
+common strings between cell.var and the column names of the object's
+metadata. Names are cell.var and values are ARI.
+
+\code{AddScoreARI}: the updated Seurat \code{object} with the ARI score(s)
+set for the integration.
 }
 \description{
 Compute a score based on adjusted rand index between a clustering
