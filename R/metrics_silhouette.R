@@ -92,11 +92,21 @@ ScoreASW <- function(object, cell.var,  what, assay = NULL,
   dist.package <- match.arg(dist.package)
   assay <- assay %||% DefaultAssay(object)
 
-  .prep_MetaDataBatch(object = object, batch.var = cell.var, assay = assay)
-  if (cell.var %iff% {!cell.var %in% colnames(df.mtdt)} %||% TRUE) {
-    abort(paste(sQuote(cell.var %||% ''), 'is not a column of the metadata'))
+  df.mtdt <- object[[]]
+  cell.var.in <- cell.var %in% colnames(df.mtdt)
+  msg <- "are absent from colnames of metadata"
+  if (sum(cell.var.in) == 0) {
+    abort(paste("All the provided cell.var", msg))
   }
-  cell.var <- as.integer(as.factor(df.mtdt[, cell.var, drop = TRUE]))
+  if (sum(cell.var.in) < length(cell.var)) {
+    warning(sprintf("%d out of %d cell.var %s (%s). Ignoring them",
+                    sum(!cell.var.in), length(cell.var), msg,
+                    paste(sQuote(cell.var[!cell.var.in]), collapse = ', ')),
+            call. = F, immediate. = T)
+    cell.var <- cell.var[cell.var.in]
+  }
+  cell.var <- lapply(asplit(df.mtdt[, cell.var, drop = FALSE], MARGIN = 2),
+                     function(vec) as.integer(as.factor(vec)))
 
   if (what %in% Reductions(object)) {
     mat <- Embeddings(object, reduction = what)
@@ -109,8 +119,13 @@ ScoreASW <- function(object, cell.var,  what, assay = NULL,
   } else {
     l <- Layers(object, search = what, assay = assay)
     if (l %iff% TRUE %||% FALSE) {
-      mat <- t(GetAssayData(JoinLayers(object, assay = assay, layers = what),
-                            assay = assay, layer = what))
+      if (inherits(sub.object[[assay]], "StdAssay")) {
+        mat <- t(GetAssayData(JoinLayers(object, assay = assay, layers = what),
+                              assay = assay, layer = what))
+      } else {
+        mat <- t(GetAssayData(object, assay = assay, layer = what))
+      }
+
       message(sprintf('found %s in Seurat object\'s layers after join\n', sQuote(what))[verbose],
               appendLF = FALSE)
     } else {
@@ -151,9 +166,12 @@ ScoreASW <- function(object, cell.var,  what, assay = NULL,
   }
   message('done\n'[verbose], appendLF = FALSE)
 
-  sil <- silhouette(x = cell.var, dist = dist.mat)[,'sil_width']
-  score <- (mean(sil) + 1) / 2
-  return(score)
+  sils <- sapply(cell.var, function(vec)
+    silhouette(x = vec, dist = dist.mat)[,'sil_width'],
+                 simplify = FALSE, USE.NAMES = TRUE)
+  scores <- sapply(sils, function(sil) (mean(sil) + 1) / 2,
+                   simplify = TRUE, USE.NAMES = TRUE)
+  return(scores)
 }
 
 #' @param integration name of the integration to score
@@ -167,10 +185,14 @@ AddScoreASW <- function(object, integration,
   scores <- ScoreASW(object, cell.var = cell.var, what = what, assay = assay,
                      metric = metric, dist.package = dist.package,
                      verbose = verbose, ...)
+
+  score.names <- paste("ASW", names(scores), sep = '_')
   object <- check_misc(object)
-  object <- SetMiscScore(object, integration = integration,
-                         score.name = "ASW",
-                         score.value = scores)
+  for (i in 1:length(scores)) {
+    object <- SetMiscScore(object, integration = integration,
+                           score.name = score.names[i],
+                           score.value = scores[[i]])
+  }
   return(object)
 }
 
@@ -222,8 +244,17 @@ ScoreASWBatch <- function(object, batch.var = NULL, cell.var = NULL,  what,
   .prep_MetaDataBatch(object = object, batch.var = batch.var,
                       assay = assay, layer = 'data')
   if (per.cell.var) {
-    if (cell.var %iff% {!cell.var %in% colnames(df.mtdt)} %||% TRUE) {
-      abort(paste(sQuote(cell.var %||% 'NULL'), 'is not a column of the metadata. cell.var required'))
+    cell.var.in <- cell.var %in% colnames(df.mtdt)
+    msg <- "are absent from colnames of metadata"
+    if (sum(cell.var.in) == 0) {
+      abort(paste("All the provided cell.var", msg))
+    }
+    if (sum(cell.var.in) < length(cell.var)) {
+      warning(sprintf("%d out of %d cell.var %s (%s). Ignoring them",
+                      sum(!cell.var.in), length(cell.var), msg,
+                      paste(sQuote(cell.var[!cell.var.in]), collapse = ', ')),
+              call. = F, immediate. = T)
+      cell.var <- cell.var[cell.var.in]
     }
   } else {
     cell.var <- 'identity'
@@ -268,45 +299,49 @@ ScoreASWBatch <- function(object, batch.var = NULL, cell.var = NULL,  what,
     mat <- Seurat:::L2Norm(mat = mat, MARGIN = 1L)
     # euclidean distance on mat -> ~ 'angular', i.e. 'cosine' of FindNeighbors (AnnoyAngular)
   }
-  i <- 0
-  prog.bar <- NULL
-  if (verbose) {
-    n <- length(unique(df.mtdt[, cell.var, drop = TRUE]))
-    if (n > 1) {
-      prog.bar <- utils::txtProgressBar(i, n, width = 30, style = 3)
-    }
-  }
-  sils <- df.mtdt %>%
-    mutate(!!sym(batch.var) := as.integer(as.factor(!!sym(batch.var)))) %>%
-    group_by(!!sym(cell.var)) %>% group_map(
-      function(df.mtdt.sub, y) {
-        i <<- i + 1
-        prog.bar %iff% setTxtProgressBar(prog.bar, i)
-        batches <- df.mtdt.sub[, batch.var, drop = TRUE]
-        if (length(unique(batches)) %in% c(1, nrow(df.mtdt.sub))) return(NULL)
 
-        cells <- df.mtdt.sub[, idcol, drop = TRUE]
-        sub.mat <- as.matrix(mat[cells, , drop = FALSE])
-        dist.mat <- switch (
-          dist.package,
-          distances = distances::distance_matrix(distances::distances(sub.mat)),
-          Rfast = Rfast::Dist(sub.mat, method = metric_),
-          parallelDist = parallelDist::parallelDist(sub.mat, method = metric_),
-          stats = stats::dist(sub.mat, method = metric_)
-        )
-        if (metric == 'cosine') {
-          dist.mat <- dist.mat**2 / 2
-        }
-
-        sil <- silhouette(x = df.mtdt.sub[, batch.var, drop = TRUE],
-                          dist = dist.mat)[,'sil_width']
-        return(mean(abs(sil)))
+  scores <- sapply(cell.var, function(vec) {
+    i <- 0
+    prog.bar <- NULL
+    if (verbose) {
+      n <- length(unique(df.mtdt[, cell.var, drop = TRUE]))
+      if (n > 1) {
+        prog.bar <- utils::txtProgressBar(i, n, width = 30, style = 3)
       }
-    )
-  prog.bar %iff% close(prog.bar)
+    }
+    sils <- df.mtdt %>%
+      mutate(!!sym(batch.var) := as.integer(as.factor(!!sym(batch.var)))) %>%
+      group_by(!!sym(cell.var)) %>% group_map(
+        function(df.mtdt.sub, y) {
+          i <<- i + 1
+          prog.bar %iff% setTxtProgressBar(prog.bar, i)
+          batches <- df.mtdt.sub[, batch.var, drop = TRUE]
+          if (length(unique(batches)) %in% c(1, nrow(df.mtdt.sub))) return(NULL)
 
-  sils <- unlist(sils, use.names = FALSE) %||% NA
-  return(mean(1 - sils))
+          cells <- df.mtdt.sub[, idcol, drop = TRUE]
+          sub.mat <- as.matrix(mat[cells, , drop = FALSE])
+          dist.mat <- switch (
+            dist.package,
+            distances = distances::distance_matrix(distances::distances(sub.mat)),
+            Rfast = Rfast::Dist(sub.mat, method = metric_),
+            parallelDist = parallelDist::parallelDist(sub.mat, method = metric_),
+            stats = stats::dist(sub.mat, method = metric_)
+          )
+          if (metric == 'cosine') {
+            dist.mat <- dist.mat**2 / 2
+          }
+
+          sil <- silhouette(x = df.mtdt.sub[, batch.var, drop = TRUE],
+                            dist = dist.mat)[,'sil_width']
+          return(mean(abs(sil)))
+        }
+      )
+    prog.bar %iff% close(prog.bar)
+
+    sils <- unlist(sils, use.names = FALSE) %||% NA
+    return(mean(1 - sils))
+  }, simplify = "numeric", USE.NAMES = TRUE)
+  return(scores)
 }
 
 #' @param integration name of the integration to score
@@ -323,9 +358,12 @@ AddScoreASWBatch <- function(object, integration,
                           assay = assay, metric = metric,
                           dist.package = dist.package, verbose = verbose, ...)
 
+  score.names <- paste("ASW.batch", names(scores), sep = '_')
   object <- check_misc(object)
-  object <- SetMiscScore(object, integration = integration,
-                         score.name = "ASW.batch",
-                         score.value = scores)
+  for (i in 1:length(scores)) {
+    object <- SetMiscScore(object, integration = integration,
+                           score.name = score.names[i],
+                           score.value = scores[[i]])
+  }
   return(object)
 }
