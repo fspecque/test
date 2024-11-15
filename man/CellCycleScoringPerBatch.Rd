@@ -11,7 +11,8 @@ CellCycleScoringPerBatch(
   g2m.features,
   ctrl = NULL,
   assay = NULL,
-  layer = NULL
+  layer = NULL,
+  ...
 )
 }
 \arguments{
@@ -33,6 +34,10 @@ present in 's.features' and 'g2m.features'.}
 
 \item{layer}{layer to use. Passed to Seurat to automatically construct the
 \code{batch.var} when not provided. Useless otherwise}
+
+\item{...}{Arguments to be passed to \code{\link[Seurat]{CellCycleScoring}},
+then \code{\link[Seurat]{AddModuleScore}} (with the exception of
+\code{set.ident} which is always \code{FALSE})}
 }
 \value{
 A Seurat object with the following columns added to object meta data: S.Score, G2M.Score, and Phase

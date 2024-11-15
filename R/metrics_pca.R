@@ -374,8 +374,11 @@ ScoreRegressPC.CellCycle <- function(object, batch.var = NULL,
              c(batch.var, 'dimred_col', r2get, 'var')))
   for (batch in unique(df.mtdt[, batch.var])) {
     cells <- df.mtdt[df.mtdt[,batch.var] == batch, idcol, drop = TRUE]
-    sub.object <- JoinLayers(subset(object, cells = cells))
+    sub.object <- subset(object, cells = cells)
     DefaultAssay(sub.object) <- assay
+    if (inherits(sub.object[[assay]], "StdAssay")) {
+      sub.object <- JoinLayers(sub.object)
+    }
     if (compute.cc) {
       sub.object <- CellCycleScoring(sub.object, s.features = s.features,
                                      g2m.features = g2m.features, ctrl = NULL,
@@ -491,6 +494,9 @@ AddScoreRegressPC.CellCycle <- function(object, integration,
 #'
 #' @inheritParams ScoreRegressPC
 #' @inheritParams Seurat::CellCycleScoring
+#' @param ... Arguments to be passed to \code{\link[Seurat]{CellCycleScoring}},
+#' then \code{\link[Seurat]{AddModuleScore}} (with the exception of
+#' \code{set.ident} which is always \code{FALSE})
 #'
 #' @inherit Seurat::CellCycleScoring return
 #' @importFrom stats lm summary.lm
@@ -520,7 +526,8 @@ CellCycleScoringPerBatch <- function(object, batch.var = NULL,
                                      g2m.features,
                                      ctrl = NULL,
                                      assay = NULL,
-                                     layer = NULL) {
+                                     layer = NULL,
+                                     ...) {
   assay <- assay %||% DefaultAssay(object)
   assay.old <- DefaultAssay(object)
   DefaultAssay(object) <- assay
@@ -531,14 +538,17 @@ CellCycleScoringPerBatch <- function(object, batch.var = NULL,
 
   cols.cc <- c('S.Score', 'G2M.Score', 'Phase')
   df.cc <- data.frame(setNames(list(numeric(0), numeric(0), character(0)), cols.cc))
-  for (batch in unique(df.mtdt[,batch.var])) {
-    cells <- df.mtdt[df.mtdt[,batch.var] == batch, idcol]
-    sub.object <- JoinLayers(subset(object, cells = cells))
+  for (batch in unique(df.mtdt[, batch.var])) {
+    cells <- df.mtdt[df.mtdt[, batch.var] == batch, idcol]
+    sub.object <- subset(object, cells = cells)
     DefaultAssay(sub.object) <- assay
+    if (inherits(sub.object[[assay]], "StdAssay")) {
+      sub.object <- JoinLayers(sub.object)
+    }
     sub.object <- CellCycleScoring(sub.object, s.features = s.features,
                                    g2m.features = g2m.features, ctrl = ctrl,
-                                   set.ident = FALSE)
-    df.cc <- rbind(df.cc, sub.object[[]][,cols.cc])
+                                   set.ident = FALSE, ...)
+    df.cc <- rbind(df.cc, sub.object[[]][, cols.cc])
   }
 
   object <- AddMetaData(object, metadata = df.cc)
