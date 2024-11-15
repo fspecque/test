@@ -34,22 +34,41 @@ check_misc <- function(object) {
   return(object)
 }
 
-#' Get integration or score name(s) stored in a Seurat object
+
+#' Retrieve integration scores from a Seurat object
 #' @description
-#' Get (or search for) integration or score names stored in a Seurat object
-#' (in a tibble object named 'si_scores' stored in Misc).
+#' Scores are stored as tibble objects in Misc. Slot for raw scores is named
+#' 'si_scores' while scaled scores are found under 'si_scaled.scores'.
+#'
+#' \code{GetMiscIntegrations}: Get (or search for) integration names in the
+#' score tibble
+#'
+#' \code{GetMiscScores}:  Get (or search for) score names in the score tibble
+#'
+#' \code{IntegrationScores}: Get the tibble with scaled or unscaled scores
 #'
 #' @param object a Seurat object
 #' @param search a character vector of names to search for through
 #' case-insensitive exact match. \code{NULL} disables the search (default)
+#' @param scaled whether to query the unscaled (default) or scaled scores (if
+#' scaling has been performed)
 #'
-#' @return a character vector of integration or score names, or
-#' \code{NULL} when the object doesn't have 'si_scores' in Misc or when search
-#' did not return any result.
+#' @return \code{GetMiscIntegrations}: a character vector of integration names,
+#' or \code{NULL} when the object doesn't have 'si_scores' in Misc or when
+#' search did not return any result.
+#'
+#' \code{GetMiscScores}: a character vector of score names, or \code{NULL} when
+#' the object doesn't have 'si_scores' in Misc or when search did not return any
+#' result.
+#'
+#' \code{IntegrationScores}: either \code{NULL} if the requested object does not
+#' exist, otherwise a tibble. The first column contains the name of the
+#' integrations, and each following column corresponds to a score.
 #'
 #' @importFrom SeuratObject Misc
-#' @importFrom tibble tibble
-#' @name get-score
+#' @export
+#' @rdname get-score
+
 GetMiscIntegrations <- function(object, search = NULL) {
   integrations <- as.character(Misc(object = object, slot = "si_scores")$Integration)
   search <- as.character(search %||% integrations)
@@ -61,6 +80,7 @@ GetMiscIntegrations <- function(object, search = NULL) {
   return(integrations)
 }
 
+#' @importFrom SeuratObject Misc
 #' @export
 #' @rdname get-score
 GetMiscScores <- function(object, search = NULL) {
@@ -350,19 +370,9 @@ ScaleScores <- function(object, ref = "Unintegrated",
 }
 
 
-#' Retrieve the tibble containing integration scores from a Seurat object
-#' @description
-#' Get the scaled or unscaled scores as a tibble
-#'
-#' @param object a Seurat object
-#' @param scaled whether to query the unscaled (default) or scaled scores (if
-#' scaling has been performed)
-#'
-#' @return either \code{NULL} if the requested object does not exist, otherwise
-#' a tibble with the first column containing the name of the integrations, and
-#' each other column corresponding to one score.
+#' @export
 #' @importFrom SeuratObject Misc
-# @rdname get-score
+#' @rdname get-score
 IntegrationScores <- function(object, scaled = FALSE) {
   slot <- c('si_scores', 'si_scaled.scores')[scaled + 1]
   return(Misc(object, slot = slot))
