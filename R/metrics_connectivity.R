@@ -89,7 +89,7 @@ ScoreConnectivity <- function(object, graph.name, cell.var, do.symmetrize = TRUE
                                 per.component = per.component,
                                 count.self = count.self)
   if (weight.by.ncells && ! per.component) {
-    cells.prop <- proportions(table(cell.var[, 1, drop = TRUE]))[names(scores)]
+    cell.props <- proportions(table(cell.var[, 1, drop = TRUE]))[names(scores)]
     scores <- sum(scores * cell.props)
   } else {
     scores <- mean(scores)
