@@ -79,21 +79,34 @@ ScoreConnectivity <- function(object, graph.name, cell.var, do.symmetrize = TRUE
   if (! graph.name %in% c(Graphs(object), Neighbors(object))) {
     rlang::abort(paste(sQuote(graph.name), "not in the Seurat object"))
   }
-  if (!cell.var %in% colnames(object[[]])) {
-    abort(paste(sQuote(cell.var), "not in the Seurat object's metadata"))
+  cell.var.in <- cell.var %in% colnames(object[[]])
+  msg <- "are absent from colnames of metadata"
+  if (sum(cell.var.in) == 0) {
+    abort(paste("All the provided cell.var", msg))
   }
-  cell.var <- object[[]][, cell.var, drop = FALSE]
+  if (sum(cell.var.in) < length(cell.var)) {
+    warning(sprintf("%d out of %d cell.var %s (%s). Ignoring them",
+                    sum(!cell.var.in), length(cell.var), msg,
+                    paste(sQuote(cell.var[!cell.var.in]), collapse = ', ')),
+            call. = F, immediate. = T)
+    cell.var <- cell.var[cell.var.in]
+  }
+  scores <- sapply(cell.var, function(col.name) {
+    cell.labs <- object[[]][, col.name, drop = FALSE]
+    scores.labs <- .graph.connectivity(object[[graph.name]],
+                                      cell.var = cell.labs,
+                                      do.symmetrize = do.symmetrize,
+                                      per.component = per.component,
+                                      count.self = count.self)
+    if (weight.by.ncells && ! per.component) {
+      cell.props <- proportions(table(cell.labs[, 1, drop = TRUE]))
+      cell.props <- cell.props[names(scores.labs)]
+      scores.labs <- sum(scores.labs * cell.props)
+    } else {
+      scores.labs <- mean(scores.labs)
+    }
+  }, simplify = TRUE, USE.NAMES = TRUE)
 
-  scores <- .graph.connectivity(object[[graph.name]], cell.var = cell.var,
-                                do.symmetrize = do.symmetrize,
-                                per.component = per.component,
-                                count.self = count.self)
-  if (weight.by.ncells && ! per.component) {
-    cell.props <- proportions(table(cell.var[, 1, drop = TRUE]))[names(scores)]
-    scores <- sum(scores * cell.props)
-  } else {
-    scores <- mean(scores)
-  }
   return(scores)
 }
 
@@ -111,10 +124,14 @@ AddScoreConnectivity <- function(object, integration,
                               count.self = count.self,
                               weight.by.ncells = weight.by.ncells)
 
+  score.names <- paste("Graph.connectivty", names(scores), sep = '_')
   object <- check_misc(object)
-  object <- SetMiscScore(object, integration = integration,
-                         score.name = "Graph.connectivty",
-                         score.value = scores)
+  for (i in 1:length(scores)) {
+    object <- SetMiscScore(object, integration = integration,
+                           score.name = score.names[i],
+                           score.value = scores[[i]],
+                           class = "numeric")
+  }
   return(object)
 }
 
