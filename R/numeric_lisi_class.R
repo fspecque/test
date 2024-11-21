@@ -65,6 +65,10 @@ setMethod('show', 'numeric_lisi', function(object) {
   print(unclass(object))
 })
 
+#' Check if an object a `numeric_lisi`
+#' @keywords internal
+#' @noRd
+is.numeric_lisi <- function(x) inherits(x = x, what = "numeric_lisi")
 
 # Coerce types
 #' Coercing from and to `numeric_lisi` (hide `@N` slot)
