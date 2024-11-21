@@ -163,7 +163,7 @@ AddScoreLISI <- function(object, integration,
   n <- n %>% rename(all_of(new.names)) %>% unlist()
   lisi.score <- lisi.score %>%
     summarize(across({{ v }}, ~ median(.x))) %>%
-    rename(all_of(new.names))# %>% unlist()
+    rename(all_of(new.names))
   object <- check_misc(object)
   for (idx in 1:length(lisi.score)) {
     object <- SetMiscScore(object, integration = integration,
