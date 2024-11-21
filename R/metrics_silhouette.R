@@ -311,7 +311,7 @@ ScoreASWBatch <- function(object, batch.var = NULL, cell.var = NULL,  what,
     }
     sils <- df.mtdt %>%
       mutate(!!sym(batch.var) := as.integer(as.factor(!!sym(batch.var)))) %>%
-      group_by(!!sym(cell.var)) %>% group_map(
+      group_by(!!sym(vec)) %>% group_map(
         function(df.mtdt.sub, y) {
           i <<- i + 1
           prog.bar %iff% setTxtProgressBar(prog.bar, i)
