@@ -297,12 +297,7 @@ ScaleScores <- function(object, ref = "Unintegrated",
         mutate(across(c(!!!syms(y)), ~ 1 - abs(.x - !!sym(y[1])) / !!sym(y[1]))) %>%
         summarise(across(c(!!!syms(y)), mean)) %>% t()
       res
-    },
-    ASW = identityy,
-    ASW.batch = identityy,
-    NMI = identityy,
-    ARI = identityy,
-    Graph.connectivity = identityy
+    }
   )
 
   cLISI <- function(x, y) (N(x) - x) / (N(x) - 1)
@@ -310,17 +305,34 @@ ScaleScores <- function(object, ref = "Unintegrated",
 
   scaling <- c(
     scaling,
-    sapply(colnames(raw.scores)[startsWith(colnames(raw.scores), "cLISI")], function(x) cLISI, simplify = F),
-    sapply(colnames(raw.scores)[startsWith(colnames(raw.scores), "iLISI")], function(x) iLISI, simplify = F))
+    sapply(colnames(raw.scores)[grep("cLISI", colnames(raw.scores), T)], function(x) cLISI, simplify = F),
+    sapply(colnames(raw.scores)[grep("iLISI", colnames(raw.scores), T)], function(x) iLISI, simplify = F))
+
+  scaling <- c(
+    scaling,
+    sapply(colnames(raw.scores)[grep("^ARI|^NMI|^ASW", colnames(raw.scores), T)], function(x) identityy),
+    sapply(colnames(raw.scores)[grep("^Graph.connectivity", colnames(raw.scores), T)], function(x) identityy)
+  )
+
+  scaling <- c(
+    scaling, sapply(setdiff(colnames(raw.scores), names(scaling)), function(x) identityy)
+  )
 
   scaled.scores <- raw.scores %>%
-    purrr::map2(colnames(.), ~ scaling[[.y]](.x, .x$Integration)) %>%
+    purrr::map2(colnames(.), ~ scaling[[.y]](.x, raw.scores$Integration)) %>%
     bind_rows()
 
-  bio.scores <- c('cell.cycle.conservation', 'ASW', 'NMI', 'ARI',
-                  colnames(scaled.scores)[grepl('cLISI', colnames(scaled.scores), T)])
-  batch.scores <- c('PCA.regression', 'PCA.density', 'ASW.batch', 'Graph.connectivity',
-                    colnames(scaled.scores)[grepl('iLISI', colnames(scaled.scores), T)])
+  bio.scores <- c(
+    'cell.cycle.conservation',
+    colnames(scaled.scores)[grep("^ARI|^NMI", colnames(scaled.scores), T)],
+    colnames(scaled.scores)[grep("^ASW(?![[:punct:][:blank:]]*batch)", colnames(scaled.scores), T, T)],
+    colnames(scaled.scores)[grep('^cLISI', colnames(scaled.scores), T)])
+  batch.scores <- c(
+    'PCA.regression', 'PCA.density',
+    colnames(scaled.scores)[grep("^Graph.connectivity", colnames(scaled.scores), T)],
+    colnames(scaled.scores)[grep("^ASW(?=[[:punct:][:blank:]]*batch)", colnames(scaled.scores), T, T)],
+    colnames(scaled.scores)[grep('^iLISI', colnames(scaled.scores), T)])
+
   bio.scores <- colnames(scaled.scores)[tolower(colnames(scaled.scores)) %in% tolower(bio.scores)]
   batch.scores <- colnames(scaled.scores)[tolower(colnames(scaled.scores)) %in% tolower(batch.scores)]
 
@@ -412,9 +424,10 @@ IntegrationScores <- function(object, scaled = FALSE) {
 #' @return a ggplot object
 #' @importFrom rlang is_installed !!
 #' @importFrom SeuratObject Misc
-#' @importFrom dplyr %>% mutate across case_when select filter
+#' @importFrom dplyr %>% mutate across where case_when desc select filter
 #' @importFrom forcats fct_reorder fct_relabel
 #' @importFrom tidyr pivot_longer
+#' @include numeric_lisi_class.R
 #' @export
 PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
                        split.by.score.type = TRUE,
@@ -438,6 +451,7 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
     } else {
       factor(Integration)
     }) %>%
+    mutate(across(where(is.numeric_lisi), as.numeric)) %>%
     # cap between [0, 1], or ]0,1] when plot is a table (NA hides circles)
     mutate(across(!Integration, ~ case_when(.x <= 0 ~ !!lo.cap, .x >= 1 ~ 1, T ~ .x)))
   if (order.by == 'score') {
@@ -499,7 +513,7 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
 
 
 #' @importFrom rlang arg_match
-#' @importFrom ggplot2 ggproto ggplot aes geom_point geom_polygon theme element_line element_blank scale_y_continuous facet_grid
+#' @importFrom ggplot2 ggproto ggplot aes geom_point geom_polygon theme element_line element_blank scale_y_continuous facet_grid CoordRadial
 #' @importFrom dplyr %>% arrange
 #' @importFrom cowplot theme_cowplot
 #' @importFrom grid unit
@@ -631,7 +645,9 @@ PlotScoresTable <- function(scaled.scores, split.by.score.type, vanilla, point.m
 
 fullsize_colorbar <- function(vanilla = T) structure(list(vanilla.circles = vanilla), class = "fullsizebar")
 
-#' @importFrom ggplot2 ggplotGrob scale_fill_distiller scale_colour_distiller guide_colorbar theme element_text
+#' @method ggplot_add fullsizebar
+#' @exportS3Method ggplot2::ggplot_add
+#' @importFrom ggplot2 ggplot_add ggplotGrob scale_fill_distiller scale_colour_distiller guide_colorbar theme element_text
 #' @importFrom grid unitType unit
 #' @keywords internal
 #' @noRd
