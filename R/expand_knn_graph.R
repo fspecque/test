@@ -265,14 +265,14 @@ setMethod("expand_neighbours_dijkstra", "Neighbor",
 expand.neighbours.diffusion <- function(conmat, k.min, max.iter) {
   norm.factor <- 1 / max(rowSums(conmat))
   conmat <- conmat * norm.factor
-  transition.mat <- cumu.transition.mat <- conmat
+  transition.mat <- transition.mat.pow <- conmat
 
   k.min.found <- min(rowSums(conmat > 0))
 
   iter <- 2
   while(k.min.found < k.min && iter < max.iter) {
-    cumu.transition.mat <- cumu.transition.mat %*% transition.mat
-    conmat <- conmat + cumu.transition.mat
+    transition.mat.pow <- transition.mat.pow %*% transition.mat
+    conmat <- conmat + transition.mat.pow
     iter <- iter + 1
     k.min.found <- min(rowSums(conmat > 0))
   }
