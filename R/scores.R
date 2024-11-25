@@ -216,6 +216,7 @@ SetMiscScore <- function(object, integration, score.name, score.value, ...) {
 #' @importFrom purrr map2 reduce
 #' @importFrom rlang sym syms data_syms !! !!!
 #' @importFrom tibble tibble add_column
+#' @export
 ScaleScores <- function(object, ref = "Unintegrated",
                         # batch.scores = c("^cell.cycle.conservation", "^ASW.batch", "^NMI", "^ARI", "^iLISI"),
                         # bio.scores = c("^PCA.regression", "^PCA.density", "^ASW", "^Graph.connectivity", "^cLISI"),
