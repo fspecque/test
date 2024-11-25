@@ -331,6 +331,49 @@ setMethod(".cut.knn", "Neighbor",
 
             return(object)
           })
+
+#' Very similar to .cut.knn.Matrix, but doesn't contruct the trimmed knn network
+#' @description
+#' Requires that all cells have at least k.max neighbors
+#'
+#' @return matrix #cells x k.max of best neighbors
+#' @importFrom rlang abort
+#' @keywords internal
+#' @noRd
+get.k.best.neighbours <- function(object, k.max,
+                                  graph.type = c("connectivities", "distances")) {
+  graph.type <- tolower(graph.type)
+  graph.type <- match.arg(graph.type)
+
+  i <- slot(object = object, name = "i") + 1
+  x <- slot(object = object, name = "x")
+  p <- slot(object = object, name = "p")
+  j <- findInterval(seq(x)-1,p[-1]) + 1
+
+  # order objects by row first, then by increasing distances or decreasing connectivities
+  o <- order(i, x, decreasing = c(F, graph.type == 'connectivities'))
+  i <- i[o]
+  j <- j[o]
+  x <- x[o]
+
+  # number of neighbours per cell (works because ordered by row first)
+  n <- rle(i)$lengths
+  # amount to add to get true indices (of i, j and x)
+  idx.increment <- c(0, cumsum(n)[-length(n)])
+  # for each cell, maximum index value to keep
+  # (n if n < k.max, i.e not enough neighbours)
+  idx.max <- n
+  if (any(idx.max < k.max)) {  #  find a workaround ? check earlier ?
+    abort(sprintf("can't get best %d neighbors for all cells, some have less", k.max))
+  }
+  idx.max[idx.max > k.max] <- k.max
+  # generate one `seq()` for each cell (from=1, to=idx.max)
+  idx.per.row <- sequence(nvec = idx.max, from = 1L, by = 1L)
+  idx <- idx.per.row + rep(idx.increment, idx.max)  # true indices
+
+  return(matrix(j[idx], ncol = k.max, byrow = TRUE))
+}
+
 ################################################################################
 #############################    NN symmetrize     #############################
 #' Symmetrize a nearest neighbours graph
