@@ -563,7 +563,7 @@ GetConnectivities <- function(object, neighbors.use, method = c("umap", "gauss")
     "gauss" = "a gaussian kernel"
   )
   graph.name <- graph.name %||% paste0("connectivities_", method, "_", neighbors.use)
-  assay <- assay %||% DefaultAssay(so)
+  assay <- assay %||% DefaultAssay(object)
 
   graph <- object[[neighbors.use]]
   if (class(graph) != "Neighbor") {
@@ -593,7 +593,7 @@ GetConnectivities <- function(object, neighbors.use, method = c("umap", "gauss")
                                            sigmas = gauss.sigmas,
                                            median.sigma = gauss.median.sigma)
   )
-  colnames(conns) <- rownames(conns) <- Cells(so)
+  colnames(conns) <- rownames(conns) <- Cells(object)
   object[[graph.name]] <- as.Graph(conns)
   slot(object = object[[graph.name]], name = "assay.used") <- assay
   message(paste("Connectivity Graph saved as", sQuote(graph.name), "\n")[verbose],
