@@ -262,7 +262,7 @@ setMethod("expand_neighbours_dijkstra", "Neighbor",
 #' @importFrom Matrix rowSums diag<-
 #' @keywords internal
 #' @noRd
-expand.neighbours.diffusion <- function(conmat, k.min, max.iter) {
+expand.neighbours.diffusion <- function(conmat, k.min, max.iter = 26L) {
   norm.factor <- 1 / max(rowSums(conmat))
   conmat <- conmat * norm.factor
   transition.mat <- transition.mat.pow <- conmat
@@ -273,6 +273,29 @@ expand.neighbours.diffusion <- function(conmat, k.min, max.iter) {
   while(k.min.found < k.min && iter < max.iter) {
     transition.mat.pow <- transition.mat.pow %*% transition.mat
     conmat <- conmat + transition.mat.pow
+    iter <- iter + 1
+    k.min.found <- min(rowSums(conmat > 0))
+  }
+  diag(conmat) <- 0
+  return(conmat)
+}
+
+#' @importFrom Matrix rowSums diag<-
+#' @keywords internal
+#' @noRd
+expand.neighbours.diffusion4kBET <- function(conmat, k.min, max.iter = 26L) {
+  norm.factor <- 1 / rowSums(conmat)
+  conmat <- conmat * norm.factor
+  transition.mat <- conmat
+  transition.mat.pow <- conmat %*% conmat # conmat^2
+  conmat <- conmat + transition.mat.pow +
+    (transition.mat.pow <- transition.mat.pow %*% transition.mat) # conmat^3
+
+  k.min.found <- min(rowSums(transition.mat > 0))
+
+  iter <- 4
+  while(k.min.found <= k.min && iter < max.iter) {
+    conmat <- conmat + (transition.mat.pow <- transition.mat.pow %*% transition.mat)
     iter <- iter + 1
     k.min.found <- min(rowSums(conmat > 0))
   }
