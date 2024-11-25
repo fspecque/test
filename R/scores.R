@@ -302,11 +302,13 @@ ScaleScores <- function(object, ref = "Unintegrated",
 
   cLISI <- function(x, y) (N(x) - x) / (N(x) - 1)
   iLISI <- function(x, y) (x - 1) / (N(x) - 1)
+  kBET <- function(x, y) 1 - x
 
   scaling <- c(
     scaling,
     sapply(colnames(raw.scores)[grep("cLISI", colnames(raw.scores), T)], function(x) cLISI, simplify = F),
-    sapply(colnames(raw.scores)[grep("iLISI", colnames(raw.scores), T)], function(x) iLISI, simplify = F))
+    sapply(colnames(raw.scores)[grep("iLISI", colnames(raw.scores), T)], function(x) iLISI, simplify = F),
+    sapply(colnames(raw.scores)[grep("kBET", colnames(raw.scores), T)], function(x) kBET, simplify = F))
 
   scaling <- c(
     scaling,
@@ -331,7 +333,8 @@ ScaleScores <- function(object, ref = "Unintegrated",
     'PCA.regression', 'PCA.density',
     colnames(scaled.scores)[grep("^Graph.connectivity", colnames(scaled.scores), T)],
     colnames(scaled.scores)[grep("^ASW(?=[[:punct:][:blank:]]*batch)", colnames(scaled.scores), T, T)],
-    colnames(scaled.scores)[grep('^iLISI', colnames(scaled.scores), T)])
+    colnames(scaled.scores)[grep('^iLISI', colnames(scaled.scores), T)],
+    colnames(scaled.scores)[grep('^kBET', colnames(scaled.scores), T)])
 
   bio.scores <- colnames(scaled.scores)[tolower(colnames(scaled.scores)) %in% tolower(bio.scores)]
   batch.scores <- colnames(scaled.scores)[tolower(colnames(scaled.scores)) %in% tolower(batch.scores)]
