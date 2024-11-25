@@ -105,7 +105,7 @@ when \code{save.graph = TRUE})}
 a list containing the aforementioned data frame and the graph used to compute
 it (\code{return.graph = TRUE}).
 
-\code{AddLISIScore}: the updated Seurat \code{object}, with cell-wise LISI
+\code{AddScoreLISI}: the updated Seurat \code{object}, with cell-wise LISI
 scores in the meta data (identical to \code{ScoreLISI}'s output), global
 scores in misc and a new Graph object when \code{save.graph = TRUE}.
 }
@@ -114,7 +114,7 @@ Compute the Local Inverse Simpson's Index (LISI) to estimate batch mixing or
 cell type mixing (iLISI and cLISI respectively according to Luecken M.D.
 \emph{et al.}, 2022).
 
-\code{AddLISIScore} returns an updated Seurat object, while \code{ScoreLISI}
+\code{AddScoreLISI} returns an updated Seurat object, while \code{ScoreLISI}
 outputs the raw LISI scores for each cell
 }
 \details{
