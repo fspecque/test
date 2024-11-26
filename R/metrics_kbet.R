@@ -54,11 +54,10 @@ NULL
 #'
 #' @importFrom SeuratObject DefaultAssay as.Neighbor
 #' @importFrom Seurat FindNeighbors
-#' @importFrom rlang abort !! data_sym
+#' @importFrom rlang is_installed abort !! data_sym
 #' @importFrom dplyr %>% group_by pick summarise n n_distinct filter pull
 #' @importFrom igraph components graph_from_adjacency_matrix
 #' @importFrom Matrix spMatrix
-#' @importFrom kBET kBET
 #'
 #' @export
 #' @references Büttner, M., Miao, Z., Wolf, F. A., Teichmann, S. A. & Theis, F.
@@ -75,6 +74,14 @@ ScoreKBET <- function(object, batch.var, cell.var, what,
                       graph.type = c("distances", "connectivities"),
                       seed.use = 42L, verbose = TRUE,
                       assay = NULL, layer = NULL) {
+  if (! is_installed("kBET")) {
+    abort(paste0(sQuote("kBET"), " package is required for this score. ",
+                 "Install it using",
+                 "\n\nremotes::install_github('theislab/kBET')",
+                 "\n# or",
+                 "\ndevtools::install_github('theislab/kBET')"
+                 ))
+  }
   graph.type <- tolower(graph.type)
   graph.type <- match.arg(graph.type)
   cell.var <- if (isFALSE(cell.var)) NULL else cell.var

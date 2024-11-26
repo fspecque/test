@@ -28,7 +28,8 @@ Imports:
     stats,
     SummarizedExperiment,
     tools,
-    cluster
+    cluster,
+    broom
 Suggests: 
     SeuratData,
     lisi,
@@ -37,7 +38,8 @@ Suggests:
     rmarkdown,
     distances,
     Rfast,
-    parallelDist
+    parallelDist,
+    kBET
 Collate: 
     'Combat.R'
     'Harmony.R'
