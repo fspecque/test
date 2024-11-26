@@ -29,7 +29,14 @@ Imports:
     SummarizedExperiment,
     tools,
     cluster,
-    broom
+    broom,
+    ggplot2,
+    cowplot,
+    forcats,
+    purrr,
+    tibble,
+    tidyr,
+    vctrs
 Suggests: 
     SeuratData,
     lisi,
