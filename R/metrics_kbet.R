@@ -183,10 +183,10 @@ ScoreKBET <- function(object, batch.var, cell.var, what,
           )
           seed.use %iff% set.seed(seed.use)
           batch.vec <- df.mtdt[match(cellids, df.mtdt[[idcol]]), batch.var]
-          score <- kBET(df = spMatrix(nrow = nrow(knn.idx), ncol = k0),
-                        batch = batch.vec, k0 = k0, knn = knn.idx,
-                        do.pca = FALSE, heuristic = FALSE, plot = FALSE,
-                        adapt = FALSE, verbose = verbose)$summary$kBET.observed[1]
+          score <- kBET::kBET(df = spMatrix(nrow = nrow(knn.idx), ncol = k0),
+                              batch = batch.vec, k0 = k0, knn = knn.idx,
+                              do.pca = FALSE, heuristic = FALSE, plot = FALSE,
+                              adapt = FALSE, verbose = verbose)$summary$kBET.observed[1]
           return(score)
 
         }
