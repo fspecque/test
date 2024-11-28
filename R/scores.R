@@ -286,8 +286,8 @@ ScaleScores <- function(object, ref = "Unintegrated",
   identityy <- function(x, y) identity(x)
   scaling <- list(
     Integration = identityy,
-    PCA.regression = function(x, y) (x[1] - x) / x[1],
-    PCA.density = function(x, y) (x - x[1]) / x,
+    PCA.regression = function(x, y) pmax((x[1] - x) / x[1], 0),
+    PCA.density = function(x, y) pmax((x - x[1]) / x, 0),
     cell.cycle.conservation = function(x, y) {
       i <- sapply(x, is.data.frame)
       res <- rep(NA, length(i))
@@ -492,12 +492,18 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
   pretty_string <- function(x) {
     gsub(pattern = '[\\._]+', replacement = ' ', x = x)
   }
+
+  bio.scores <- c(
+    'cell.cycle.conservation',
+    colnames(scaled.scores)[grep("^ARI|^NMI", colnames(scaled.scores), T)],
+    colnames(scaled.scores)[grep("^ASW(?![[:punct:][:blank:]]*batch)", colnames(scaled.scores), T, T)],
+    colnames(scaled.scores)[grep('^cLISI', colnames(scaled.scores), T)])
+
   scaled.scores <- scaled.scores %>%
     pivot_longer(!Integration, names_to = 'Score', values_to = 'y', ) %>%
     mutate(Integration = fct_relabel(Integration, pretty_string)) %>%
     mutate(Score.type = case_when(
-      Score %in% c('cell.cycle.conservation', 'ASW', 'NMI', 'ARI') ~ 'Bio-conservation',
-      grepl("clisi", Score, ignore.case = T) ~ 'Bio-conservation',
+      Score %in% bio.scores ~ 'Bio-conservation',
       Score %in% c('Overall.score', 'Bio.conservation', 'Batch.correction') ~ 'Overall',
       T ~ 'Batch correction'
     )) %>% mutate(Score = factor(Score)) %>%
