@@ -441,14 +441,15 @@ AddScoreRegressPC.CellCycle <- function(object, integration,
 }
 
 #' @importFrom SeuratObject Reductions Embeddings DefaultAssay Layers
+#' @importFrom Seurat RunPCA
 #' @importFrom tibble rownames_to_column
 #' @importFrom dplyr left_join
 #' @keywords internal
 #' @noRd
 .prep_MetadataPC <- function(object, df.mtdt, idcol, batch.var = NULL,
-                          reduction = "pca", dims = NULL,
-                          weight.by = c("var", "stdev"),
-                          s.var = NULL, g2m.var = NULL) {
+                             reduction = "pca", dims = NULL,
+                             weight.by = c("var", "stdev"),
+                             s.var = NULL, g2m.var = NULL) {
   reduction <- reduction %||% "pca"
   if (! reduction %in% Reductions(object)) {
     abort(message = sprintf("%s reduction not in object", sQuote(reduction)))
@@ -458,10 +459,15 @@ AddScoreRegressPC.CellCycle <- function(object, integration,
   if (! all(dims %in% 1:ncol(dimred))) {
     abort(message = "some dims are out of range")
   }
+  dimvar <- Reductions(object = object, slot = reduction)@stdev
+  if (is.null(dimvar) || length(dimvar) == 0) {
+    dimred <- suppressWarnings(RunPCA(t(dimred), npcs = ncol(dimred),
+                                      approx = FALSE, verbose = FALSE))
+    dimvar <- dimred@stev
+    dimred <- dimred@cell.embeddings
+  }
   dimred <- dimred[, dims, drop=FALSE]
-  dimvar <- Reductions(object = object, slot = reduction)@stdev[dims]
-  dimvar %||% abort(sprintf("Reduction %s has no standard deviations associated. Run PCA first.",
-                            sQuote(reduction)))
+  dimvar <- dimvar[dims]
   if (grepl('^var', tolower(weight.by[1]))) {
     dimvar <- dimvar^2
   }
