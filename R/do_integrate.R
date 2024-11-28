@@ -27,7 +27,7 @@
 #' @return the updated Seurat object enriched with the integration methods'
 #' outputs.
 #'
-#' @importFrom rlang enquos
+#' @importFrom rlang enquos as_label
 #'
 #' @details
 #' Each call to an integration method \strong{require parentheses}. Parameter
@@ -65,18 +65,26 @@ DoIntegrate <- function (object, ..., use.hvg = TRUE, use.future = TRUE,
 
   for (int in 1:n.integrations) {
     cat(sprintf('Integration %d in %d: ', int, n.integrations))
+    tryCatch({
     object <- DoIntegrateSingle(
       object = object, method = integrations[[int]], use.hvg = use.hvg[int],
       use.future = use.future[int],
       future.globals.size = future.globals.size %iff% future.globals.size[int])
+    }, error = function(e) {
+      warning("`", sub("\\(.*", "", as_label(integrations[[int]])), "`",
+              ": failed, because ", dQuote(e$message),
+              "\n -> Skipping this integration",
+              call. = FALSE, immediate. = TRUE)
+    })
   }
 
   return(object)
 }
 
-#' @importFrom rlang quo_get_expr call_ns call_name call_match call_args eval_tidy maybe_missing fn_fmls_names call_modify zap quo_set_expr
+#' @importFrom rlang quo_get_expr call_ns call_name call_match call_args eval_tidy maybe_missing fn_fmls_names call_modify quo quo_set_expr
 #' @importFrom SeuratObject DefaultAssay Layers Features VariableFeatures DefaultDimReduc
 #' @importFrom Seurat SelectSCTIntegrationFeatures
+#' @importFrom parallelly supportsMulticore
 #' @importFrom future sequential multisession multicore plan %<-% %seed% %packages%
 #' @keywords internal
 #' @noRd
@@ -84,6 +92,9 @@ DoIntegrateSingle <- function (object, method, use.hvg = TRUE, use.future = TRUE
                          future.globals.size = getOption("future.globals.maxSize"))
 {
   method_expr <- quo_get_expr(method)
+  is_a_call <- tryCatch(call_name(method_expr) %iff% TRUE %||% FALSE,
+                        error = function(e) FALSE)
+  method_expr <- if (! is_a_call)  call2(method_expr) else method_expr
   method_fun <- paste0(c(call_ns(method_expr),
                          call_name(method_expr)),
                        collapse = '::')
@@ -91,13 +102,17 @@ DoIntegrateSingle <- function (object, method, use.hvg = TRUE, use.future = TRUE
   method_env <- eval(parse(text = method_fun))
   method_expr <- call_match(method_expr, method_env, defaults = FALSE)
 
-  method_args <- lapply(call_args(method_expr), eval_tidy)
+  method_args <- call_args(method_expr)#lapply(call_args(method_expr), quo)
+  if (use.future && ! supportsMulticore()) {
+    # suboptimal but fixes object no found for future plan(multisession)
+    method_args <- lapply(method_args, eval_tidy)
+  }
   assay <- method_args$assay %||% DefaultAssay(object = object)
-  layers <- method_args$layers
-  scale.layer <- method_args$scale.layer %||% 'scale.data'
+  layers <- eval_tidy(method_args$layers)
+  scale.layer <- eval_tidy(method_args$scale.layer) %||% 'scale.data'
   scale.layer <- Layers(object = object, search = scale.layer, assay = assay)
-  orig.use <- maybe_missing(method_args$orig, default = NULL)
-  features <- method_args$features
+  orig.use <- maybe_missing(eval_tidy(method_args$orig), default = NULL)
+  features <- eval_tidy(method_args$features)
 
   features <- features %||% if (!use.hvg) {
     Features(object[[assay]], layer = layers)
@@ -127,24 +142,25 @@ DoIntegrateSingle <- function (object, method, use.hvg = TRUE, use.future = TRUE
     }
   }
   assay.use <- object[[assay]]
-  if (inherits(assay.use, 'SCTAssay')) {
+  method_env_name <- tryCatch({
+    call_ns(method_expr) %||% environmentName(environment(fun = get(method_fun)))},
+    error = function(e) "Unknown")
+  if (inherits(assay.use, 'SCTAssay') && method_env_name == .packageName) {
     groups <- Seurat:::CreateIntegrationGroups(assay.use)
     assay.use <- suppressMessages(suppressWarnings(
       split(assay.use, f = groups$group, layers = c("counts", "data"))))
   }
   method_expr <- call_modify(method_expr, !!! method_args)
-  method_expr <- call_modify(method_expr, object = assay.use, assay = assay,
-                             orig = orig.use, layers = layers,
-                             scale.layer = scale.layer, features = features,
-                             .options = zap())
+  method_expr <- call_modify(method_expr, object = quo(assay.use), assay = assay,
+                             orig = quo(orig.use), layers = layers,
+                             scale.layer = scale.layer, features = quo(features))
   if (use.future) {
     future.globals.size <- future.globals.size %||% unclass(object.size(object)) * 3
     oopts <- options(future.globals.maxSize = future.globals.size)  ## 1.0 GB
     on.exit(options(oopts))
     on.exit(plan(sequential))
 
-    future.strat <- if (rstudioapi::isAvailable()) multisession else multicore
-    # print(future.strat)
+    future.strat <- if (supportsMulticore()) multicore else multisession
     plan(future.strat)
     value %<-% {
       eval_tidy(quo_set_expr(method, method_expr))
