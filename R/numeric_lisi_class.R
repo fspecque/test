@@ -139,6 +139,14 @@ setMethod('[<-', 'numeric_lisi', function(x, i, value) {
   numeric_lisi(callNextMethod(), picked_N)
 })
 
+#' Meadian method (keep `@N` slot)
+#' @keywords internal
+#' @noRd
+#' @method median numeric_lisi
+#' @exportS3Method stats::median
+median.numeric_lisi <- function(x, na.rm = FALSE, ...) {
+  numeric_lisi(NextMethod(), N(x))
+}
 
 #' Casting and coercion support
 #'
