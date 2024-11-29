@@ -193,6 +193,76 @@ SetMiscScore <- function(object, integration, score.name, score.value, ...) {
   return(object)
 }
 
+#' @keywords internal
+#' @noRd
+get.score.types <- function(col_names, batch = FALSE) {
+  if(batch) {
+    found.colnames <- c(
+      col_names[tolower(col_names) %in% tolower(c('PCA.regression', 'PCA.density'))],
+      col_names[grep("^Graph.connectivity", col_names, T)],
+      col_names[grep("^ASW(?=[[:punct:][:blank:]]*batch)", col_names, T, T)],
+      col_names[grep('^iLISI', col_names, T)],
+      col_names[grep('^kBET', col_names, T)]
+    )
+  } else {
+    found.colnames <- c(
+      tolower(col_names)[tolower(col_names) %in% tolower('cell.cycle.conservation')],
+      col_names[grep("^ARI|^NMI", col_names, T)],
+      col_names[grep("^ASW(?![[:punct:][:blank:]]*batch)", col_names, T, T)],
+      col_names[grep('^cLISI', col_names, T)]
+    )
+  }
+  return(found.colnames)
+}
+
+#' @importFrom dplyr %>% rowwise mutate c_across ungroup case_when
+#' @importFrom rlang data_syms !!!
+#' @keywords internal
+#' @noRd
+compute.overall.scores <- function(scaled.scores, batch.scores, bio.scores,
+                                   batch.coeff = .4, bio.coeff = .6) {
+  scaled.scores <- scaled.scores %>% rowwise()
+  l <- c(length(bio.scores), length(batch.scores))
+  if (all(l == 0)) {
+    scaled.scores <- scaled.scores %>%
+      mutate(Overall.score = mean(c_across(!Integration), na.rm = T))
+    warning("Could not discriminate between score types. Overall score is the mean of everything")
+  } else {
+    scaled.scores <- suppressWarnings(
+      scaled.scores %>%
+        mutate(Bio.conservation = mean(c(!!!data_syms(bio.scores)), na.rm = T),
+               Batch.correction = mean(c(!!!data_syms(batch.scores)), na.rm = T)) %>%
+        ungroup() %>% # remove rowwise
+        mutate(Overall.score = case_when(
+          is.na(Bio.conservation) ~ Batch.correction,
+          is.na(Batch.correction) ~ Bio.conservation,
+          T ~ batch.coeff * Batch.correction + bio.coeff * Bio.conservation)
+        )
+    )
+
+    if (any(l == 0)) {
+      i <- l == 0
+      msg <- paste('Did not find any', c('bio-conservation', 'batch correction')[i],
+                   'scores. Overall score is the mean of',
+                   c('bio-conservation', 'batch correction')[!i], 'scores')
+      warning(msg)
+    } else {
+      if (any((i <- is.na(scaled.scores$Bio.conservation)))) {
+        msg <- paste(paste(sQuote(scaled.scores$Integration[i]), collapse = ', '),
+                     'don\'t have bio-conservation scores.',
+                     'Their overall score is the mean of batch correction scores')
+        warning(msg)
+      }
+      if (any((i <- is.na(scaled.scores$Batch.correction)))) {
+        msg <- paste(paste(sQuote(scaled.scores$Integration[i]), collapse = ', '),
+                     'don\'t have batch correction scores.',
+                     'Their overall score is the mean of bio-conservation scores')
+        warning(msg)
+      }
+    }
+  }
+  return(scaled.scores)
+}
 
 #' Scale the scores in the score tibble to plot them
 #' @description
@@ -218,8 +288,6 @@ SetMiscScore <- function(object, integration, score.name, score.value, ...) {
 #' @importFrom tibble tibble add_column
 #' @export
 ScaleScores <- function(object, ref = "Unintegrated",
-                        # batch.scores = c("^cell.cycle.conservation", "^ASW.batch", "^NMI", "^ARI", "^iLISI"),
-                        # bio.scores = c("^PCA.regression", "^PCA.density", "^ASW", "^Graph.connectivity", "^cLISI"),
                         batch.coeff = .4, bio.coeff = .6) {
   ref <- ref %||% "Unintegrated"
   Misc(object, slot = 'si_scores') %||%
@@ -325,61 +393,14 @@ ScaleScores <- function(object, ref = "Unintegrated",
     purrr::map2(colnames(.), ~ scaling[[.y]](.x, raw.scores$Integration)) %>%
     bind_rows()
 
-  bio.scores <- c(
-    'cell.cycle.conservation',
-    colnames(scaled.scores)[grep("^ARI|^NMI", colnames(scaled.scores), T)],
-    colnames(scaled.scores)[grep("^ASW(?![[:punct:][:blank:]]*batch)", colnames(scaled.scores), T, T)],
-    colnames(scaled.scores)[grep('^cLISI', colnames(scaled.scores), T)])
-  batch.scores <- c(
-    'PCA.regression', 'PCA.density',
-    colnames(scaled.scores)[grep("^Graph.connectivity", colnames(scaled.scores), T)],
-    colnames(scaled.scores)[grep("^ASW(?=[[:punct:][:blank:]]*batch)", colnames(scaled.scores), T, T)],
-    colnames(scaled.scores)[grep('^iLISI', colnames(scaled.scores), T)],
-    colnames(scaled.scores)[grep('^kBET', colnames(scaled.scores), T)])
+  bio.scores <- get.score.types(colnames(scaled.scores), batch = FALSE)
+  batch.scores <- get.score.types(colnames(scaled.scores), batch = TRUE)
 
-  bio.scores <- colnames(scaled.scores)[tolower(colnames(scaled.scores)) %in% tolower(bio.scores)]
-  batch.scores <- colnames(scaled.scores)[tolower(colnames(scaled.scores)) %in% tolower(batch.scores)]
-
-  scaled.scores <- scaled.scores %>% rowwise()
-  l <- c(length(bio.scores), length(batch.scores))
-  if (all(l == 0)) {
-    scaled.scores <- scaled.scores %>%
-      mutate(Overall.score = mean(c_across(!Integration), na.rm = T))
-    warning("Could not discriminate between score types. Overall score is the mean of everything")
-  } else {
-    scaled.scores <- suppressWarnings(
-      scaled.scores %>%
-        mutate(Bio.conservation = mean(c(!!!data_syms(bio.scores)), na.rm = T),
-               Batch.correction = mean(c(!!!data_syms(batch.scores)), na.rm = T)) %>%
-        ungroup() %>% # remove rowwise
-        mutate(Overall.score = case_when(
-          is.na(Bio.conservation) ~ Batch.correction,
-          is.na(Batch.correction) ~ Bio.conservation,
-          T ~ batch.coeff * Batch.correction + bio.coeff * Bio.conservation)
-        )
-    )
-
-    if (any(l == 0)) {
-      i <- l == 0
-      msg <- paste('Did not find any', c('bio-conservation', 'batch correction')[i],
-                   'scores. Overall score is the mean of',
-                   c('bio-conservation', 'batch correction')[!i], 'scores')
-      warning(msg)
-    } else {
-      if (any((i <- is.na(scaled.scores$Bio.conservation)))) {
-        msg <- paste(paste(sQuote(scaled.scores$Integration[i]), collapse = ', '),
-                     'don\'t have bio-conservation scores.',
-                     'Their overall score is the mean of batch correction scores')
-        warning(msg)
-      }
-      if (any((i <- is.na(scaled.scores$Batch.correction)))) {
-        msg <- paste(paste(sQuote(scaled.scores$Integration[i]), collapse = ', '),
-                     'don\'t have batch correction scores.',
-                     'Their overall score is the mean of bio-conservation scores')
-        warning(msg)
-      }
-    }
-  }
+  scaled.scores <- compute.overall.scores(scaled.scores = scaled.scores,
+                                          batch.scores = batch.scores,
+                                          bio.scores = bio.scores,
+                                          batch.coeff = batch.coeff,
+                                          bio.coeff = bio.coeff)
 
   slot(object = object, name = 'misc')[['si_scaled.scores']] <- scaled.scores
   return(object)
@@ -399,6 +420,7 @@ IntegrationScores <- function(object, scaled = FALSE) {
 #' @description
 #' Plot the scaled integration scores to compare the obtained integrations
 #'
+#' @inheritParams ScaleScores
 #' @param object a Seurat object
 #' @param plot.type one of 'table' (default), 'radar' or 'lollipop'. Type of
 #' desired plot
@@ -417,6 +439,9 @@ IntegrationScores <- function(object, scaled = FALSE) {
 #' (\code{NULL}) enable to include them all.
 #' @param exclude.score name of the score(s) to exclude. The default value
 #' (\code{NULL}) enable to include them all.
+#' @param recompute.overall.scores whether to recompute overall scores. Useful
+#' when there is a restriction on scores to plot. When \code{FALSE},
+#' coefficient parameters have no impact.
 #' @param point.max.size inoperative unless \code{plot.type = 'table'} and
 #' \code{use.ggforce = FALSE}. Determine the maximum size of the points
 #' (only achieved for a score of 1) to fit the plotting area (handled
@@ -440,6 +465,8 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
                        exclude.integration = NULL,
                        include.score = NULL,
                        exclude.score = NULL,
+                       recompute.overall.scores = TRUE,
+                       batch.coeff = .4, bio.coeff = .6,
                        point.max.size = 20L,
                        use.ggforce = is_installed('ggforce')) {
   Misc(object, slot = 'si_scaled.scores') %||% abort('Scale scores first')
@@ -448,21 +475,7 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
   order.by <- tolower(order.by %||% 'asis')
   order.by <- match.arg(order.by)
 
-  lo.cap <- c(0, NA)[(plot.type == 'dot') + 1]
-  scaled.scores <- Misc(object, slot = 'si_scaled.scores') %>%
-    mutate(Integration = if(order.by == "asis") {
-      factor(Integration, levels = unique(Integration))
-    } else {
-      factor(Integration)
-    }) %>%
-    mutate(across(where(is.numeric_lisi), as.numeric)) %>%
-    # cap between [0, 1], or ]0,1] when plot is a table (NA hides circles)
-    mutate(across(!Integration, ~ case_when(.x <= 0 ~ !!lo.cap, .x >= 1 ~ 1, T ~ .x)))
-  if (order.by == 'score') {
-    scaled.scores <- scaled.scores %>%
-      mutate(Integration = fct_reorder(Integration, desc(Overall.score)))
-                                       # .desc = plot.type != 'lollipop'))
-  }
+  scaled.scores <- Misc(object, slot = 'si_scaled.scores')
 
   exclude.integration <- if(isFALSE(exclude.integration)) NULL else tolower(exclude.integration)
   include.integration <- if(isTRUE(include.integration)) NULL else include.integration
@@ -489,15 +502,40 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
                 'Consider less harsh exclusion or broader inclusion criteria'))
   }
 
+  bio.scores <- get.score.types(colnames(scaled.scores), batch = FALSE)
+  if (recompute.overall.scores) {
+    # ensure sum of coefficients is 1 (to keep overall scores between 0 and 1)
+    sum.coeff <- batch.coeff + bio.coeff
+    batch.coeff <- batch.coeff / sum.coeff
+    bio.coeff <- bio.coeff / sum.coeff
+
+    batch.scores <- get.score.types(colnames(scaled.scores), batch = TRUE)
+    scaled.scores <- compute.overall.scores(scaled.scores = scaled.scores,
+                                            batch.scores = batch.scores,
+                                            bio.scores = bio.scores,
+                                            batch.coeff = batch.coeff,
+                                            bio.coeff = bio.coeff)
+  }
+
   pretty_string <- function(x) {
     gsub(pattern = '[\\._]+', replacement = ' ', x = x)
   }
 
-  bio.scores <- c(
-    'cell.cycle.conservation',
-    colnames(scaled.scores)[grep("^ARI|^NMI", colnames(scaled.scores), T)],
-    colnames(scaled.scores)[grep("^ASW(?![[:punct:][:blank:]]*batch)", colnames(scaled.scores), T, T)],
-    colnames(scaled.scores)[grep('^cLISI', colnames(scaled.scores), T)])
+  lo.cap <- c(0, NA)[(plot.type == 'dot') + 1]
+  scaled.scores <- scaled.scores %>%
+    mutate(Integration = if(order.by == "asis") {
+      factor(Integration, levels = unique(Integration))
+    } else {
+      factor(Integration)
+    }) %>%
+    mutate(across(where(is.numeric_lisi), as.numeric)) %>%
+    # cap between [0, 1], or ]0,1] when plot is a table (NA hides circles)
+    mutate(across(!Integration, ~ case_when(.x <= 0 ~ !!lo.cap, .x >= 1 ~ 1, T ~ .x)))
+  if (order.by == 'score') {
+    scaled.scores <- scaled.scores %>%
+      mutate(Integration = fct_reorder(Integration, desc(Overall.score)))
+    # .desc = plot.type != 'lollipop'))
+  }
 
   scaled.scores <- scaled.scores %>%
     pivot_longer(!Integration, names_to = 'Score', values_to = 'y', ) %>%
