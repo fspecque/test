@@ -463,7 +463,7 @@ AddScoreRegressPC.CellCycle <- function(object, integration,
   if (is.null(dimvar) || length(dimvar) == 0) {
     dimred <- suppressWarnings(RunPCA(t(dimred), npcs = ncol(dimred),
                                       approx = FALSE, verbose = FALSE))
-    dimvar <- dimred@stev
+    dimvar <- dimred@stdev
     dimred <- dimred@cell.embeddings
   }
   dimred <- dimred[, dims, drop=FALSE]
