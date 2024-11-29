@@ -1,16 +1,30 @@
 ---
 title: "Introduction: Integration of scRNA-seq data and evaluation"
-output: rmarkdown::html_vignette
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: false
 vignette: >
   %\VignetteIndexEntry{Introduction: Integration of scRNA-seq data and evaluation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+```{css, echo=FALSE}
+.darker-code {
+  color: #2f2f2f;
+}
+```
+
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+  collapse = FALSE,
+  results = "hold",
+  message = FALSE,
+  class.source  = "darker-code"
 )
 ```
 
@@ -20,14 +34,15 @@ library(SeuratIntegrate)
 
 ## Install and load the data
 
+We will use the `pbmcsca` dataset available from the package `SeuratData`.
 ```{r install, eval=FALSE}
 # install `SeuratData` package (if not yet)
 if (! requireNamespace("SeuratData", quietly = TRUE)) {
   devtools::install_github('satijalab/seurat-data')
 }
-# increase download timeout
+
+# increase download timeout and install the dataset
 options(timeout = 300)
-# install the dataset to replicate the results of the vignette
 SeuratData::InstallData('pbmcsca')
 ```
 
@@ -45,20 +60,23 @@ Have a look at the metadata:
 rmarkdown::paged_table(head(seu[[]], n = 10))
 ```
 
-Two variables seem to reflect the batches.
+The `Method` column seems to contain the cells' batch of origin.
 
 ```{r}
-table(seu$Experiment, seu$Method)
+table(seu$Method)
 ```
 
 ## Process the data in a standard fashion
 
-We pick the `Method` variable and separate the cell batches accordingly. This way, we obtain one layer per batch.
-
+For now, our Seurat object is not split. Each layer contains cells from all
+batches.
 ```{r}
 cat('Layers before split:', paste(Layers(seu), collapse = ", "), '\n')
 ```
 
+
+We pick the `Method` column and separate the cell batches accordingly.
+This way, we obtain one layer per batch.
 ```{r split-batch}
 seu[['RNA']] <- split(seu[['RNA']], f = seu$Method)
 
@@ -67,167 +85,166 @@ cat('Layers after split:', paste(Layers(seu), collapse = ", "), '\n')
 
 Then, we proceed to the standard `Seurat` workflow until we obtain the PCA reduction.
 
-```{r standard-worflow}
-seu <- NormalizeData(seu, verbose = F)
-seu <- FindVariableFeatures(seu, verbose = F)
-seu <- ScaleData(seu, verbose = F)
+```{r standard-worflow, results='hide', warning=FALSE}
+seu <- SCTransform(seu)
 seu <- RunPCA(seu, verbose = F)
 ```
 
 ## Seurat-Integrate workflow
 
-For `SeuratIntegrate`, we need that all knn networks store the distances between cells. This is the first difference with the standard workflow. By default, the `FindNeighbors()` function from `Seurat` outputs an adjacency matrix with 0/1s and a SNN network with values bounded between 0 and 1. Those objects are not suited for our need, thus we will slightly deviate from the default workflow.
+For `SeuratIntegrate`, we need that all knn networks store the distances between
+cells. This is the first difference with the standard workflow. By default, the
+`FindNeighbors()` function from `Seurat` outputs an adjacency matrix with 0/1s
+and a SNN network with values bounded between 0 and 1. Those objects are not
+suited for our need, thus we will slightly deviate from the default workflow.
 
 ```{r knn}
 seu <- FindNeighbors(
   # classical
-  seu, reduction = "pca", dims = 1:30,  k.param = 20,
+  seu, reduction = "pca", dims = 1:30, k.param = 20L,
   # modified
   return.neighbor = TRUE)
 ```
 
 ```{r}
-cat("Graphs:", paste(Graphs(seu), collapse = ", "),
-  "\nNeighbors:", paste(Neighbors(seu), collapse = ", "), "\n")
+cat("Graph objects:", Graphs(seu), "\n")
+cat("Neighbor objects:", Neighbors(seu), "\n")
 ```
 
-Instead of the usual `RNA_nn` and `RNA_snn` `Graph` objects, we only have a `RNA.nn` `Neighbor` object.
+Instead of the usual `[Assay]_nn` and `[Assay]_snn` `Graph` objects, we only
+have a `SCT.nn` `Neighbor` object.
 
 ```{r}
-seu[['RNA.nn']]
+seu[['SCT.nn']]
 ```
 
 The standard objects would look like that:
 
 ```         
-> seu[["RNA_nn"]][1:4,1:4]
+> seu[["SCT_nn"]][1:4,1:4]
 4 x 4 sparse Matrix of class "dgCMatrix"
                    pbmc1_SM2_Cell_108 pbmc1_SM2_Cell_115 pbmc1_SM2_Cell_133 pbmc1_SM2_Cell_142
-pbmc1_SM2_Cell_108                  1                  1                  1                  .
+pbmc1_SM2_Cell_108                  1                  .                  1                  .
 pbmc1_SM2_Cell_115                  1                  1                  1                  .
 pbmc1_SM2_Cell_133                  1                  1                  1                  .
 pbmc1_SM2_Cell_142                  .                  .                  .                  1
-> seu[["RNA_snn"]][1:4,1:4]
+> seu[["SCT_snn"]][1:4,1:4]
 4 x 4 sparse Matrix of class "dgCMatrix"
                    pbmc1_SM2_Cell_108 pbmc1_SM2_Cell_115 pbmc1_SM2_Cell_133 pbmc1_SM2_Cell_142
-pbmc1_SM2_Cell_108          1.0000000          0.6000000          0.4814815                  .
-pbmc1_SM2_Cell_115          0.6000000          1.0000000          0.5384615                  .
-pbmc1_SM2_Cell_133          0.4814815          0.5384615          1.0000000                  .
+pbmc1_SM2_Cell_108          1.0000000          0.4814815          0.6000000                  .
+pbmc1_SM2_Cell_115          0.4814815          1.0000000          0.4814815                  .
+pbmc1_SM2_Cell_133          0.6000000          0.4814815          1.0000000                  .
 pbmc1_SM2_Cell_142          .                  .                  .                          1
 ```
 
-<!-- ```          -->
-
-<!-- > seu[["RNA_nn"]][1:4,1:4] -->
-
-<!-- 4 x 4 sparse Matrix of class "dgCMatrix" -->
-
-<!--                    pbmc1_SM2_Cell_108 pbmc1_SM2_Cell_115 pbmc1_SM2_Cell_133 pbmc1_SM2_Cell_142 -->
-
-<!-- pbmc1_SM2_Cell_108                  1                  .                  1                  . -->
-
-<!-- pbmc1_SM2_Cell_115                  1                  1                  .                  . -->
-
-<!-- pbmc1_SM2_Cell_133                  1                  .                  1                  . -->
-
-<!-- pbmc1_SM2_Cell_142                  .                  .                  .                  1 -->
-
-<!-- > seu[["RNA_snn"]][1:4,1:4] -->
-
-<!-- 4 x 4 sparse Matrix of class "dgCMatrix" -->
-
-<!--                    pbmc1_SM2_Cell_108 pbmc1_SM2_Cell_115 pbmc1_SM2_Cell_133 pbmc1_SM2_Cell_142 -->
-
-<!-- pbmc1_SM2_Cell_108          1.0000000          0.3793103          0.4814815                  . -->
-
-<!-- pbmc1_SM2_Cell_115          0.3793103          1.0000000          0.2903226                  . -->
-
-<!-- pbmc1_SM2_Cell_133          0.4814815          0.2903226          1.0000000                  . -->
-
-<!-- pbmc1_SM2_Cell_142          .                  .                  .                          1 -->
-
-<!-- ``` -->
-
 While ours:
 
-```{r}
-as.Graph(seu[['RNA.nn']])[1:4,1:4]
+```{r, comment=''}
+as.Graph(seu[['SCT.nn']])[1:4,1:4]
 ```
 
-<!-- You can already see discrepancies between the standard objects (nn and snn). The cell 1 (pbmc1_SM2_Cell_108) doesn't have the cell 2 (pbmc1_SM2_Cell_115) in its neigourhood while the reverse is true. This is due to the approximate nature of the nearest neighbour search algorithm used to compute the knn graph, making the resulting adjacency matrix asymmetric. However, the snn matrix is symmetric. -->
+What's obvious is that the `_nn` graph (i.e. the knn graph *per  se*) is
+asymmetric while the `_snn` graph is symmetric:
 
-Because of the approximate nature of the nearest neighbour search algorithm used to compute the knn graph, it happens that some edges are misplaced. To elaborate on that, let's consider three cells:
-
-$cell_i$, $cell_j$ and $cell_k$ for $i \neq j \neq k$
-
-Let's denote the distances separating them:
-
-$D_{ij} = D(cell_i, cell_j)$ and $D_{jk} = D(cell_j, cell_k)$
-
-We know that $D_{ij} \lt D_{jk}$. Yet, it is possible that in the final distance matrix $M$, $cell_j$ is in the neighbourhood of $cell_i$ but the reverse is not true, while $cell_k$ is in the neighbourhood of $cell_j$. To overcome this limitation, we proceed in two steps:
-
-The distance matrix is first made symmetrical (such that $M_{i,j} = M_{j,i}$), then each cell's farthest neighbours are discarded such that the closest $n$ cells are retain.
-
-```{r}
-Matrix::isSymmetric(as.Graph(seu[['RNA.nn']]))
+```
+> Matrix::isSymmetric(seu[["SCT_nn"]])
+[1] FALSE
+> Matrix::isSymmetric(seu[["SCT_snn"]])
+[1] TRUE
 ```
 
-You can make it symmetric with `SymmetrizeKnn()` from `SeuratIntegrate`
+On our side, the knn is asymmetric as well.
+```{r}
+Matrix::isSymmetric(as.Graph(seu[['SCT.nn']]))
+```
+
+To obtain a graph somehow equivalent to `_snn`, one can "symmetrize" the
+`Neighbour` object storing cell-to-cell distances:
 
 ```{r}
-seu <- SymmetrizeKnn(seu, graph.name = 'RNA.nn', use.max = FALSE)
-seu <- CutKnn(seu, graph.name = 'RNA.nn_symmetric', k.max = 20)
+seu <- SymmetrizeKnn(seu, graph.name = 'SCT.nn', use.max = FALSE)
 print(Graphs(seu))
 ```
 
-In case of discrepancy between $M[i,j]$ and $M[j,i]$, the `use.max` argument from `SymmetrizeKnn()` decides what to do (use the maximum or minimum value when `TRUE` or `FALSE` respectively). However, keep in mind that zeros are not taken into account, hence if $M[i,j] = 0$ and $M[j,i] = 8$, $M[i,j]$ will be set to $8$ regardless of `use.max` argument value. Also, both values of `use.max` argument will lead to identical results in this case.
+> In case of discrepancy between $M[i,j]$ and $M[j,i]$, the `use.max` argument
+from `SymmetrizeKnn()` decides what to do (use the maximum or minimum value when
+`TRUE` or `FALSE` respectively). However, keep in mind that zeros are not taken
+into account, hence if $M[i,j] = 0$ and $M[j,i] = 8$, $M[i,j]$ will be set to
+$8$ regardless of `use.max` argument value. Also, both values of `use.max`
+argument will lead to identical results in this case.
 
 This transformation leads to an increase in number of neighbours for many cells:
 
 ```{r}
-range(rowSums(seu[['RNA.nn_symmetric']] > 0))
-# 19 because the self-to-self distances are zero
-sum(rowSums(seu[['RNA.nn_symmetric']] > 0) > 19) / ncol(seu) * 100
+range(rowSums(seu[['SCT.nn_symmetric']] > 0))
+# at least 19 because the self-to-self distances are zero
+
+sum(rowSums(seu[['SCT.nn_symmetric']] > 0) > 19) / ncol(seu) * 100
+# almost 90% of cells have more that 20 neighbours
 ```
 
-But `CutKnn()` corrects that:
+Optionally, one can use `CutKnn()` to retrieve a constant k value:
 
 ```{r}
-range(rowSums(seu[['RNA.nn_symmetric_cut20k']] > 0))
+seu <- CutKnn(seu, graph.name = 'SCT.nn_symmetric', k.max = 20)
+range(rowSums(seu[['SCT.nn_symmetric_cut20k']] > 0))
 ```
 
-Note that the new knn graph has a constant number of neighbours per cell. It wouldn't have been the case for `k.max > 20`, because we used `FindNeighbors(k.param = 20)`. Again, the matrix is probably asymmetric. But we have both matrices stored in the Seurat object.
+The new knn graph (`SCT.nn_symmetric_cut20k`) has a constant number of
+neighbours per cell. It wouldn't have been the case for `k.max > 20`, because we
+used `FindNeighbors(k.param = 20)`. Again, the matrix is probably asymmetric.
+But we have both matrices (`SCT.nn_symmetric` and `SCT.nn_symmetric_cut20k`)
+stored in the Seurat object.
 
-We can use this `Graph` object for subsequent analyses.
+Since community detection algorithms applied on knn graphs with a small k value
+tend to output several singletons, we will use the `SCT.nn_symmetric` graph in
+subsequent analyses (by default, `Seurat` uses the `snn` graph to avoid that as
+well)
 
-```{r}
-seu <- FindClusters(seu, graph.name = 'RNA.nn_symmetric_cut20k', resolution = .5)
+
+```{r umap, warning=FALSE}
+seu <- FindClusters(seu, graph.name = 'SCT.nn_symmetric', resolution = .5)
 seu <- RunUMAP(seu, dims = 1:30, reduction = 'pca')
 ```
 
-```{r}
-DimPlot(seu, label = T) + NoLegend() + ggplot2::coord_fixed()
+```{r, fig.height=5}
+DimPlot(seu, label = T) + NoLegend() + ggplot2::coord_fixed(ratio = .7)
 ```
 
 ```{r, fig.width=10, fig.height=4}
 DimPlot(seu, group.by = 'Method') +
-  DimPlot(seu, group.by = 'CellType') & ggplot2::coord_fixed()
+  DimPlot(seu, group.by = 'CellType') & ggplot2::coord_fixed(ratio = .7)
 ```
 
 ## Integrate batches
 
-The integration commands are very similar to the [Seurat V5 vignette](https://satijalab.org/seurat/articles/seurat5_integration). The purpose of this package is to extend the set of available integration methods. See the bottom of `?IntegrateLayers` to have a complete list.
+The integration commands are to some extent similar to the
+[Seurat V5 vignette](https://satijalab.org/seurat/articles/seurat5_integration).
+The purpose of this package is to extend the set of available integration methods.
+See the bottom of `?IntegrateLayers` to have a comprehensive list of relevant
+methods.
 
-Many methods are implemented in python, and the wrappers developed for this package rely on the `reticulate` package and `conda` environments. If you are not familiar with the `CondaEnvManager`, have a look at the vignette **setup_and_tips**.
+Many methods are implemented in python, and the wrappers developed for this
+package rely on the `reticulate` package and `conda` environments. If you are
+not familiar with the `CondaEnvManager`, have a look at the vignette
+**setup_and_tips**.
 
-Let's perform a few integrations. We will launch three of them. To run any integration, the process is similar:
+Let's perform a few integrations. To this purpose, one might:
 
--   use the function `IntegrateLayers()` from Seurat
--   with a method (from `SeuratIntegrate`), such as `bbknnIntegration`
+<!-- -   preferably use the function `IntegrateLayers()` from Seurat with integration -->
+<!-- methods not distributed by SeuratIntegrate (`CCAIntegration` is an exception) -->
+-   use the function `DoIntegrate()` from SeuratIntegrate with integration
+methods<!--  from the same package -->
 -   check the method-specific arguments (e.g. `?bbknnIntegration`)
--   when a method requires a `conda` environment, the conda environment from the manager is called by default (`conda_env = NULL`) . Inputting a path to a conda environment or its name overrides the default behaviour by loading the specified environment.
+-   first set up the `CondaEnvManager` before using python-based methods (check
+the vignette **setup_and_tips**)
+-   when a method requires a `conda` environment, the conda environment from the
+manager is called by default (`conda_env = NULL`) . Inputting a path to a conda
+environment or its name overrides the default behaviour by loading the specified
+environment.
 
-Some methods expect a raw count matrix, others expect the scaled counts of the variable features, etc. To help you with the choice, look at the table below
+Some methods expect a raw count matrix, others expect the scaled counts of the
+variable features, etc. To help you with the choice, look at the table below
 
 +---------------+-------------------------+-------------------------------------------------------------------+
 | Method        | Layer                   | Features                                                          |
@@ -244,9 +261,9 @@ Some methods expect a raw count matrix, others expect the scaled counts of the v
 +---------------+-------------------------+-------------------------------------------------------------------+
 | Scanorama     | counts or data          | any                                                               |
 +---------------+-------------------------+-------------------------------------------------------------------+
-| trVAE         | data (recon loss "mse") | all                                                               |
-|               |                         |                                                                   |
-|               | counts                  |                                                                   |
+|               | data (recon loss "mse") | all                                                               |
+| trVAE         |                         |                                                                   |
+|               | counts (otherwise)      |                                                                   |
 +---------------+-------------------------+-------------------------------------------------------------------+
 
 Layers:
@@ -257,203 +274,442 @@ Layers:
 
 <br /> <strong style='color:red;'> /!\\ IMPORTANT /!\\ </strong> To use all features when calling an integration method with `IntegrateLayers()`: `IntegrateLayers(object, features = Features(object), scale.layer = NULL)`. Does not work for a `SCTAssay`.
 
+
+### DoIntegrate philosophy
+
+The function `DoIntegrate()` is a very handy way to run multiple integrations
+in a single command. Note that:
+
+-   `...` is the place to specify the integration commands to run.
+-   integration commands are expected to be **function calls**, i.e. of the form
+`FooIntegration()`, `BarIntegration()`.
+-   Calls accept method-specific argument (e.g.
+`FooIntegration(layers = "data")`)
+-   `use.hvg = TRUE` results in using variable features
+-   `use.future = TRUE` is useful to run python-based methods (a normal R
+session cannot load more than one conda instance, while `future` enables
+to launch background sessions, preventing the main on to load any conda
+environment.)
+
+Most integration methods can be used without modifying default parameters. In
+this vignette, we will change some arguments to meet our needs. Notably, we will
+change the number of cores allocated to each method (where possible).
+
+```{r}
+ncores <- parallel::detectCores() - 2
+```
+
+
 <br /> Let's proceed to a few batch-effect corrections:
 
-1)  Using `Harmony`
+### Integration part 1)  Using R-based methods
 
-```{r integrate-harmony, fig.height=3, fig.width=5}
-seu <- IntegrateLayers(seu, method = SeuratIntegrate::HarmonyIntegration,
-                       orig.reduction = "pca", dims = 1:30,
-                       plot_convergence = TRUE)
+
+```{r integrate-r-methods}
+seu <- DoIntegrate(
+  object = seu,
+  SeuratIntegrate::HarmonyIntegration(orig = "pca", dims = 1:30,
+                                      ncores = ncores),
+  CCAIntegration(orig = "pca", dims = 1:30 , new.reduction = "cca.integrated",
+                 normalization.method = "SCT"),
+  RPCAIntegration(orig = "pca", dims = 1:30, new.reduction = "rpca.integrated",
+                  normalization.method = "SCT"),
+  use.future = FALSE
+)
 ```
 
-2)  Using `bbknn`
 
-```{r integrate-bbknn}
-# bbknn
-library(future)
-# increase maximum object size for each future worker to 3GB
-options(future.globals.maxSize = 3e3 * 1024 ^ 2)
+### Integration part 2)  Using python-based methods
+```{r  integrate-python-methods, warning=FALSE}
+seu <- DoIntegrate(
+  object = seu,
+  bbknnIntegration(orig = "pca", layers = "data", ndims = 30,
+                   graph.use = "distances"),
+  ScanoramaIntegration(orig = "pca", ncores = ncores),
+  SeuratIntegrate::scANVIIntegration(groups = seu[[]], groups.name = "Method",
+                                     labels.name = "CellType", layers = "counts",
+                                     torch.intraop.threads = ncores,
+                                     torch.interop.threads = ncores,
+                                     max_epochs = 20L),
+  use.future = TRUE, use.hvg = c(TRUE, TRUE, FALSE)
+)
+```
+> Note: set `max_epochs = 20L` for `scANVIIntegration` is only to save time !
+The default number of epochs (400) results in a superior integration.
 
-plan(multisession)
-seu %<-% { IntegrateLayers(seu, method = SeuratIntegrate::bbknnIntegration,
-                           orig.reduction = "pca", layers = "data", ndims = 30,
-                           grap.use = "distances") } %seed% 42L
-seu
+
+If we take a look at our Seurat object, we can observe that it has been enriched
+with many objects:
+```{r}
+print(seu)
 ```
 
-3)  Using `scANVI`
-
-`scANVI` requires that at least some cells are identified, even roughly. Fortunately, that's precisely the type of information contained in the `CellType` column in the metadata. We will pass that to `scANVI` through `groups = seu[[]]` and `labels.name = "CellType", labels.null = "Unassigned"`.
-
-We also set a low number of epochs to decrease running time, but in real life cases, it is better to keep the default value `NULL`.
-
-```{r integrate-scANVI}
-# scANVI
-plan(multisession)
-seu %<-% { IntegrateLayers(seu, method = scANVIIntegration,
-                           features = Features(seu), layers = "counts",
-                           scale.layer = NULL, # force using all features
-                           groups = seu[[]], groups.name = 'Method',
-                           labels.name = "CellType", labels.null = "Unassigned",
-                           max_epochs = 8L,
-                           torch.intraop.threads = 4L,
-                           torch.interop.threads = 1L) } %seed% 42L
-seu
+```{r}
+cat("Graph objects:", paste(Graphs(seu), collapse = ", "), "\n")
+cat("Neighbor objects:", paste(Neighbors(seu), collapse = ", "), "\n")
+cat("Reduction dimensions:", paste(Reductions(seu), collapse = ", "), "\n")
+cat("Assays:", paste(Assays(seu), collapse = ", "), "\n")
 ```
 
-<!-- IntegrateLayers can be skipped. See an example below, where both alternatives are equivalent: -->
-
-<!-- ```{r, eval=FALSE} -->
-
-<!-- # version with `IntegrateLayers` -->
-
-<!-- seu <- IntegrateLayers(seu, method = SeuratIntegrate::HarmonyIntegration, -->
-
-<!--                        orig.reduction = "pca", dims = 1:30, -->
-
-<!--                        plot_convergence = TRUE) -->
-
-<!-- # version without (equivalent) -->
-
-<!-- res <- SeuratIntegrate::HarmonyIntegration(seu[['RNA']], orig = "pca", -->
-
-<!--                                            dims = 1:30, plot_convergence = TRUE) -->
-
-<!-- for(i in names(res)) { -->
-
-<!--   seu[[i]] <- res[[i]] -->
-
-<!-- } -->
-
-<!-- ``` -->
-
-Then, for each integration, we will process the output to obtain an assessable representation in order to score it.
+Now, we will process each integration's output(s) to obtain assessable
+representations to score.
 
 ## Score integrations
 
-### Regress PCAs
+### Process outputs
 
-Scores based on PCA regressions require a count matrix or a dimension reduction object (ideally a PCA). Hence, it cannot be used with methods that output a graph. `bbknn` would fall into the latter category, but will use intermediate objects also output by the method to circumvent this limitation.
+Several objects can be produced by each integration algorithm, namely a layer in
+a new assay (i.e. corrected counts), a dimension reduction (corrected
+embedding), or a knn network. Some even produce different outputs (for instance
+Scanorama produces corrected counts and a dimension reduction).
 
-The regression score weights the $R^2$ by the variance explained by the PCA. Thus, it is indispensable that the slot `stdev` in the `DimReduc` object is not null.
+The type of output is important to consider, because scoring metrics are not
+compatible with all output types. The simplest strategy is to process each
+output separately in order to obtain at least a PCA out of it, or even a knn
+graph (indispensable to compute clusters). Note that most scores cannot be
+computed on knn graphs, hence knn graph outputs (e.g. BBKNN) can only be
+evaluated by a reduced set of metrics.
 
-```{r}
-# Harmony
-head(seu[['harmony']]@stdev)
-# bbknn
-head(seu[['pca.bbknn']]@stdev)
-# scANVI
-head(seu[['integrated.scANVI']]@stdev)
+Below is a summary for each output type (bracketed steps are not always necessary):
+
+-   corrected counts: [`ScaleData()`] -> `RunPCA()` -> [`FindNeighbors()` -> `FindClusters()`]
+-   Dimension reduction: [`RunPCA()`] -> [`FindNeighbors()` -> `FindClusters()`]
+-   knn graph:  [`FindClusters()`]
+
+`RunPCA()` is sometimes ran even on dimension reduction objects (within scoring
+functions) because some scores require a variance associated with each dimension.
+
+Let's process all the outputs. Here, we will not go further than the
+`FindNeighbors()` step to keep things relatively concise, but note that the
+ideal case would be to compute clusters with each new knn graph, because a
+clustering variable is required to compute the ARI score) :
+```{r, warning=FALSE}
+# corrected counts outputs
+DefaultAssay(seu) <- "scanorama.reconstructed"
+seu <- ScaleData(seu)
+seu <- RunPCA(seu, npcs = 50L, reduction.name = "pca.scanorama_counts")
+seu <- FindNeighbors(seu, reduction = "pca.scanorama_counts", dims = 1:30, return.neighbor = TRUE,
+                     graph.name = "knn.scanorama_counts")
+seu <- SymmetrizeKnn(seu, graph.name = "knn.scanorama_counts")
+
+
+# dimension reduction outputs
+DefaultAssay(seu) <- "SCT"
+seu <- FindNeighbors(seu, reduction = "integrated.scanorama", dims = 1:30, return.neighbor = TRUE,
+                     graph.name = "knn.scanorama_reduction")
+seu <- SymmetrizeKnn(seu, graph.name = "knn.scanorama_reduction")
+
+seu <- FindNeighbors(seu, reduction = "harmony", dims = 1:30, return.neighbor = TRUE,
+                     graph.name = "knn.harmony")
+seu <- SymmetrizeKnn(seu, graph.name = "knn.harmony")
+
+seu <- FindNeighbors(seu, reduction = "cca.integrated", dims = 1:30, return.neighbor = TRUE,
+                     graph.name = "knn.cca")
+seu <- SymmetrizeKnn(seu, graph.name = "knn.cca")
+
+seu <- FindNeighbors(seu, reduction = "rpca.integrated", dims = 1:30, return.neighbor = TRUE,
+                     graph.name = "knn.rpca")
+seu <- SymmetrizeKnn(seu, graph.name = "knn.rpca")
+
+seu <- FindNeighbors(seu, reduction = "integrated.scANVI", return.neighbor = TRUE,
+                     graph.name = "knn.scanvi")
+seu <- SymmetrizeKnn(seu, graph.name = "knn.scanvi")
+
+
+# graph outputs
+# nothing to do
 ```
 
-Hence, we need to compute a PCA on the output of `scANVI`.
+### Add scores to the Seurat object
+
+Now that we have computed objects ready to be scored, we will proceed with
+assessing each integration output. For this step, one can either use
+`Score[score_name]()` and save scores in separate variables or use
+`AddScore[score_name]()` to directly store scores within the Seurat object. The
+latter is far more convenient and allows to compare scores graphically. This is
+the strategy we are going  to adopt here.
+
+First of all, let's organise outputs in lists:
 
 ```{r}
-seu[['pca.integrated.scANVI']] <- RunPCA(t(Embeddings(seu, 'integrated.scANVI')),
-                                     npcs = 9L, verbose = F)
+reductions <- list(
+  unintegrated = "pca",
+  scanorama_counts = "pca.scanorama_counts",
+  scanorama_reduction = "integrated.scanorama",
+  harmony = "harmony",
+  cca = "cca.integrated",
+  rpca = "rpca.integrated",
+  scanvi = "integrated.scANVI",
+  bbknn = NULL
+)
+
+graphs <- list(
+  unintegrated = "SCT.nn_symmetric",
+  scanorama_counts = "knn.scanorama_counts_symmetric",
+  scanorama_reduction = "knn.scanorama_reduction_symmetric",
+  harmony = "knn.harmony_symmetric",
+  cca = "knn.cca_symmetric",
+  rpca = "knn.rpca_symmetric",
+  scanvi = "knn.scanvi_symmetric",
+  bbknn = "bbknn_ridge.residuals"
+)
+
+integrations <- names(reductions)
 ```
 
-We can also compute standard deviation on the output and compare the results:
+Let's now define the batch variable and the cell-type variable(s):
 
 ```{r}
-seu[['integrated.scANVI']]@stdev <- apply(Embeddings(seu, 'integrated.scANVI'), 2, sd)
+batch.var <- 'Method'   # available in the metadata of the object
+cell.var <- 'CellType'  # available in the metadata of the object
 ```
 
-We will also compare for `bbknn`:
+> Note that if one doesn't have a variable with cell-labels (used as ground truth
+in multiple scores) he will have to do without several scores. Alternatively,
+one can use automatic cell annotation algorithms (e.g. the
+[Azimuth package](https://github.com/satijalab/azimuth)). It is also possible to
+have multiple cell label variables (e.g. Azimuth typically returns as many cell
+label variables as levels of annotations contained in the reference). However,
+there is a risk of confusion between cell annotations when using automatic cell
+annotation tools. Furthermore, in the case of using Azimuth to annotate cells,
+there is a specific risk of biasing results by favouring RPCA integration because
+Azimuth uses RPCA to integrate the query dataset onto the reference.
+
+Let's finalise our preparations: :
+
+-   Make sure you have the [kBET package](https://github.com/theislab/kBET)
+installed to run `ScoreKBET()`
+-   To benefit from a faster implementation of the lisi algorithm, install the
+[lisi package](https://github.com/immunogenomics/LISI)
+-   To run `ScoreRegressPC.CellCycle()` (score of cell cycle conservation),
+run `CellCycleScoringPerBatch()` beforehand (next chunk)
+
+```{r, warning=FALSE}
+seu <- CellCycleScoringPerBatch(seu, batch.var = batch.var,
+                                s.features = cc.genes$s.genes,
+                                g2m.features = cc.genes$g2m.genes)
+```
+
+
+Let's now loop through the integration outputs:
+
+```{r, warning=FALSE, results='hide'}
+for (integ in integrations) {
+  reduc <- reductions[[integ]]
+  graph <- graphs[[integ]]
+  if (! is.null(reduc)) {   # all TRUE except bbknn
+    seu <- AddScoreASW(seu, integration = integ, cell.var = cell.var,
+                       what = reduc, dist.package = "distances")
+    seu <- AddScoreASWBatch(seu, integration = integ, batch.var = batch.var,
+                            cell.var = cell.var, what = reduc,
+                            dist.package = "distances")
+    seu <- AddScoreDensityPC(seu, integration = integ, batch.var = batch.var,
+                             reduction = reduc)
+    seu <- AddScoreRegressPC(seu, integration = integ, batch.var = batch.var,
+                             reduction = reduc)
+    seu <- AddScoreRegressPC.CellCycle(seu, integration = integ,
+                                       batch.var = batch.var, what = reduc,
+                                       compute.cc = FALSE) # because CellCycleScoringPerBatch was ran before
+  }
+  seu <- AddScoreConnectivity(seu, integration = integ, graph.name = graph,
+                              cell.var = cell.var)
+  seu <- AddScoreKBET(seu, integration = integ, batch.var = batch.var,
+                      cell.var = cell.var, what = reduc %||% graph, graph.type = "distances")
+  seu <- AddScoreLISI(seu, integration = integ, batch.var = batch.var,
+                      cell.var = cell.var, reduction = reduc,
+                      graph.name = if (is.null(reduc)) graph else NULL,
+                      graph.type = "distances", ncores = ncores)
+  
+}
+```
+
+Now that we have computed multiple scores, we can look at them using
+`IntegrationScores()`:
+```{r}
+ rmarkdown::paged_table(IntegrationScores(seu))
+```
+
+Note that those scores are raw. Let's scale them (and make them comparable):
 
 ```{r}
-seu[['pca.pca.bbknn']] <- RunPCA(t(Embeddings(seu, 'pca.bbknn')),
-                                     npcs = 29L, verbose = F)
+seu <- ScaleScores(seu)
 ```
 
+Once again, we can print them:
 ```{r}
-# 1st: compare PCA scores (variance regression)
-s.0 <- ScoreRegressPC(seu, batch.var = 'Method', dims = 1:30, reduction = "pca")
-s.harmony <- ScoreRegressPC(seu, batch.var = 'Method', dims = 1:30, reduction = "harmony")
-s.bbknn.sd <-ScoreRegressPC(seu, batch.var = 'Method', reduction = "pca.bbknn")
-s.bbknn.pca <-ScoreRegressPC(seu, batch.var = 'Method', reduction = "pca.pca.bbknn")
-s.scanvi.sd <-ScoreRegressPC(seu, batch.var = 'Method', reduction = "integrated.scANVI")
-s.scanvi.pca <-ScoreRegressPC(seu, batch.var = 'Method', reduction = "pca.integrated.scANVI")
-
-cat("Scores (PCA regression):\n",
-    "  - harmony:", (s.0 - s.harmony) / s.0, "\n",
-    "  - bbknn (sd):", (s.0 - s.bbknn.sd) / s.0, "\n",
-    "  - bbknn (pca):", (s.0 - s.bbknn.pca) / s.0, "\n",
-    "  - scANVI (sd):", (s.0 - s.scanvi.sd) / s.0, "\n",
-    "  - scANVI (pca):", (s.0 - s.scanvi.pca) / s.0, "\n")
+rmarkdown::paged_table(IntegrationScores(seu, scaled = TRUE))
 ```
-
-Results for standard deviation computed on the raw output or from the PCA are quite comparable. Methods ranked from best to worse for this metric are `bbknn`, then `Harmony` and `scANVI`. `scANVI` actually performs worse than the unintegrated PCA. But we used a very low number of epoch, hampering the algorithm to show its true capabilities.
-
-The next metric we will use is the cell cycle conservation score. It is computed for each batch independently (and then averaged for instance). Hence, the PCA and the cell cycle scores are computed per batch. Let's first compute the cell cycle scores (on the unintegrated data) per batch (this way, we won't have to re-compute it each time we want to score an integration):
-
+To readily compare the integrations, let's plot the scores:
 ```{r}
-seu <- CellCycleScoringPerBatch(seu, batch.var = 'Method',
-                                s.features = cc.genes.updated.2019$s.genes,
-                                g2m.features = cc.genes.updated.2019$g2m.genes)
+PlotScores(seu)
 ```
 
-Now, let's regress those scores for each integration (this time we don't need to worry about whether a variance is associated to each dimension because a PCA will be calculated for each batch):
 
+
+We notice that PCA based methods output very low scores in this case. Since they
+cannot be computed on knn graphs, scores are biased in favour of BBKNN. You can
+exclude some scores (and recompute overall scores on the fly)
 ```{r}
-# 2nd: compare PCA scores (cell cycle regression)
-s.0 <- ScoreRegressPC.CellCycle(seu, batch.var = 'Method', what = 'scale.data', compute.cc = F)
-s.harmony <- ScoreRegressPC.CellCycle(seu, batch.var = 'Method', what = 'harmony', compute.cc = F)
-s.bbknn <-ScoreRegressPC.CellCycle(seu, batch.var = 'Method', what = 'scale.data', compute.cc = F, assay = 'bbknn.ridge')
-s.scanvi <-ScoreRegressPC.CellCycle(seu, batch.var = 'Method', what = 'integrated.scANVI', compute.cc = F)
+PlotScores(seu, exclude.score = c("pca.density", "pca.regression"))
 ```
 
-Now, let's compute the conservation scores *per se*:
 
-```{r}
-library(dplyr)
-library(purrr)
-
-list(ref = s.0, harmony = s.harmony, bbknn = s.bbknn, scanvi = s.scanvi) %>%
-  purrr::map2(names(.), ~ rename(.x, !! paste0('score.', .y) := score)) %>%
-  purrr::reduce(left_join, by = 'Method') %>%
-  mutate(across(score.harmony:score.scanvi, ~ 1 - abs(.x - score.ref) / score.ref)) %>%
-  summarize(across(score.harmony:score.scanvi, mean)) %>%
-  rmarkdown::paged_table()
+You can chose a different type of plot (`radar` or `lollipop`):
+```{r, fig.height=8, fig.width=12}
+library(ggplot2)
+PlotScores(seu, plot.type = "radar", exclude.score = c("pca.density", "pca.regression")) +
+  # reduce overlap between axis names and figures 
+  theme(legend.position = "top", panel.spacing = unit(3, "cm"),
+        plot.margin = margin(r = 3, l = 3, unit = "cm"),
+        axis.text.x = element_text(size = 10))
 ```
 
-Once again, `bbknn` outperforms other methods.
-
-### Local Inverse Simpson Index (LISI)
-
-The LISI scores measure how diverse is each cell's local neighbourhood. We can pass two variables to the LISI algorithm, namely the batch variable or the cell-type variable. After the integration, we expect that a cell share connections with multiples batches, but not with other cell types. Thoses scores are sometimes referred to as iLISI and cLISI respectively.
-
-This score is computed on a graph (with the distances). When the method outputs counts, you need to get a PCA out of it. Apart from that, the function accepts a reduction or a graph. In the latter case, Dijkstra's algorithm is compute to increase the number of nearest neighbours per cell if necessary.
-You can use two functions: `ScoreLISI()` to get the raw table of LISI score, or `AddLISIScore()` to directly integrate the score to the Seurat object and get a global score.
-
-```{r}
-seu <- AddLISIScore(seu, batch.var = 'Method', cell.var = 'CellType', reduction = 'pca', dims = 1:30)
-seu <- AddLISIScore(seu, , batch.var = 'Method', cell.var = 'CellType', reduction = 'harmony', dims = 1:30)
-seu <- AddLISIScore(seu, batch.var = 'Method', cell.var = 'CellType', reduction =  'integrated.scANVI')
-
-seu <- AddLISIScore(seu, batch.var = 'Method', cell.var = 'CellType', graph.name = 'bbknn_ridge.residuals', graph.type = 'distances')
+```{r, fig.width=9, fig.height=6}
+  PlotScores(seu, plot.type = "lollipop",
+             exclude.score = c("pca.density", "pca.regression", "iLISI_Method"),
+             exclude.integration = "unintegrated")
 ```
 
-Each cell's LISI scores are in the metadata of the Seurat object:
 
-```{r}
-head(seu[[]] %>% dplyr::select(starts_with('LISI'))) %>%
-  rmarkdown::paged_table()
-```
+<!-- Let's process all the outputs. Here, we will only go to the `RunPCA()` step, but -->
+<!-- note that the ideal case would be to compute knn graphs in order to get clusters -->
+<!-- for each outputs, because a clustering variable is required to compute the ARI score) : -->
+<!-- ```{r} -->
+<!-- # corrected counts outputs -->
+<!-- DefaultAssay(seu) <- "scanorama.reconstructed" -->
+<!-- seu <- ScaleData(seu) -->
+<!-- seu <- RunPCA(seu, npcs = 50L, reduction.name = "pca.scanorama_counts") -->
 
-The median scores (scaled between O and 1) are in `Misc(seu)`. Let's print them in a convenient way: 
+<!-- # dimension reduction outputs -->
+<!-- # nothing to do -->
 
-```{r}
-unlist(Misc(seu)) %>% data.frame() %>% setNames(nm = 'val') %>%
-  tibble::rownames_to_column('var') %>%
-  mutate(lisi.type = case_when(grepl('LISIbatch', var) ~ 'iLISI (batch mixing)',
-                               T ~ 'cLISI (cell types sparation)')) %>%
-  mutate(method = case_when(grepl('_pca_', var) ~ 'Unintegrated',
-                            grepl('_harmony_', var) ~ 'Harmony',
-                            grepl('scANVI_', var) ~ 'scANVI',
-                            T ~ 'BBKNN')) %>%
-  tidyr::pivot_wider(names_from = lisi.type, id_cols = method, values_from = val) %>%
-  rmarkdown::paged_table()
-```
-The higher the LISI scores, the better.
+<!-- # graph outputs -->
+<!-- # nothing to do -->
+<!-- ``` -->
+
+
+<!-- ### Regress PCAs -->
+
+<!-- Scores based on PCA regressions require a count matrix or a dimension reduction object (ideally a PCA). Hence, it cannot be used with methods that output a graph. `bbknn` would fall into the latter category, but will use intermediate objects also output by the method to circumvent this limitation. -->
+
+<!-- The regression score weights the $R^2$ by the variance explained by the PCA. Thus, it is indispensable that the slot `stdev` in the `DimReduc` object is not null. -->
+
+<!-- ```{r} -->
+<!-- # Harmony -->
+<!-- head(seu[['harmony']]@stdev) -->
+<!-- # bbknn -->
+<!-- head(seu[['pca.bbknn']]@stdev) -->
+<!-- # scANVI -->
+<!-- head(seu[['integrated.scANVI']]@stdev) -->
+<!-- ``` -->
+
+<!-- Hence, we need to compute a PCA on the output of `scANVI`. -->
+
+<!-- ```{r} -->
+<!-- seu[['pca.integrated.scANVI']] <- RunPCA(t(Embeddings(seu, 'integrated.scANVI')), -->
+<!--                                      npcs = 9L, verbose = F) -->
+<!-- ``` -->
+
+<!-- We can also compute standard deviation on the output and compare the results: -->
+
+<!-- ```{r} -->
+<!-- seu[['integrated.scANVI']]@stdev <- apply(Embeddings(seu, 'integrated.scANVI'), 2, sd) -->
+<!-- ``` -->
+
+<!-- We will also compare for `bbknn`: -->
+
+<!-- ```{r} -->
+<!-- seu[['pca.pca.bbknn']] <- RunPCA(t(Embeddings(seu, 'pca.bbknn')), -->
+<!--                                      npcs = 29L, verbose = F) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # 1st: compare PCA scores (variance regression) -->
+<!-- s.0 <- ScoreRegressPC(seu, batch.var = 'Method', dims = 1:30, reduction = "pca") -->
+<!-- s.harmony <- ScoreRegressPC(seu, batch.var = 'Method', dims = 1:30, reduction = "harmony") -->
+<!-- s.bbknn.sd <-ScoreRegressPC(seu, batch.var = 'Method', reduction = "pca.bbknn") -->
+<!-- s.bbknn.pca <-ScoreRegressPC(seu, batch.var = 'Method', reduction = "pca.pca.bbknn") -->
+<!-- s.scanvi.sd <-ScoreRegressPC(seu, batch.var = 'Method', reduction = "integrated.scANVI") -->
+<!-- s.scanvi.pca <-ScoreRegressPC(seu, batch.var = 'Method', reduction = "pca.integrated.scANVI") -->
+
+<!-- cat("Scores (PCA regression):\n", -->
+<!--     "  - harmony:", (s.0 - s.harmony) / s.0, "\n", -->
+<!--     "  - bbknn (sd):", (s.0 - s.bbknn.sd) / s.0, "\n", -->
+<!--     "  - bbknn (pca):", (s.0 - s.bbknn.pca) / s.0, "\n", -->
+<!--     "  - scANVI (sd):", (s.0 - s.scanvi.sd) / s.0, "\n", -->
+<!--     "  - scANVI (pca):", (s.0 - s.scanvi.pca) / s.0, "\n") -->
+<!-- ``` -->
+
+<!-- Results for standard deviation computed on the raw output or from the PCA are quite comparable. Methods ranked from best to worse for this metric are `bbknn`, then `Harmony` and `scANVI`. `scANVI` actually performs worse than the unintegrated PCA. But we used a very low number of epoch, hampering the algorithm to show its true capabilities. -->
+
+<!-- The next metric we will use is the cell cycle conservation score. It is computed for each batch independently (and then averaged for instance). Hence, the PCA and the cell cycle scores are computed per batch. Let's first compute the cell cycle scores (on the unintegrated data) per batch (this way, we won't have to re-compute it each time we want to score an integration): -->
+
+<!-- ```{r} -->
+<!-- seu <- CellCycleScoringPerBatch(seu, batch.var = 'Method', -->
+<!--                                 s.features = cc.genes.updated.2019$s.genes, -->
+<!--                                 g2m.features = cc.genes.updated.2019$g2m.genes) -->
+<!-- ``` -->
+
+<!-- Now, let's regress those scores for each integration (this time we don't need to worry about whether a variance is associated to each dimension because a PCA will be calculated for each batch): -->
+
+<!-- ```{r} -->
+<!-- # 2nd: compare PCA scores (cell cycle regression) -->
+<!-- s.0 <- ScoreRegressPC.CellCycle(seu, batch.var = 'Method', what = 'scale.data', compute.cc = F) -->
+<!-- s.harmony <- ScoreRegressPC.CellCycle(seu, batch.var = 'Method', what = 'harmony', compute.cc = F) -->
+<!-- s.bbknn <-ScoreRegressPC.CellCycle(seu, batch.var = 'Method', what = 'scale.data', compute.cc = F, assay = 'bbknn.ridge') -->
+<!-- s.scanvi <-ScoreRegressPC.CellCycle(seu, batch.var = 'Method', what = 'integrated.scANVI', compute.cc = F) -->
+<!-- ``` -->
+
+<!-- Now, let's compute the conservation scores *per se*: -->
+
+<!-- ```{r} -->
+<!-- library(dplyr) -->
+<!-- library(purrr) -->
+
+<!-- list(ref = s.0, harmony = s.harmony, bbknn = s.bbknn, scanvi = s.scanvi) %>% -->
+<!--   purrr::map2(names(.), ~ rename(.x, !! paste0('score.', .y) := score)) %>% -->
+<!--   purrr::reduce(left_join, by = 'Method') %>% -->
+<!--   mutate(across(score.harmony:score.scanvi, ~ 1 - abs(.x - score.ref) / score.ref)) %>% -->
+<!--   summarize(across(score.harmony:score.scanvi, mean)) %>% -->
+<!--   rmarkdown::paged_table() -->
+<!-- ``` -->
+
+<!-- Once again, `bbknn` outperforms other methods. -->
+
+<!-- ### Local Inverse Simpson Index (LISI) -->
+
+<!-- The LISI scores measure how diverse is each cell's local neighbourhood. We can pass two variables to the LISI algorithm, namely the batch variable or the cell-type variable. After the integration, we expect that a cell share connections with multiples batches, but not with other cell types. Thoses scores are sometimes referred to as iLISI and cLISI respectively. -->
+
+<!-- This score is computed on a graph (with the distances). When the method outputs counts, you need to get a PCA out of it. Apart from that, the function accepts a reduction or a graph. In the latter case, Dijkstra's algorithm is compute to increase the number of nearest neighbours per cell if necessary. -->
+<!-- You can use two functions: `ScoreLISI()` to get the raw table of LISI score, or `AddLISIScore()` to directly integrate the score to the Seurat object and get a global score. -->
+
+<!-- ```{r} -->
+<!-- seu <- AddLISIScore(seu, batch.var = 'Method', cell.var = 'CellType', reduction = 'pca', dims = 1:30) -->
+<!-- seu <- AddLISIScore(seu, , batch.var = 'Method', cell.var = 'CellType', reduction = 'harmony', dims = 1:30) -->
+<!-- seu <- AddLISIScore(seu, batch.var = 'Method', cell.var = 'CellType', reduction =  'integrated.scANVI') -->
+
+<!-- seu <- AddLISIScore(seu, batch.var = 'Method', cell.var = 'CellType', graph.name = 'bbknn_ridge.residuals', graph.type = 'distances') -->
+<!-- ``` -->
+
+<!-- Each cell's LISI scores are in the metadata of the Seurat object: -->
+
+<!-- ```{r} -->
+<!-- head(seu[[]] %>% dplyr::select(starts_with('LISI'))) %>% -->
+<!--   rmarkdown::paged_table() -->
+<!-- ``` -->
+
+<!-- The median scores (scaled between O and 1) are in `Misc(seu)`. Let's print them in a convenient way:  -->
+
+<!-- ```{r} -->
+<!-- unlist(Misc(seu)) %>% data.frame() %>% setNames(nm = 'val') %>% -->
+<!--   tibble::rownames_to_column('var') %>% -->
+<!--   mutate(lisi.type = case_when(grepl('LISIbatch', var) ~ 'iLISI (batch mixing)', -->
+<!--                                T ~ 'cLISI (cell types sparation)')) %>% -->
+<!--   mutate(method = case_when(grepl('_pca_', var) ~ 'Unintegrated', -->
+<!--                             grepl('_harmony_', var) ~ 'Harmony', -->
+<!--                             grepl('scANVI_', var) ~ 'scANVI', -->
+<!--                             T ~ 'BBKNN')) %>% -->
+<!--   tidyr::pivot_wider(names_from = lisi.type, id_cols = method, values_from = val) %>% -->
+<!--   rmarkdown::paged_table() -->
+<!-- ``` -->
+<!-- The higher the LISI scores, the better. -->

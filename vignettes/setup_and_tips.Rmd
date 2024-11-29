@@ -1,16 +1,30 @@
 ---
 title: "Generic advice about setting up and using conda environments"
-output: rmarkdown::html_vignette
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: false
 vignette: >
   %\VignetteIndexEntry{Generic advice about setting up and using conda environments}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+```{css, echo=FALSE}
+.darker-code {
+  color: #2f2f2f;
+}
+```
+
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+  collapse = FALSE,
+  results = "hold",
+  message = FALSE,
+  class.source  = "darker-code"
 )
 ```
 
@@ -50,7 +64,7 @@ Have look at your `CondaEnvManager`:
 ```{r, eval=FALSE}
 conda_status$current
 ```
-```{r png-conda-unset, echo=FALSE, out.width='690px', fig.align='center'}
+```{r png-conda-unset, echo=FALSE, out.width='100%', fig.align='center'}
 knitr::include_graphics('./img/conda_envs_unset.png')
 ```
 
@@ -63,7 +77,7 @@ If you don't have any conda environments for them, look at the [next sub-section
 Conversely, if you want to add an existing conda environment, directly go to the
 [following one](#use_env).
 
-### Create new conda environments with `SeuratIntegrate` {#create_env}
+### Option 1: Create new conda environments with `SeuratIntegrate` {#create_env}
 
 **Note that the commands below have only been tested on Linux disributions**
 
@@ -87,17 +101,17 @@ Have look at your `CondaEnvManager`:
 ```{r, eval=FALSE}
 conda_status$current
 ```
-```{r png-conda-set, echo=FALSE, out.width='690px', fig.align='center'}
+```{r png-conda-set, echo=FALSE, out.width='100%', fig.align='center'}
 knitr::include_graphics('./img/conda_envs_set.png')
 ```
 
-### Use existing conda environments {#use_env}
+### Option 2: Use existing conda environments {#use_env}
 
-If you already have (an) existing conda environment(s) for one or more of the
-methods, you can tell `SeuratIntegrate` to use it (them). Similarly, if you run
-into problems with `UpdateEnvCache()`, the alternative is to set up conda
-environments yourself and provide them to `SeuratIntegrate`. Whatever the case,
-let's proceed.
+If you already have one (several) existing conda environment(s) for one (some)
+of the methods, you can tell `SeuratIntegrate` to use it (them). Similarly, if
+you run into problems with `UpdateEnvCache()` commands above, the alternative is
+to set up conda environments yourself and provide them to `SeuratIntegrate`.
+Whatever the case, let's proceed.
 
 You'll use `UpdateEnvCache()`. You can specify the name of the conda environment
 or the path to it. By default, `UpdateEnvCache()` will try to decide whether the
@@ -112,6 +126,10 @@ See examples below. You shall adapt the arguments to your situation:
 # environment for bbknn
 UpdateEnvCache('bbknn', conda.env = 'bbknn_env',
                conda.env.is.path = FALSE)   # default 'auto' would work
+
+# environment for bbknn in ./bbknn_env/
+UpdateEnvCache('bbknn', conda.env = 'bbknn_env',
+               conda.env.is.path = TRUE)
 
 # environment for bbknn, conda binary not in PATH
 UpdateEnvCache('bbknn', conda.env = 'bbknn_env', conda.bin = 'cutom/location/conda')
@@ -128,6 +146,8 @@ Note that:
 - `scVI` and `scANVI` share the same environment. Hence, it is not necessary to
 run both `UpdateEnvCache('scvi')` and `UpdateEnvCache('scanvi')`
 
+Now you can use the python-based methods !
+
 ###  Update or reset conda environments
 
 If you want to update a `conda` environment, use
@@ -140,80 +160,79 @@ To unset an environment, use
 resetCache(method = 'method')
 ```
 
+<!-- ## Usage -->
 
-## Usage
+<!-- Now you can use the python-based methods ! -->
 
-Now you can use the python-based methods !
+<!-- However, you can only load and attach one conda environment per R session. If -->
+<!-- you plan to use multiple python-based methods, you need to launch as many -->
+<!-- sessions as integrations using those methods. To circumvent this limitation of -->
+<!-- reticulate, you can take advantage of the R package `future`. It allows you to -->
+<!-- launch background R sessions, in such a way that the conda environments will be -->
+<!-- loaded on those sessions and not on the main one. Simply follow one of the -->
+<!-- syntaxes below (`seu` is a Seurat object, and `IntegrateLayers()` is the -->
+<!-- function to call any integration method): -->
 
-However, you can only load and attach one conda environment per R session. If
-you plan to use multiple python-based methods, you need to launch as many
-sessions as integrations using those methods. To circumvent this limitation of
-reticulate, you can take advantage of the R package `future`. It allows you to
-launch background R sessions, in such a way that the conda environments will be
-loaded on those sessions and not on the main one. Simply follow one of the
-syntaxes below (`seu` is a Seurat object, and `IntegrateLayers()` is the
-function to call any integration method):
+<!-- ### Working on RStudio and outside -->
 
-### Working on RStudio and outside
+<!-- ```{r, eval=FALSE} -->
+<!-- library(future) -->
 
-```{r, eval=FALSE}
-library(future)
+<!-- plan(multisession) -->
+<!-- seu %<-% { IntegrateLayers(seu, method = bbknnIntegration) } %seed% 42L # seu is a promise -->
+<!-- seu                                                                     # seu is evaluated -->
+<!-- plan(multisession) -->
+<!-- seu %<-% { IntegrateLayers(seu, method = scVIIntegration) } %seed% 42L  # seu is a promise -->
+<!-- seu                                                                     # seu is evaluated -->
+<!-- ``` -->
 
-plan(multisession)
-seu %<-% { IntegrateLayers(seu, method = bbknnIntegration) } %seed% 42L # seu is a promise
-seu                                                                     # seu is evaluated
-plan(multisession)
-seu %<-% { IntegrateLayers(seu, method = scVIIntegration) } %seed% 42L  # seu is a promise
-seu                                                                     # seu is evaluated
-```
+<!-- ### Not working on RStudio -->
 
-### Not working on RStudio
+<!-- ```{r, eval=FALSE} -->
+<!-- library(future) -->
 
-```{r, eval=FALSE}
-library(future)
+<!-- plan(multicore) # needed just once -->
+<!-- seu %<-% { IntegrateLayers(seu, method = bbknnIntegration) } %seed% 42L # seu is a promise -->
+<!-- seu                                                                     # seu is evaluated -->
+<!-- seu %<-% { IntegrateLayers(seu, method = scVIIntegration) } %seed% 42L  # seu is a promise -->
+<!-- seu                                                                     # seu is evaluated -->
+<!-- ``` -->
 
-plan(multicore) # needed just once
-seu %<-% { IntegrateLayers(seu, method = bbknnIntegration) } %seed% 42L # seu is a promise
-seu                                                                     # seu is evaluated
-seu %<-% { IntegrateLayers(seu, method = scVIIntegration) } %seed% 42L  # seu is a promise
-seu                                                                     # seu is evaluated
-```
+<!-- ### In case of failing -->
 
-### In case of failing
+<!-- In practice, if an error is thrown during the evaluation, the Seurat object -->
+<!-- would be lost and `seu` would stay a (failed) promise. To avoid this, we can use -->
+<!-- another syntax: -->
 
-In practice, if an error is thrown during the evaluation, the Seurat object
-would be lost and `seu` would stay a (failed) promise. To avoid this, we can use
-another syntax:
+<!-- ```{r, eval=FALSE} -->
+<!-- library(future) -->
 
-```{r, eval=FALSE}
-library(future)
+<!-- plan(multisession) #or plan(multicore) -->
 
-plan(multisession) #or plan(multicore)
+<!--  f <- future({ IntegrateLayers(seu, method = bbknnIntegration) })  # f is a promise -->
+<!--  seu <- value(f)                                                   # f is evaluated -->
+<!-- ``` -->
 
- f <- future({ IntegrateLayers(seu, method = bbknnIntegration) })  # f is a promise
- seu <- value(f)                                                   # f is evaluated
-```
+<!-- The difference comes from the fact that the promise is evaluated at the last -->
+<!-- line. If an error is thrown, the variable `seu` is handled by R, preventing it -->
+<!-- to be overwritten. Because it is safer, it might come in handy if you are not -->
+<!-- familiar with integration methods from `SeuratIntegrate`. -->
 
-The difference comes from the fact that the promise is evaluated at the last
-line. If an error is thrown, the variable `seu` is handled by R, preventing it
-to be overwritten. Because it is safer, it might come in handy if you are not
-familiar with integration methods from `SeuratIntegrate`.
+<!-- Another error occurs when the total size of exported objects is too high. -->
+<!-- ``` -->
+<!-- Error in getGlobalsAndPackages(expr, envir = envir, globals = TRUE) :  -->
+<!--   The total size of the X globals that need to be exported for the future expression ('FUN()') is X GiB. This exceeds the maximum allowed size of 500.00 MiB (option 'future.globals.maxSize'). The X largest globals are ... -->
+<!-- ``` -->
+<!-- By default, `future` allows 500MB per thread. `Seurat` objects tend to grow -->
+<!-- quickly, hence it might be necessary to increase the limit. Below is an example -->
+<!-- to allow 1.5GB per thread: -->
 
-Another error occurs when the total size of exported objects is too high.
-```
-Error in getGlobalsAndPackages(expr, envir = envir, globals = TRUE) : 
-  The total size of the X globals that need to be exported for the future expression ('FUN()') is X GiB. This exceeds the maximum allowed size of 500.00 MiB (option 'future.globals.maxSize'). The X largest globals are ...
-```
-By default, `future` allows 500MB per thread. `Seurat` objects tend to grow
-quickly, hence it might be necessary to increase the limit. Below is an example
-to allow 1.5GB per thread:
+<!-- ```{r, eval=FALSE} -->
+<!-- library(future) -->
+<!-- ngb <- 1.5  # 1.5GB -->
+<!-- options(future.globals.maxSize = ngb * 1e3 * 1024 ^ 2)  -->
 
-```{r, eval=FALSE}
-library(future)
-ngb <- 1.5  # 1.5GB
-options(future.globals.maxSize = ngb * 1e3 * 1024 ^ 2) 
-
-plan(multisession) #or plan(multicore)
-# ...
-```
+<!-- plan(multisession) #or plan(multicore) -->
+<!-- # ... -->
+<!-- ``` -->
 
