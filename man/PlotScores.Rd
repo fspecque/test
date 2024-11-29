@@ -13,6 +13,9 @@ PlotScores(
   exclude.integration = NULL,
   include.score = NULL,
   exclude.score = NULL,
+  recompute.overall.scores = TRUE,
+  batch.coeff = 0.4,
+  bio.coeff = 0.6,
   point.max.size = 20L,
   use.ggforce = is_installed("ggforce")
 )
@@ -43,6 +46,16 @@ value (\code{NULL}) enable to include them all.}
 
 \item{exclude.score}{name of the score(s) to exclude. The default value
 (\code{NULL}) enable to include them all.}
+
+\item{recompute.overall.scores}{whether to recompute overall scores. Useful
+when there is a restriction on scores to plot. When \code{FALSE},
+coefficient parameters have no impact.}
+
+\item{batch.coeff}{the weight of batch correction performance evaluation
+scores in the overall score.}
+
+\item{bio.coeff}{the weight of bio-conservation performance evaluation scores
+in the overall score.}
 
 \item{point.max.size}{inoperative unless \code{plot.type = 'table'} and
 \code{use.ggforce = FALSE}. Determine the maximum size of the points

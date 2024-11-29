@@ -157,8 +157,9 @@ DoIntegrateSingle <- function (object, method, use.hvg = TRUE, use.future = TRUE
   if (use.future) {
     future.globals.size <- future.globals.size %||% unclass(object.size(object)) * 3
     oopts <- options(future.globals.maxSize = future.globals.size)  ## 1.0 GB
+    oplan <- plan()
     on.exit(options(oopts))
-    on.exit(plan(sequential))
+    on.exit(plan(oplan))
 
     future.strat <- if (supportsMulticore()) multicore else multisession
     plan(future.strat)
