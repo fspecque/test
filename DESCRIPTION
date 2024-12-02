@@ -36,7 +36,11 @@ Imports:
     purrr,
     tibble,
     tidyr,
-    future
+    vctrs,
+    future,
+    igraph,
+    parallelly,
+    methods
 Suggests: 
     SeuratData,
     lisi,
