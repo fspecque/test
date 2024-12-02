@@ -36,11 +36,10 @@ Imports:
     purrr,
     tibble,
     tidyr,
-    vctrs
+    future
 Suggests: 
     SeuratData,
     lisi,
-    future,
     knitr,
     rmarkdown,
     distances,
