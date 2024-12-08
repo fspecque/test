@@ -533,12 +533,14 @@ setMethod("GetNeighborsPerBatch", "Neighbor",
                          count.self = count.self)
 })
 
+#' @importFrom stats as.formula
+#' @importFrom Matrix sparse.model.matrix
 #' @keywords internal
 setMethod("GetNeighborsPerBatch", "Matrix",
   function(object, batch.var, count.self) {
     batch.var.nm <- colnames(batch.var)[1]
     formula <- as.formula(sprintf("~ 0 + %s", batch.var.nm))
-    binmat <- Matrix::sparse.model.matrix(object = formula, data = batch.var)
+    binmat <- sparse.model.matrix(object = formula, data = batch.var)
 
     # if binmat has rownames, ensure object matrix dimnames are properly ordered
     # else, assume they are ordered likewise

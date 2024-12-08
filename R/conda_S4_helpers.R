@@ -62,6 +62,8 @@ CondaEnv <- function(method = known.methods, conda.bin = NULL,
 #' @return a \linkS4class{CondaEnvManager} object
 #'
 #' @importFrom dplyr "%>%" group_by group_map
+#' @importFrom stats setNames
+#' @importFrom methods new
 #' @export
 #' @seealso \linkS4class{CondaEnvManager}
 #' @details The \code{cache} data.frame's expected column names are:
@@ -131,6 +133,7 @@ CondaManager <- function(cache) {
   }
 }
 
+#' @importFrom methods new
 .blankCondaManager <- function() {
   suppressWarnings(
     new("CondaEnvManager",
@@ -175,6 +178,9 @@ CondaManager <- function(cache) {
 #' But the new conda environment (if any) will be created. \code{FALSE} by default.
 #'
 #' @return a \linkS4class{CondaEnvManager} object
+#'
+#' @importFrom methods slot slot<-
+#' @importFrom utils adist
 #'
 #' @export
 #' @seealso \linkS4class{CondaEnvManager} \link[=CondaManager]{CondaManager()}
@@ -281,6 +287,7 @@ UpdateEnvCache <- function(method = known.methods, conda.bin = "auto",
   }
 }
 
+#' @importFrom methods new
 .CondaEnvFromDf <- function(cache, ...) {
   new("CondaEnv", method = cache$method, needs.conda = cache$needs.conda,
       conda.bin = new("CondaEnvSlot",
@@ -306,6 +313,7 @@ CondaEnvFromDf <- function(cache) {
   .CondaEnvFromDf(cache)
 }
 
+#' @importFrom methods new
 .blankCondaManager <- function() {
   new("CondaEnvManager",
       combat = checkCondaEnv(CondaEnv("combat")),

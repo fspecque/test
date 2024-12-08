@@ -81,11 +81,12 @@ DoIntegrate <- function (object, ..., use.hvg = TRUE, use.future = TRUE,
   return(object)
 }
 
-#' @importFrom rlang quo_get_expr call_ns call_name call_match call_args eval_tidy maybe_missing fn_fmls_names call_modify quo quo_set_expr
+#' @importFrom rlang quo_get_expr call_ns call_name call2 call_match call_args eval_tidy maybe_missing fn_fmls_names call_modify quo quo_set_expr
 #' @importFrom SeuratObject DefaultAssay Layers Features VariableFeatures DefaultDimReduc
 #' @importFrom Seurat SelectSCTIntegrationFeatures
 #' @importFrom parallelly supportsMulticore
 #' @importFrom future sequential multisession multicore plan %<-% %seed% %packages%
+#' @importFrom utils object.size
 #' @keywords internal
 #' @noRd
 DoIntegrateSingle <- function (object, method, use.hvg = TRUE, use.future = TRUE,

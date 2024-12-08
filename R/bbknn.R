@@ -54,7 +54,7 @@
 #'
 #' @importFrom reticulate use_condaenv import r_to_py py_to_r
 #' @importFrom Matrix t
-#' @importFrom Seurat CreateDimReducObject
+#' @importFrom Seurat CreateDimReducObject FindClusters
 #' @importFrom SeuratObject JoinLayers GetAssayData
 #'
 #' @export

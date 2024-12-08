@@ -149,6 +149,7 @@ setMethod("checkCondaEnvName", "CondaEnv", function(x, ...) {
   x
 })
 
+#' @importFrom utils setTxtProgressBar
 setMethod("checkCondaEnv", "CondaEnv", function(x, ...) {
   if (pb$onLoad) {
     tryCatch({
@@ -216,6 +217,8 @@ setMethod("unsetSlot", "CondaEnvSlot", function(x, valid = FALSE) {
   x@valid <- valid %||% FALSE
   x
 })
+
+#' @importFrom methods slot slot<-
 setMethod("unsetSlot", "CondaEnv", function(x, slot = c('conda.bin',
                                                         'conda.env.name',
                                                         'conda.env.path'),
@@ -321,6 +324,7 @@ setMethod("show", "CondaEnvManager", function(object) {
 ###                                                                          ###
 #                                                                              #
 
+#' @importFrom methods slotNames
 #' @export
 as.list.CondaEnvSlot <- function(x, ...) {
   sapply(slotNames(x), slot, object = x, simplify = FALSE, USE.NAMES = TRUE)
@@ -352,15 +356,19 @@ as.data.frame.CondaEnvManager <- function(x, ...) {
   do.call(rbind, lapply(x, as.data.frame))
 }
 
+
+#' @importFrom utils .DollarNames
 #' @export
 .DollarNames.CondaEnvSlot <- function(x, pattern="") {
   return("value")
 }
+#' @importFrom utils .DollarNames
 #' @export
 .DollarNames.CondaEnv <- function(x, pattern="") {
   return(c("method", "needs.conda", "conda.bin", "conda.env.name",
            "conda.env.path", "is.valid"))
 }
+#' @importFrom utils .DollarNames
 #' @export
 .DollarNames.CondaEnvManager <- function(x, pattern="") {
   return(known.methods)
@@ -428,6 +436,7 @@ as.data.frame.CondaEnvManager <- function(x, ...) {
   }
   return(object)
 }
+#' @importFrom methods is
 #' @export
 "$<-.CondaEnvManager" <- function(object, name, value) {
   name <- intersect(name, known.methods)

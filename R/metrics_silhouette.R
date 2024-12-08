@@ -206,7 +206,7 @@ AddScoreASW <- function(object, integration,
 #'
 #' @importFrom SeuratObject DefaultAssay Reductions Embeddings Layers LayerData JoinLayers GetAssayData
 #' @importFrom Matrix t
-#' @importFrom rlang is_installed
+#' @importFrom rlang is_installed :=
 #' @importFrom cluster silhouette
 #'
 #' @export

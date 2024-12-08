@@ -410,6 +410,8 @@ compute.umap.connectivities <- function(knn.dist, knn.idx, sorted.dist = FALSE,
 #'
 #' @return A sparse matrix of computed connectivities of size ncells x ncells.
 #'
+#' @importFrom stats median
+#'
 #' @note This function is adapted from \pkg{scanpy} original python
 #' implementation. You can have a look at the
 #' \href{https://github.com/scverse/scanpy/blob/b918a23eb77462837df90d7b3a30a573989d4d48/src/scanpy/neighbors/_connectivity.py#L18}{original function}\cr

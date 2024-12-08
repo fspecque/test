@@ -15,6 +15,7 @@ setClass('numeric_lisi', contains = "numeric",
 
 
 #' `numeric_lisi` constructor
+#' @importFrom methods new
 #' @keywords internal
 #' @noRd
 numeric_lisi <- function(x, N = NA_integer_) {
@@ -28,6 +29,7 @@ numeric_lisi <- function(x, N = NA_integer_) {
 
 
 #' Get and set `@N` slot of a `numeric_lisi`
+#' @importFrom methods validObject
 #' @keywords internal
 #' @noRd
 setGeneric("N", function(x) standardGeneric("N"))
@@ -99,6 +101,7 @@ setMethod('as.numeric', 'numeric_lisi', function(x) {
 
 
 #' Indexing method (keep `@N` slot)
+#' @importFrom methods callNextMethod
 #' @keywords internal
 #' @noRd
 setMethod('[', 'numeric_lisi', function(x, i) {
@@ -107,6 +110,7 @@ setMethod('[', 'numeric_lisi', function(x, i) {
 
 
 #' Replicating method (keep `@N` slot)
+#' @importFrom methods callNextMethod
 #' @keywords internal
 #' @noRd
 setMethod('rep', 'numeric_lisi', function(x, ...) {
@@ -130,6 +134,7 @@ pick_N <- function(x, y) {
 }
 
 #' Value replacement method (check `@N` slot compatibility)
+#' @importFrom methods callNextMethod
 #' @keywords internal
 #' @noRd
 setMethod('[<-', 'numeric_lisi', function(x, i, value) {

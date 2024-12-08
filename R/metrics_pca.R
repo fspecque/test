@@ -169,7 +169,7 @@ AddScoreDensityPC <- function(object, integration,
 #' \code{AddScoreRegressPC}: the updated Seurat \code{object} with the regression
 #' PCA score set for the integration.
 #'
-#' @importFrom stats lm summary.lm
+#' @importFrom stats lm summary.lm as.formula
 #' @importFrom dplyr %>% group_by summarise across all_of ungroup mutate pick
 #'
 #' @export
