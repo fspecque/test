@@ -41,7 +41,8 @@ Imports:
     igraph,
     parallelly,
     methods,
-    scales
+    scales,
+    cli
 Suggests: 
     SeuratData,
     lisi,
