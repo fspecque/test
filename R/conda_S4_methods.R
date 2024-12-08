@@ -270,53 +270,57 @@ setMethod("show", "CondaEnvSlot", function(object) {
       " element of a conda environement (", sQuote(object@value), ")\n",
       sep = "")
 })
+
+#' @importFrom cli rule style_bold col_green col_red symbol style_strikethrough col_blue style_dim
 setMethod("show", "CondaEnv", function(object) {
   # header1 <- cli::bg_blue(cli::ansi_align(cli::col_br_white(cli::style_bold("Conda environment")), align="center"))
-  header2 <- cli::rule(left = cli::style_bold("Conda environment"),
+  header2 <- rule(left = style_bold("Conda environment"),
                        right = sprintf("%s (v%s)", "SeuratIntegrate", getNamespaceVersion(.packageName)[[1]]),
                        line_col = "gray60", col= "royalblue")
-  good_tick <- cli::col_green(cli::symbol$tick)
-  bad_cross <- cli::col_red(cli::symbol$cross)
-  sep <- paste(" ", cli::style_strikethrough("    "), "  ")
+  good_tick <- col_green(symbol$tick)
+  bad_cross <- col_red(symbol$cross)
+  sep <- paste(" ", style_strikethrough("    "), "  ")
   is.valid <- good_tick
-  env.name <- cli::col_blue(cli::style_dim("R-based method"))
+  env.name <- col_blue(style_dim("R-based method"))
   current.status <- paste0(is.valid, "  ", object$method, sep, env.name,
                            "\n", collapse = " ")
   if (object$needs.conda) {
     is.valid <- ifelse(isValid(object), good_tick, bad_cross)
-    env.name <- ifelse(isValid(object), cli::col_blue(object$conda.env.name$value), bad_cross)
-    env.path <- ifelse(isValid(object), cli::col_blue(dirname(object$conda.env.path$value)), bad_cross)
+    env.name <- ifelse(isValid(object), (object$conda.env.name$value), bad_cross)
+    env.path <- ifelse(isValid(object), (dirname(object$conda.env.path$value)), bad_cross)
     current.status <- paste0(is.valid, "  ", object$method, sep, env.name,
                              sep, env.path, "\n", collapse = " ")
   }
   cat(header2, "\n ", current.status, sep = "")
 })
+
+#' @importFrom cli col_green symbol col_red style_bold style_dim col_blue col_grey style_strikethrough ansi_align ansi_nchar col_br_white bg_blue rule
 setMethod("show", "CondaEnvManager", function(object) {
-  good_tick <- cli::col_green(cli::symbol$tick)
-  bad_cross <- cli::col_red(cli::symbol$cross)
+  good_tick <- col_green(symbol$tick)
+  bad_cross <- col_red(symbol$cross)
   is.valid <- ifelse(isValid(object), good_tick, bad_cross)
-  methods <- cli::style_bold(names(is.valid))
+  methods <- style_bold(names(is.valid))
   needs.conda <- sapply(object, function(x) x@needs.conda)[names(is.valid)]
 
   env.name <- sapply(object, function(x) x@conda.env.name@value)[names(is.valid)]
-  env.name[!needs.conda] <-  cli::style_dim("R-based method")
-  env.name <- cli::col_blue(env.name)
+  env.name[!needs.conda] <-  style_dim("R-based method")
+  env.name <- col_blue(env.name)
   env.name[!isValid(object)] <- bad_cross
 
   env.path <- sapply(object, function(x) x@conda.env.path@value)[names(is.valid)]
-  env.path[!needs.conda] <-  cli::style_dim("R-based method")
-  env.path <- cli::col_grey(env.path)
+  env.path[!needs.conda] <-  style_dim("R-based method")
+  env.path <- col_grey(env.path)
   env.path[!isValid(object)] <- bad_cross
   env.path[isValid(object) & needs.conda] <- dirname(env.path[isValid(object) & needs.conda])
-  sep <- paste(" ", cli::style_strikethrough("    "), "  ")
+  sep <- paste(" ", style_strikethrough("    "), "  ")
   current.status <- paste0(is.valid, "  ",
-                           cli::ansi_align(methods, max(cli::ansi_nchar(methods))), sep,
-                           cli::ansi_align(env.name, max(cli::ansi_nchar(env.name))),
+                           ansi_align(methods, max(ansi_nchar(methods))), sep,
+                           ansi_align(env.name, max(ansi_nchar(env.name))),
                            sep, env.path, "\n", collapse = " ")
-  # header1 <- cli::rule(center =  cli::style_bold("Conda environments manager"),
+  # header1 <- rule(center =  style_bold("Conda environments manager"),
   #                      line = " ", line_col = "black", col = "gray30")
-  header1 <- cli::bg_blue(cli::ansi_align(cli::col_br_white(cli::style_bold("Conda environments manager")), align="center"))
-  header2 <- cli::rule(left = cli::style_bold("Integration methods"),
+  header1 <- bg_blue(ansi_align(col_br_white(style_bold("Conda environments manager")), align="center"))
+  header2 <- rule(left = style_bold("Integration methods"),
                        right = sprintf("%s (v%s)", "SeuratIntegrate", getNamespaceVersion(.packageName)[[1]]),
                        line_col = "gray60", col= "royalblue")
   cat(header1, "\n", header2, "\n\n ", current.status, sep = "")
