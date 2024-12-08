@@ -82,8 +82,8 @@ NULL
 #' In either case, it is recommended to keep \code{do.symmetrize = TRUE}.
 #'
 #' For possible additional parameters, see \code{\link[Seurat]{FindNeighbors}}
-#' (when inputting a reduction) or \code{\link{ExpandNeighbors}} (when inputting
-#' a knn graph)
+#' (when inputting a reduction) or \code{\link{ExpandNeighbours}} (when
+#' inputting a knn graph)
 #'
 #' @note This score is an adaptation of the LISI score as described in Korsunsky
 #' I. \emph{et al.}, 2019 and also used in Luecken M.D. \emph{et al.}, 2022.
@@ -100,7 +100,7 @@ NULL
 #' single-cell genomics. Nat Methods 19, 41–50 (2021).
 #' \href{https://doi.org/10.1038/s41592-021-01336-8}{DOI}
 #'
-#' @seealso \code{\link[Seurat]{FindNeighbors}}, \code{\link{ExpandNeighbors}}
+#' @seealso \code{\link[Seurat]{FindNeighbors}}, \code{\link{ExpandNeighbours}}
 #' and \code{\link{CutKnn}}
 #' @rdname score-lisi
 
