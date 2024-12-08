@@ -76,7 +76,8 @@ NULL
 #'                        features = Features(obj), conda_env = 'scvi-tools',
 #'                        layers = 'counts', groups = obj[[]], groups.name = 'Method')
 #'
-#' # To enable cell label-guided correction, save the model, add other 'nuisance' factors and increase number of threads used:
+#' # To enable cell label-guided correction, save the model, add other
+#' # 'nuisance' factors and increase number of threads used:
 #' obj <- IntegrateLayers(object = obj, method = scVIIntegration,
 #'                        features = Features(obj), conda_env = 'scvi-tools',
 #'                        layers = 'counts', groups = obj[[]], groups.name = "Method",
