@@ -157,8 +157,8 @@ ScoreASW <- function(object, cell.var,  what, assay = NULL,
                   sQuote(dist.package))[verbose], appendLF = FALSE)
   dist.mat <- switch (dist.package,
                       distances = distances::distance_matrix(distances::distances(mat), ...),
-                      Rfast = Rfast::Dist(mat, method = metric_...),
-                      parallelDist = parallelDist::parallelDist(mat, method = metric_,...),
+                      Rfast = Rfast::Dist(mat, method = metric_, ...),
+                      parallelDist = parallelDist::parallelDist(mat, method = metric_, ...),
                       stats = stats::dist(mat, method = metric_, ...)
   )
   if (metric == 'cosine') {
