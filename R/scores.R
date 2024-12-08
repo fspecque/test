@@ -104,6 +104,7 @@ GetMiscScores <- function(object, search = NULL) {
 #'
 #' @return the Seurat object with updated table of scores.
 #'
+#' @importFrom methods slot<- as
 #' @importFrom SeuratObject Misc
 #' @importFrom tibble add_row
 #' @importFrom dplyr %>%
@@ -274,8 +275,9 @@ compute.overall.scores <- function(scaled.scores, batch.scores, bio.scores,
 #' @param object a Seurat object
 #' @param ref the name of the integration to use as a reference for scaling.
 #' Useful for PCA regression (and density) and cell cycle conservation scores.
-#' @param integration the name of the integration for which the score was
-#' computed.
+#' @param rescale whether to rescale each score between 0 and 1 using min-max
+#' normalisation before computing overall scores. This ensures that each metric
+#' equally contributes to the overall scores. \code{TRUE by default}
 #' @param batch.coeff the weight of batch correction performance evaluation
 #' scores in the overall score.
 #' @param bio.coeff the weight of bio-conservation performance evaluation scores
@@ -285,9 +287,9 @@ compute.overall.scores <- function(scaled.scores, batch.scores, bio.scores,
 #' @importFrom dplyr %>% select arrange filter summarise across mutate bind_rows rowwise c_across ungroup case_when
 #' @importFrom purrr map2 reduce
 #' @importFrom rlang sym syms data_syms !! !!!
-#' @importFrom tibble tibble add_column
+#' @importFrom scales rescale
 #' @export
-ScaleScores <- function(object, ref = "Unintegrated",
+ScaleScores <- function(object, ref = "Unintegrated", rescale = FALSE,
                         batch.coeff = .4, bio.coeff = .6) {
   ref <- ref %||% "Unintegrated"
   Misc(object, slot = 'si_scores') %||%
@@ -393,6 +395,11 @@ ScaleScores <- function(object, ref = "Unintegrated",
     purrr::map2(colnames(.), ~ scaling[[.y]](.x, raw.scores$Integration)) %>%
     bind_rows()
 
+  if (rescale) {
+    scaled.scores <- scaled.scores %>%
+      mutate(across(!Integration, ~ rescale(x = .x, to = c(0,1))) )
+  }
+
   bio.scores <- get.score.types(colnames(scaled.scores), batch = FALSE)
   batch.scores <- get.score.types(colnames(scaled.scores), batch = TRUE)
 
@@ -441,6 +448,10 @@ IntegrationScores <- function(object, scaled = FALSE) {
 #' @param recompute.overall.scores whether to recompute overall scores. Useful
 #' when there is a restriction on scores to plot. When \code{FALSE},
 #' coefficient parameters have no impact.
+#' @param rescale whether to rescale each score between 0 and 1 using min-max
+#' normalisation before computing overall scores. This ensures that each metric
+#' equally contributes to the overall scores. Has no effect when
+#' \code{recompute.overall.scores = FALSE}. \code{TRUE by default}
 #' @param point.max.size inoperative unless \code{plot.type = 'table'} and
 #' \code{use.ggforce = FALSE}. Determine the maximum size of the points
 #' (only achieved for a score of 1) to fit the plotting area (handled
@@ -453,6 +464,7 @@ IntegrationScores <- function(object, scaled = FALSE) {
 #' @importFrom rlang is_installed !!
 #' @importFrom SeuratObject Misc
 #' @importFrom dplyr %>% mutate across where case_when desc select filter
+#' @importFrom scales rescale
 #' @importFrom forcats fct_reorder fct_relabel
 #' @importFrom tidyr pivot_longer
 #' @include numeric_lisi_class.R
@@ -465,6 +477,7 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
                        include.score = NULL,
                        exclude.score = NULL,
                        recompute.overall.scores = TRUE,
+                       rescale = TRUE,
                        batch.coeff = .4, bio.coeff = .6,
                        point.max.size = 20L,
                        use.ggforce = is_installed('ggforce')) {
@@ -499,6 +512,11 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
   if(ncol(scaled.scores) < 2) {
     abort(paste('All scores filtered out. Nothing left to plot.',
                 'Consider less harsh exclusion or broader inclusion criteria'))
+  }
+
+  if (rescale) {
+    scaled.scores <- scaled.scores %>%
+      mutate(across(!Integration, ~ rescale(x = .x, to = c(0,1))) )
   }
 
   bio.scores <- get.score.types(colnames(scaled.scores), batch = FALSE)
