@@ -235,7 +235,7 @@ trVAEIntegration <- function(
   if ((torch.interop.threads %iff% !is.na(as.integer(torch.interop.threads))) %||% FALSE) {
     blas_set_num_threads(1L)
     omp_set_num_threads(1L)
-    tryCatch({torch$set_num_interop_threads(as.integer(torch.threads))},
+    tryCatch({torch$set_num_interop_threads(as.integer(torch.interop.threads))},
              error = function(e) {
                warning("Number of inter-op threads was already set to ",
                        torch$get_num_interop_threads(),

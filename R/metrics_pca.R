@@ -365,7 +365,7 @@ ScoreRegressPC.CellCycle <- function(object, batch.var = NULL,
   }
 
   .prep_MetaDataBatch(object = object, batch.var = batch.var,
-                      assay = assay, layer = layer)
+                      assay = assay)
 
   cols.cc <- c('S.Score', 'G2M.Score', 'Phase')
   r2get <- paste0("adj."[adj.r2], "r.squared")
