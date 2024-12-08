@@ -236,16 +236,18 @@ UpdateEnvCache <- function(method = known.methods, conda.bin = "auto",
   }
   if (create.env) {
     conda.env_ <- conda.env
+    os <- ifelse("Darwin" %in% Sys.info()[['sysname']], "osx", "default")
+    conda.req <- .conda_requirements[[os]][[method]]
     conda.env <- conda_create(envname = conda.env_,
-                              packages = .conda_requirements[[method]]$packages,
+                              packages = conda.req$packages,
                               forge = FALSE,
-                              channel = .conda_requirements[[method]]$channels,
+                              channel = conda.req$channels,
                               conda = conda.bin)
     conda.known.envs <- conda_list(conda = conda.bin)
     conda.known.envs$path <- sub("/bin/python[^/]*$", "", conda.known.envs$python)
 
-    .conda_requirements[[method]]$pip %iff% {
-      conda_install(packages = .conda_requirements[[method]]$pip,
+    conda.req$pip %iff% {
+      conda_install(packages = conda.req$pip,
                     envname = conda.env_,
                     pip = TRUE, conda = conda.bin)
     }

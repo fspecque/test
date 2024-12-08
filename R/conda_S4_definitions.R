@@ -10,7 +10,7 @@ needs.conda <- sapply(known.methods, function(method) ifelse(
   method %in% c("scanorama", "bbknn", "scvi", "scanvi", "trvae"), T, F
 ))
 
-.conda_requirements <- list(
+.conda_requirements <- list(default = list(
   bbknn = list(
     packages = c("python", "scipy", "scanpy", "bbknn"),
     channels = c("conda-forge", "bioconda"),
@@ -34,8 +34,16 @@ needs.conda <- sapply(known.methods, function(method) ifelse(
     channels = c("conda-forge", "bioconda", "pytorch", "nvidia"),
     pip = c("scarches")
   )
-)
-.conda_requirements$scanvi <- .conda_requirements$scvi
+))
+.conda_requirements$default$scanvi <- .conda_requirements$default$scvi
+
+
+.conda_requirements$osx <- .conda_requirements$default
+.conda_requirements$osx$scvi$packages <- c("python", "scipy", "scanpy",
+                                           "scvi-tools", "setuptools", "cmake")
+.conda_requirements$osx$trvae$packages <- c("python", "pip", "numpy",
+                                            "scipy<1.14.0", "scvi-tools")
+.conda_requirements$osx$scanvi <- .conda_requirements$osx$scvi
 
 .conda_default_envname <- list(
   bbknn = "SeuratIntegrate_bbknn",
