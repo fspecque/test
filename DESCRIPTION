@@ -40,7 +40,8 @@ Imports:
     future,
     igraph,
     parallelly,
-    methods
+    methods,
+    scales
 Suggests: 
     SeuratData,
     lisi,
@@ -49,7 +50,8 @@ Suggests:
     distances,
     Rfast,
     parallelDist,
-    kBET
+    kBET,
+    ggforce
 Collate: 
     'Combat.R'
     'Harmony.R'
@@ -64,6 +66,7 @@ Collate:
     'convert_distances.R'
     'do_integrate.R'
     'expand_knn_graph.R'
+    'globals.R'
     'kwargs.R'
     'metrics_ari.R'
     'metrics_connectivity.R'
