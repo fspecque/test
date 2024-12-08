@@ -529,8 +529,8 @@ compute.gauss.connectivities <- function(knn.dist, knn.idx, sorted.dist = FALSE,
 #' identical connectivities. You can check the
 #' \href{https://umap-learn.readthedocs.io/en/latest/api.html#umap.umap_.fuzzy_simplicial_set}{original documentation}.\cr\cr
 #' The Gaussian kernel method is a re-implementation of the analogous function
-#' from \pkg{scanpy} called by \code{\code{sc.pp.neighbors()}}. You can have a
-#' look at the
+#' from \pkg{scanpy} called by \code{sc.pp.neighbors()}. You can have a look at
+#' the
 #' \href{https://github.com/scverse/scanpy/blob/b918a23eb77462837df90d7b3a30a573989d4d48/src/scanpy/neighbors/_connectivity.py#L18}{original function}\cr
 #' \code{median.sigmas = FALSE} is the method used in Haghverdi L. et al.,2016.
 #'
