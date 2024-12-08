@@ -29,8 +29,8 @@ as.dgcmatrix <- function(mat) {
 #' @name matrix-indexing
 #' @export
 
-#' @param row.idx indices of rows
-#' @param col.idx indices of columns
+#' @param rows.idx indices of rows
+#' @param cols.idx indices of columns
 #' @rdname matrix-indexing
 rowcol2idx <- function(rows.idx, cols.idx, height) {
   return((cols.idx - 1) * height + rows.idx)

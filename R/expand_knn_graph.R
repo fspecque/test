@@ -13,6 +13,8 @@ NULL
 #' @inheritParams SymmetrizeKnn
 #' @param new.graph.name name of the return \code{Graph} to store in the
 #' \code{Seurat object}.
+#' @param graph.type One of "distances" or "connectivities", indicating the type
+#' of metric stored in the graph object.
 #' @param k.target number of nearest neighbours to reach
 #' @param do.symmetrize whether to make the input graph symmetric if necessary.
 #' See \strong{Details} section for further explanations

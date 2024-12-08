@@ -18,7 +18,7 @@
 #' @param groups.name Column name from \code{groups} data frame that stores
 #' grouping information. If \code{groups.name = NULL}, the first column is used
 #' @param layers Name of the layers to use in the integration
-#' @param scale.later Name of the scaled layer in \code{Assay}
+#' @param scale.layer Name of the scaled layer in \code{Assay}
 #' @param seed.use An integer to generate reproducible outputs.
 #' Set \code{seed.use = NULL} to disable
 #' @param verbose Print messages. Set to \code{FALSE} to disable

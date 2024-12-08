@@ -19,6 +19,10 @@ NULL
 #' @param surgery.name Column name from \code{groups} data frame that stores
 #' surgery information. If \code{surgery.name = NULL}, a one shot integration is
 #' performed
+#' @param surgery.sort change the order in which surgery groups are integrated.
+#' By default (\code{surgery.sort = TRUE}), surgery groups are ordered by name.
+#' When \code{FALSE}, each group is integrated in the order of first occurrence
+#' in the column \code{surgery.name}
 #' @param conda_env Path to conda environment to run trVAE (should also
 #' contain the scipy python module).  By default, uses the conda environment
 #' registered for trVAE in the conda environment manager

@@ -16,6 +16,7 @@
 #' grouping variable to correct batch-effect.
 #' @param scale.layer Ignored
 #' @param features Ignored
+#' @param key Prefix for the dimension names computed by harmony.
 #' @param ... Ignored for \code{HarmonyIntegration()}, or all of the above for
 #' \code{HarmonyIntegration.fix()}
 #'

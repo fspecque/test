@@ -485,6 +485,9 @@ compute.gauss.connectivities <- function(knn.dist, knn.idx, sorted.dist = FALSE,
 #' @param object a \code{Seurat} object
 #' @param neighbors.use name of a \code{Neighbor} instance stored in the
 #' \code{Seurat object} to derive connectivities from.
+#' @param method one of "umap" or "gauss". Decides whether connectivities are
+#' computed using  a fuzzy union of simplical sets ("umap") or a Gaussian kernel
+#' ("gauss")
 #' @param graph.name name of the return \code{Graph} of connectivities to store
 #' in the \code{Seurat object}.
 #' @param assay name of the assay to reference in the output \code{Graph} object.

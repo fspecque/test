@@ -14,6 +14,7 @@ NULL
 #' outputs the raw LISI scores for each cell
 #'
 #' @param object A Seurat object
+#' @param integration name of the integration to score
 #' @param batch.var The name of the batch variable (must be in the object metadata).
 #' Can be omitted if \code{cell.var} is not \code{NULL}
 #' @param cell.var The name of the  cell variable (must be in the object metadata).
