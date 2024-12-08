@@ -566,7 +566,7 @@ GetConnectivities <- function(object, neighbors.use, method = c("umap", "gauss")
   assay <- assay %||% DefaultAssay(object)
 
   graph <- object[[neighbors.use]]
-  if (class(graph) != "Neighbor") {
+  if (!inherits(graph, what = "Neighbor")) {
     rlang::abort(sprintf("%s object required, got a %s object instead",
                          sQuote("Neighbor"), sQuote(class(graph))))
   }
