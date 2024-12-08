@@ -421,7 +421,6 @@ IntegrationScores <- function(object, scaled = FALSE) {
 #' Plot the scaled integration scores to compare the obtained integrations
 #'
 #' @inheritParams ScaleScores
-#' @param object a Seurat object
 #' @param plot.type one of 'table' (default), 'radar' or 'lollipop'. Type of
 #' desired plot
 #' @param split.by.score.type whether to split scores by type (bio-conservation,

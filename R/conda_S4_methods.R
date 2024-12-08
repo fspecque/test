@@ -61,7 +61,6 @@ setGeneric("checkCondaEnv", function(x, ..., verbose = getOption("verbose"))
 #' not apply when \code{x} is a \code{CondaEnvSlot} object.
 #' @param ... ignored when \code{x} is a \code{CondaEnvSlot} object. Otherwise,
 #' can be used to pass \code{do.check} argument.
-#' @param verbose ignored
 #'
 #' @return \code{TRUE} or \code{FALSE} or a logical named vector when \code{x}
 #' is a \linkS4class{CondaEnvManager} object (one element per

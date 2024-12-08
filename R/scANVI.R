@@ -30,7 +30,6 @@ NULL
 #' @param torch.interop.threads Number of intra-op threads available to torch
 #' when training on CPU instead of GPU. Set via \code{torch.set_num_interop_threads()}.
 #' Can only be changed once, on first call.
-#' @param cuda.cores Number of parallel threads PyTorch is allowed to use
 #' @param model.save.dir Path to a directory to save the model to. Uses
 #' \code{SCANVI.save()}. Does not save anndata. Note that neither the trainer
 #' optimizer state nor the trainer history are saved.
