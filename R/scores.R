@@ -698,17 +698,17 @@ fullsize_colorbar <- function(vanilla = T) structure(list(vanilla.circles = vani
 #' @importFrom grid unitType unit
 #' @keywords internal
 #' @noRd
-ggplot_add.fullsizebar <- function(obj, g, name = "fullsizebar", ...) {
-  h <- ggplotGrob(g)$heights
+ggplot_add.fullsizebar <- function(object, plot, object_name = "fullsizebar", ...) {
+  h <- ggplotGrob(plot)$heights
   panel <- which(unitType(h) == "null")
   panel_height <- unit(1, "npc") - sum(h[-panel])
 
   scale_distiller <- scale_fill_distiller
-  if (obj$vanilla.circles) {
+  if (object$vanilla.circles) {
     scale_distiller <- scale_colour_distiller
   }
 
-  g +
+  plot +
     scale_distiller(palette = 'RdBu', limits = c(0, 1),
                     guide = guide_colorbar(barheight = panel_height,
                                            title.position = "right",
