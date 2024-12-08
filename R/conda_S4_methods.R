@@ -198,15 +198,21 @@ setMethod("checkCondaEnv", "CondaEnvManager", function(x, ...) {
   x
 })
 
+#' @export
+#' @rdname isValid
 setMethod("isValid", "CondaEnvSlot", function(x, ...) {
   x@valid
 })
+#' @export
+#' @rdname isValid
 setMethod("isValid", "CondaEnv", function(x, do.check = FALSE, ...) {
   if (do.check) {
     x <- checkCondaEnv(x)
   }
   x@is.valid
 })
+#' @export
+#' @rdname isValid
 setMethod("isValid", "CondaEnvManager", function(x, ...) {
   sapply(x, isValid, ...)
 })
