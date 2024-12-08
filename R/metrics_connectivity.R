@@ -124,7 +124,7 @@ AddScoreConnectivity <- function(object, integration,
                               count.self = count.self,
                               weight.by.ncells = weight.by.ncells)
 
-  score.names <- paste("Graph.connectivty", names(scores), sep = '_')
+  score.names <- paste("Graph.connectivity", names(scores), sep = '_')
   object <- check_misc(object)
   for (i in 1:length(scores)) {
     object <- SetMiscScore(object, integration = integration,
