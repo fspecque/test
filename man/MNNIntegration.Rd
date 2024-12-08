@@ -29,6 +29,8 @@ directly when called with \code{\link[Seurat]{IntegrateLayers}}, use
 
 \item{layers}{Name of the layers to use in the integration}
 
+\item{scale.layer}{Name of the scaled layer in \code{Assay}}
+
 \item{features}{Either a list of features to use when calculating batch
 correction, or a number (2000 by default) of variable features to select.}
 

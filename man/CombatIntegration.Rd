@@ -37,6 +37,8 @@ grouping information. If \code{groups.name = NULL}, the first column is used}
 
 \item{layers}{Name of the layers to use in the integration}
 
+\item{scale.layer}{Name of the scaled layer in \code{Assay}}
+
 \item{features}{Vector of feature names to input to the integration method.
 When \code{features = NULL} (default), the
 \code{\link[SeuratObject]{VariableFeatures}} are used. To pass all features,

@@ -57,11 +57,11 @@ package's conda environments registry.
 \details{
 The conda environments default names are:
 \itemize{
-  \item{\strong{bbknn}}: {None}
-  \item{\strong{SCVI}}: {\code{SeuratIntegrate_scvi-tools}}
-  \item{\strong{SCANVI}}: {\code{SeuratIntegrate_scvi-tools}}
-  \item{\strong{scanorama}}: {\code{SeuratIntegrate_scanorama}}
-  \item{\strong{trVAE}}: {\code{SeuratIntegrate_trvae}}
+  \item \strong{bbknn}: \code{SeuratIntegrate_scvi}
+  \item \strong{SCVI}: \code{SeuratIntegrate_scvi-tools}
+  \item \strong{SCANVI}: \code{SeuratIntegrate_scvi-tools}
+  \item \strong{scanorama}: \code{SeuratIntegrate_scanorama}
+  \item \strong{trVAE}: \code{SeuratIntegrate_trvae}
 }
 }
 \seealso{

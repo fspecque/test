@@ -14,6 +14,7 @@ PlotScores(
   include.score = NULL,
   exclude.score = NULL,
   recompute.overall.scores = TRUE,
+  rescale = TRUE,
   batch.coeff = 0.4,
   bio.coeff = 0.6,
   point.max.size = 20L,
@@ -50,6 +51,11 @@ value (\code{NULL}) enable to include them all.}
 \item{recompute.overall.scores}{whether to recompute overall scores. Useful
 when there is a restriction on scores to plot. When \code{FALSE},
 coefficient parameters have no impact.}
+
+\item{rescale}{whether to rescale each score between 0 and 1 using min-max
+normalisation before computing overall scores. This ensures that each metric
+equally contributes to the overall scores. Has no effect when
+\code{recompute.overall.scores = FALSE}. \code{TRUE by default}}
 
 \item{batch.coeff}{the weight of batch correction performance evaluation
 scores in the overall score.}

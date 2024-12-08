@@ -62,6 +62,8 @@ use the output of \code{\link[SeuratObject]{Features}()}}
 \item{layers}{Name of the layers to use in the integration.
 \bold{'counts'} is highly recommended}
 
+\item{scale.layer}{Name of the scaled layer in \code{Assay}}
+
 \item{conda_env}{Path to conda environment to run scANVI (should also
 contain the scipy python module).  By default, uses the conda environment
 registered for scANVI in the conda environment manager}
@@ -93,17 +95,17 @@ Corresponds to \code{n_latent} argument in the original API of SCANVI}
 
 \item{dispersion}{One of the following:
 \itemize{
- \item{\code{gene}:} {dispersion parameter of NB is constant per gene across cells (default)}
- \item{\code{gene-batch}:} {dispersion can differ between different batches}
- \item{\code{gene-label}:} {dispersion can differ between different labels}
- \item{\code{gene-cell}:} {dispersion can differ for every gene in every cell}
+ \item \code{gene}: dispersion parameter of NB is constant per gene across cells (default)
+ \item \code{gene-batch}: dispersion can differ between different batches
+ \item \code{gene-label}: dispersion can differ between different labels
+ \item \code{gene-cell}: dispersion can differ for every gene in every cell
 }}
 
 \item{gene_likelihood}{One of the following:
 \itemize{
- \item{\code{zinb}:} {Zero-inflated negative binomial distribution (default)}
- \item{\code{nb}:} {Negative binomial distribution}
- \item{\code{poisson}:} {Poisson distribution}
+ \item \code{zinb}: Zero-inflated negative binomial distribution (default)
+ \item \code{nb}: Negative binomial distribution
+ \item \code{poisson}: Poisson distribution
 }}
 
 \item{linear_classifier}{When switched to \code{TRUE}, uses a single linear layer for
@@ -125,8 +127,6 @@ CRITICAL, ERROR, WARNING, INFO (default), DEBUG, NOTSET}
 
 \item{...}{Additional arguments to be passed to \code{scvi.model.SCANVI},
 \code{SCANVI.setup_anndata} or \code{SCANVI.train} (see \strong{Details} section)}
-
-\item{cuda.cores}{Number of parallel threads PyTorch is allowed to use}
 }
 \value{
 A list containing:
@@ -149,14 +149,14 @@ Requires a conda environment with \code{scvi-tools} and necessary dependencies
 This wrappers calls three python functions through \pkg{reticulate}.
 Find the \pkg{scVANVI}-specific arguments there:
 \itemize{
-  \item{model initiation:} {
+  \item model initiation:
   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCANVI.html#scvi-model-scanvi}{scvi.model.SCANVI}, which relies on
   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.module.SCANVAE.html#scvi-module-scanvae}{scvi.module.SCANVAE} which in turn relies on
-  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.module.VAE.html#scvi-module-vae}{scvi.module.VAE}}
-  \item{anndata setup:} {
-  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCANVI.html#scvi.model.SCANVI.setup_anndata}{SCANVI.setup_anndata}}
-  \item{training:} {
-  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCANVI.html#scvi.model.SCANVI.train}{SCANVI.train}}
+  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.module.VAE.html#scvi-module-vae}{scvi.module.VAE}
+  \item anndata setup:
+  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCANVI.html#scvi.model.SCANVI.setup_anndata}{SCANVI.setup_anndata}
+  \item training:
+  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCANVI.html#scvi.model.SCANVI.train}{SCANVI.train}
 }
 }
 \note{

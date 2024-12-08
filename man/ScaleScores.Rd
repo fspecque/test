@@ -4,7 +4,13 @@
 \alias{ScaleScores}
 \title{Scale the scores in the score tibble to plot them}
 \usage{
-ScaleScores(object, ref = "Unintegrated", batch.coeff = 0.4, bio.coeff = 0.6)
+ScaleScores(
+  object,
+  ref = "Unintegrated",
+  rescale = FALSE,
+  batch.coeff = 0.4,
+  bio.coeff = 0.6
+)
 }
 \arguments{
 \item{object}{a Seurat object}
@@ -12,14 +18,15 @@ ScaleScores(object, ref = "Unintegrated", batch.coeff = 0.4, bio.coeff = 0.6)
 \item{ref}{the name of the integration to use as a reference for scaling.
 Useful for PCA regression (and density) and cell cycle conservation scores.}
 
+\item{rescale}{whether to rescale each score between 0 and 1 using min-max
+normalisation before computing overall scores. This ensures that each metric
+equally contributes to the overall scores. \code{TRUE by default}}
+
 \item{batch.coeff}{the weight of batch correction performance evaluation
 scores in the overall score.}
 
 \item{bio.coeff}{the weight of bio-conservation performance evaluation scores
 in the overall score.}
-
-\item{integration}{the name of the integration for which the score was
-computed.}
 }
 \description{
 Once the scores of interest have been computed and saved in the score tibble,

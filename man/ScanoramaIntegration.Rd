@@ -48,6 +48,8 @@ When \code{features = NULL} (default), the
 \code{\link[SeuratObject]{VariableFeatures}} are used. To pass all features,
 use the output of \code{\link[SeuratObject]{Features}()}}
 
+\item{scale.layer}{Name of the scaled layer in \code{Assay}}
+
 \item{conda_env}{Path to conda environment to run scanorama (should also
 contain the scipy python module). By default, uses the conda environment
 registered for scanorama in the conda environment manager}

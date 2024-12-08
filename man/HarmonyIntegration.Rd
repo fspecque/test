@@ -59,6 +59,8 @@ grouping variable to correct batch-effect.}
 \item{dims}{Dimensions of dimensional reduction to use for integration.
 All used by default}
 
+\item{key}{Prefix for the dimension names computed by harmony.}
+
 \item{seed.use}{An integer to generate reproducible outputs.
 Set \code{seed.use = NULL} to disable}
 

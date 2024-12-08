@@ -14,13 +14,13 @@ idx2col(idx, height)
 idx2row(idx, height)
 }
 \arguments{
+\item{rows.idx}{indices of rows}
+
+\item{cols.idx}{indices of columns}
+
 \item{height}{height of the matrix (number of rows)}
 
 \item{idx}{vector-like, matrix-wide indices}
-
-\item{row.idx}{indices of rows}
-
-\item{col.idx}{indices of columns}
 }
 \value{
 a vector of indices

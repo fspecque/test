@@ -48,6 +48,8 @@ ScoreLISI(
 \arguments{
 \item{object}{A Seurat object}
 
+\item{integration}{name of the integration to score}
+
 \item{batch.var}{The name of the batch variable (must be in the object metadata).
 Can be omitted if \code{cell.var} is not \code{NULL}}
 
@@ -135,8 +137,8 @@ considered as directed only to find components.
 In either case, it is recommended to keep \code{do.symmetrize = TRUE}.
 
 For possible additional parameters, see \code{\link[Seurat]{FindNeighbors}}
-(when inputting a reduction) or \code{\link{ExpandNeighbors}} (when inputting
-a knn graph)
+(when inputting a reduction) or \code{\link{ExpandNeighbours}} (when
+inputting a knn graph)
 }
 \note{
 This score is an adaptation of the LISI score as described in Korsunsky
@@ -156,6 +158,6 @@ single-cell genomics. Nat Methods 19, 41–50 (2021).
 \href{https://doi.org/10.1038/s41592-021-01336-8}{DOI}
 }
 \seealso{
-\code{\link[Seurat]{FindNeighbors}}, \code{\link{ExpandNeighbors}}
+\code{\link[Seurat]{FindNeighbors}}, \code{\link{ExpandNeighbours}}
 and \code{\link{CutKnn}}
 }

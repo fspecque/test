@@ -59,6 +59,8 @@ use the output of \code{\link[SeuratObject]{Features}()}}
 \item{layers}{Name of the layers to use in the integration.
 \bold{'counts'} is highly recommended}
 
+\item{scale.layer}{Name of the scaled layer in \code{Assay}}
+
 \item{conda_env}{Path to conda environment to run scVI (should also
 contain the scipy python module).  By default, uses the conda environment
 registered for scVI in the conda environment manager}
@@ -90,23 +92,23 @@ Corresponds to \code{n_latent} argument in the original API of SCVI}
 
 \item{dispersion}{One of the following:
 \itemize{
- \item{\code{gene}:} {dispersion parameter of NB is constant per gene across cells (default)}
- \item{\code{gene-batch}:} {dispersion can differ between different batches}
- \item{\code{gene-label}:} {dispersion can differ between different labels}
- \item{\code{gene-cell}:} {dispersion can differ for every gene in every cell}
+ \item \code{gene}: dispersion parameter of NB is constant per gene across cells (default)
+ \item \code{gene-batch}: dispersion can differ between different batches
+ \item \code{gene-label}: dispersion can differ between different labels
+ \item \code{gene-cell}: dispersion can differ for every gene in every cell
 }}
 
 \item{gene_likelihood}{One of the following:
 \itemize{
- \item{\code{zinb}:} {Zero-inflated negative binomial distribution (default)}
- \item{\code{nb}:} {Negative binomial distribution}
- \item{\code{poisson}:} {Poisson distribution}
+ \item \code{zinb}: Zero-inflated negative binomial distribution (default)
+ \item \code{nb}: Negative binomial distribution
+ \item \code{poisson}: Poisson distribution
 }}
 
 \item{latent_distribution}{One of the following:
 \itemize{
- \item{\code{normal}:} {Normal distribution (default)}
- \item{\code{ln}:} {Logistic normal distribution (Normal(0, I) transformed by softmax)}
+ \item \code{normal}: Normal distribution (default)
+ \item \code{ln}: Logistic normal distribution (Normal(0, I) transformed by softmax)
 }}
 
 \item{max_epochs}{Number of passes through the dataset for semisupervised training.}
@@ -151,13 +153,13 @@ Can be called via \code{SeuratIntegrate::scVIIntegration()} or
 This wrappers calls three python functions through \pkg{reticulate}.
 Find the \pkg{scVI}-specific arguments there:
 \itemize{
-  \item{model initiation:} {
+  \item model initiation:
   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.html#scvi.model.SCVI}{scvi.model.SCVI}, which relies on
-  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.module.VAE.html#scvi.module.VAE}{scvi.module.VAE}}
-  \item{anndata setup:} {
-  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.html#scvi.model.SCVI.setup_anndata}{SCVI.setup_anndata}}
-  \item{training:} {
-  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.html#scvi.model.SCVI.train}{SCVI.train}}
+  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.module.VAE.html#scvi.module.VAE}{scvi.module.VAE}
+  \item anndata setup:
+  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.html#scvi.model.SCVI.setup_anndata}{SCVI.setup_anndata}
+  \item training:
+  \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.html#scvi.model.SCVI.train}{SCVI.train}
 }
 }
 \note{
@@ -180,7 +182,8 @@ obj <- IntegrateLayers(object = obj, method = scVIIntegration,
                        features = Features(obj), conda_env = 'scvi-tools',
                        layers = 'counts', groups = obj[[]], groups.name = 'Method')
 
-# To enable cell label-guided correction, save the model, add other 'nuisance' factors and increase number of threads used:
+# To enable cell label-guided correction, save the model, add other
+# 'nuisance' factors and increase number of threads used:
 obj <- IntegrateLayers(object = obj, method = scVIIntegration,
                        features = Features(obj), conda_env = 'scvi-tools',
                        layers = 'counts', groups = obj[[]], groups.name = "Method",

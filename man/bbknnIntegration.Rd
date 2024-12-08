@@ -42,6 +42,8 @@ grouping information. If \code{groups.name = NULL}, the first column is used}
 
 \item{layers}{Name of the layers to use in the integration}
 
+\item{scale.layer}{Name of the scaled layer in \code{Assay}}
+
 \item{conda_env}{Path to conda environment to run bbknn (should also
 contain the scipy python module).  By default, uses the conda environment
 registered for bbknn in the conda environment manager}
@@ -102,12 +104,12 @@ Requires a conda environment with \code{bbknn} and necessary dependencies
 This wrappers calls three python functions through \pkg{reticulate}.
 Find the \pkg{bbknn}-specific arguments there:
 \itemize{
-  \item{bbknn function:} {
+  \item bbknn function:
   \href{https://bbknn.readthedocs.io/en/latest/bbknn.bbknn.html}{bbknn.bbknn}, which relies on
-  \href{https://bbknn.readthedocs.io/en/latest/bbknn.matrix.bbknn.html}{bbknn.matrix.bbknn}}
-  \item{ridge regression:} {
+  \href{https://bbknn.readthedocs.io/en/latest/bbknn.matrix.bbknn.html}{bbknn.matrix.bbknn}
+  \item ridge regression:
   \href{https://bbknn.readthedocs.io/en/latest/bbknn.ridge_regression.html}{bbknn.ridge_regression}, which relies on
-  \href{https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html}{sklearn.linear_model.Ridge}}
+  \href{https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html}{sklearn.linear_model.Ridge}
 }
 }
 \note{

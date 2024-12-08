@@ -46,6 +46,9 @@ the \code{Seurat object}.}
 \item{new.graph.name}{name of the return \code{Graph} to store in the
 \code{Seurat object}.}
 
+\item{graph.type}{One of "distances" or "connectivities", indicating the type
+of metric stored in the graph object.}
+
 \item{k.target}{number of nearest neighbours to reach}
 
 \item{do.symmetrize}{whether to make the input graph symmetric if necessary.

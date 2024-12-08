@@ -58,12 +58,19 @@ grouping information. If \code{groups.name = NULL}, the first column is used}
 surgery information. If \code{surgery.name = NULL}, a one shot integration is
 performed}
 
+\item{surgery.sort}{change the order in which surgery groups are integrated.
+By default (\code{surgery.sort = TRUE}), surgery groups are ordered by name.
+When \code{FALSE}, each group is integrated in the order of first occurrence
+in the column \code{surgery.name}}
+
 \item{features}{Vector of feature names to input to the integration method.
 When \code{features = NULL} (default), the
 \code{\link[SeuratObject]{VariableFeatures}} are used. To pass all features,
 use the output of \code{\link[SeuratObject]{Features}()}}
 
 \item{layers}{Name of the layers to use in the integration}
+
+\item{scale.layer}{Name of the scaled layer in \code{Assay}}
 
 \item{conda_env}{Path to conda environment to run trVAE (should also
 contain the scipy python module).  By default, uses the conda environment
@@ -163,15 +170,15 @@ scale.layer = NULL}).
 This wrappers calls three to four python functions through \pkg{reticulate}.
 Find the \pkg{trVAE}-specific arguments there:
 \itemize{
-  \item{model initiation:} {
-  \href{https://docs.scarches.org/en/latest/api/models.html#scarches.models.TRVAE}{scarches.models.TRVAE}}
-  \item{training:} {
+  \item model initiation:
+  \href{https://docs.scarches.org/en/latest/api/models.html#scarches.models.TRVAE}{scarches.models.TRVAE}
+  \item training:
   \href{https://docs.scarches.org/en/latest/api/models.html#scarches.models.TRVAE.train}{TRVAE.train}, which relies on
-  \href{https://github.com/theislab/scarches/blob/51a0294ca987dabffb6d109178e0f69a90f9c24f/scarches/trainers/trvae/trainer.py#L14}{scarches.trainers.trvae.train.Trainer}}
-  \item{post-training:} {
-  \href{https://github.com/theislab/scarches/blob/51a0294ca987dabffb6d109178e0f69a90f9c24f/scarches/models/base/_base.py#L285}{scarches.models.base._base.CVAELatentsMixin.get_latent}}
-  \item{surgery initiation:} {
-  \href{https://github.com/theislab/scarches/blob/51a0294ca987dabffb6d109178e0f69a90f9c24f/scarches/models/base/_base.py#L200}{scarches.models.base._base.SurgeryMixin.load_query_data}}
+  \href{https://github.com/theislab/scarches/blob/51a0294ca987dabffb6d109178e0f69a90f9c24f/scarches/trainers/trvae/trainer.py#L14}{scarches.trainers.trvae.train.Trainer}
+  \item post-training:
+  \href{https://github.com/theislab/scarches/blob/51a0294ca987dabffb6d109178e0f69a90f9c24f/scarches/models/base/_base.py#L285}{scarches.models.base._base.CVAELatentsMixin.get_latent}
+  \item surgery initiation:
+  \href{https://github.com/theislab/scarches/blob/51a0294ca987dabffb6d109178e0f69a90f9c24f/scarches/models/base/_base.py#L200}{scarches.models.base._base.SurgeryMixin.load_query_data}
 }
 
 Note that \code{seed.use} is passed to \code{torch.manual_seed()}.

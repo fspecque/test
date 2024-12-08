@@ -32,10 +32,10 @@ an updated object of same class as input \code{x}
 Check the validity of conda environment's components. Best used on a
 \linkS4class{CondaEnv} object. Internally call:
 \itemize{
-  \item{\strong{checkCondaBin}} {\link[reticulate]{conda_binary}}
-  \item{\strong{checkCondaEnvPath}} {\link[reticulate]{condaenv_exists}}
-  \item{\strong{checkCondaEnvName}} {\link[reticulate]{condaenv_exists}}
-  \item{\strong{checkCondaEnv}} {both}
+  \item \strong{checkCondaBin}: \link[reticulate]{conda_binary}
+  \item \strong{checkCondaEnvPath}: \link[reticulate]{condaenv_exists}
+  \item \strong{checkCondaEnvName}: \link[reticulate]{condaenv_exists}
+  \item \strong{checkCondaEnv}: both
 }
 }
 \note{

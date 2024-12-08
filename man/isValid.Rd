@@ -2,9 +2,18 @@
 % Please edit documentation in R/conda_S4_methods.R
 \name{isValid}
 \alias{isValid}
+\alias{isValid,CondaEnvSlot-method}
+\alias{isValid,CondaEnv-method}
+\alias{isValid,CondaEnvManager-method}
 \title{Check the validity of conda environment's components}
 \usage{
 isValid(x, ...)
+
+\S4method{isValid}{CondaEnvSlot}(x, ...)
+
+\S4method{isValid}{CondaEnv}(x, do.check = FALSE, ...)
+
+\S4method{isValid}{CondaEnvManager}(x, ...)
 }
 \arguments{
 \item{x}{a \linkS4class{CondaEnvManager}, a
@@ -16,8 +25,6 @@ can be used to pass \code{do.check} argument.}
 
 \item{do.check}{whether to call \link[=checkCondaEnv]{check functions}. Does
 not apply when \code{x} is a \code{CondaEnvSlot} object.}
-
-\item{verbose}{ignored}
 }
 \value{
 \code{TRUE} or \code{FALSE} or a logical named vector when \code{x}
