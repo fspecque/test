@@ -29,8 +29,8 @@ NULL
 #' Corresponds to \code{n_latent} argument in the original API of SCVI
 #' @param latent_distribution One of the following:
 #' \itemize{
-#'  \item{\code{normal}:} {Normal distribution (default)}
-#'  \item{\code{ln}:} {Logistic normal distribution (Normal(0, I) transformed by softmax)}
+#'  \item \code{normal}: Normal distribution (default)
+#'  \item \code{ln}: Logistic normal distribution (Normal(0, I) transformed by softmax)
 #' }
 #' @param verbose.scvi Verbosity level of scVI. From quietest to talkiest:
 #' CRITICAL, ERROR, WARNING, INFO (default), DEBUG, NOTSET
@@ -42,13 +42,13 @@ NULL
 #' This wrappers calls three python functions through \pkg{reticulate}.
 #' Find the \pkg{scVI}-specific arguments there:
 #' \itemize{
-#'   \item{model initiation:} {
+#'   \item model initiation:
 #'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.html#scvi.model.SCVI}{scvi.model.SCVI}, which relies on
-#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.module.VAE.html#scvi.module.VAE}{scvi.module.VAE}}
-#'   \item{anndata setup:} {
-#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.html#scvi.model.SCVI.setup_anndata}{SCVI.setup_anndata}}
-#'   \item{training:} {
-#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.html#scvi.model.SCVI.train}{SCVI.train}}
+#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.module.VAE.html#scvi.module.VAE}{scvi.module.VAE}
+#'   \item anndata setup:
+#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.html#scvi.model.SCVI.setup_anndata}{SCVI.setup_anndata}
+#'   \item training:
+#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.html#scvi.model.SCVI.train}{SCVI.train}
 #' }
 #'
 #' @importFrom reticulate use_condaenv import r_to_py py_to_r

@@ -44,12 +44,12 @@
 #' This wrappers calls three python functions through \pkg{reticulate}.
 #' Find the \pkg{bbknn}-specific arguments there:
 #' \itemize{
-#'   \item{bbknn function:} {
+#'   \item bbknn function:
 #'   \href{https://bbknn.readthedocs.io/en/latest/bbknn.bbknn.html}{bbknn.bbknn}, which relies on
-#'   \href{https://bbknn.readthedocs.io/en/latest/bbknn.matrix.bbknn.html}{bbknn.matrix.bbknn}}
-#'   \item{ridge regression:} {
+#'   \href{https://bbknn.readthedocs.io/en/latest/bbknn.matrix.bbknn.html}{bbknn.matrix.bbknn}
+#'   \item ridge regression:
 #'   \href{https://bbknn.readthedocs.io/en/latest/bbknn.ridge_regression.html}{bbknn.ridge_regression}, which relies on
-#'   \href{https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html}{sklearn.linear_model.Ridge}}
+#'   \href{https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html}{sklearn.linear_model.Ridge}
 #' }
 #'
 #' @importFrom reticulate use_condaenv import r_to_py py_to_r

@@ -42,16 +42,16 @@ NULL
 #' @param dropout_rate Dropout rate for neural networks.
 #' @param dispersion One of the following:
 #' \itemize{
-#'  \item{\code{gene}:} {dispersion parameter of NB is constant per gene across cells (default)}
-#'  \item{\code{gene-batch}:} {dispersion can differ between different batches}
-#'  \item{\code{gene-label}:} {dispersion can differ between different labels}
-#'  \item{\code{gene-cell}:} {dispersion can differ for every gene in every cell}
+#'  \item \code{gene}: dispersion parameter of NB is constant per gene across cells (default)
+#'  \item \code{gene-batch}: dispersion can differ between different batches
+#'  \item \code{gene-label}: dispersion can differ between different labels
+#'  \item \code{gene-cell}: dispersion can differ for every gene in every cell
 #' }
 #' @param gene_likelihood One of the following:
 #' \itemize{
-#'  \item{\code{zinb}:} {Zero-inflated negative binomial distribution (default)}
-#'  \item{\code{nb}:} {Negative binomial distribution}
-#'  \item{\code{poisson}:} {Poisson distribution}
+#'  \item \code{zinb}: Zero-inflated negative binomial distribution (default)
+#'  \item \code{nb}: Negative binomial distribution
+#'  \item \code{poisson}: Poisson distribution
 #' }
 #' @param linear_classifier When switched to \code{TRUE}, uses a single linear layer for
 #' classification instead of a multi-layer perceptron.
@@ -76,14 +76,14 @@ NULL
 #' This wrappers calls three python functions through \pkg{reticulate}.
 #' Find the \pkg{scVANVI}-specific arguments there:
 #' \itemize{
-#'   \item{model initiation:} {
+#'   \item model initiation:
 #'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCANVI.html#scvi-model-scanvi}{scvi.model.SCANVI}, which relies on
 #'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.module.SCANVAE.html#scvi-module-scanvae}{scvi.module.SCANVAE} which in turn relies on
-#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.module.VAE.html#scvi-module-vae}{scvi.module.VAE}}
-#'   \item{anndata setup:} {
-#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCANVI.html#scvi.model.SCANVI.setup_anndata}{SCANVI.setup_anndata}}
-#'   \item{training:} {
-#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCANVI.html#scvi.model.SCANVI.train}{SCANVI.train}}
+#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.module.VAE.html#scvi-module-vae}{scvi.module.VAE}
+#'   \item anndata setup:
+#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCANVI.html#scvi.model.SCANVI.setup_anndata}{SCANVI.setup_anndata}
+#'   \item training:
+#'   \href{https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCANVI.html#scvi.model.SCANVI.train}{SCANVI.train}
 #' }
 #'
 #' @importFrom reticulate use_condaenv import r_to_py py_to_r
