@@ -148,11 +148,13 @@ setMethod("checkCondaEnvName", "CondaEnv", function(x, ...) {
   x
 })
 
-#' @importFrom utils setTxtProgressBar
+#' @importFrom utils setTxtProgressBar capture.output
 setMethod("checkCondaEnv", "CondaEnv", function(x, ...) {
-  if (pb$onLoad) {
+  if (pb$onAttach) {
     tryCatch({
-      setTxtProgressBar(pb$pb, which(known.methods[needs.conda] == x@method))
+      packageStartupMessage(capture.output(
+        setTxtProgressBar(pb$pb, which(known.methods[needs.conda] == x@method))
+      ), appendLF = FALSE)
     }, error = function(e) NULL)
   }
   x <- checkCondaBin(x)

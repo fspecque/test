@@ -80,7 +80,7 @@ CondaEnv <- function(method = known.methods, conda.bin = NULL,
 #' }
 #'
 CondaManager <- function(cache) {
-  if (missing(cache)) {
+  if (missing(cache) || cache %iff% FALSE %||% TRUE) {
     return(.blankCondaManager())
   } else {
     expected.fields <- c("method", "needs.conda", "conda.bin.value",
@@ -95,7 +95,14 @@ CondaManager <- function(cache) {
       cache <- readRDS(cache)
     }
     if (! all(expected.fields %in% colnames(cache)) || length(cache$method) != length(unique(cache$method))) {
-      abort(message = "provided cache is not properly formatted (missing columns or non-unique methods)")
+      msg <- "provided cache is not properly formatted (missing columns or non-unique methods)"
+      if (! any(pb$onLoad, pb$onAttach)) {
+        abort(message = msg)
+      } else {
+        warning(paste0(msg, ". Returning blank manager"), call. = TRUE,
+                immediate. = TRUE)
+        return(.blankCondaManager())
+      }
     }
     rownames(cache) <- cache$method
     missing.methods <- setdiff(known.methods, cache$method)
@@ -113,17 +120,7 @@ CondaManager <- function(cache) {
       group_map(.f = .CondaEnvFromDf, .keep = TRUE)
     cache.envs <- append(cache.envs, lapply(missing.methods, CondaEnv))
     cache.envs <- setNames(cache.envs, sapply(cache.envs, function(obj) obj@method))
-    conman <- suppressWarnings(
-      new("CondaEnvManager",
-          combat = checkCondaEnv(cache.envs$combat),
-          harmony = checkCondaEnv(cache.envs$harmony),
-          mnn = checkCondaEnv(cache.envs$mnn),
-          bbknn = checkCondaEnv(cache.envs$bbknn),
-          scvi = checkCondaEnv(cache.envs$scvi),
-          scanvi = checkCondaEnv(cache.envs$scanvi),
-          scanorama = checkCondaEnv(cache.envs$scanorama),
-          trvae = checkCondaEnv(cache.envs$trvae))
-    )
+    conman <- .CondaManager(cache.envs = cache.envs)
     if (length(missing.methods)) {
       warning(paste(length(missing.methods), " method(s) missing, adding"),
               call. = TRUE, immediate. = TRUE)
@@ -131,6 +128,25 @@ CondaManager <- function(cache) {
     }
     return(conman)
   }
+}
+
+.CondaManager <- function(cache.envs, onLoad = pb$onLoad) {
+  check_fun <- checkCondaEnv
+  if (onLoad) {
+    check_fun <- identity
+  }
+  conman <- suppressWarnings(
+    new("CondaEnvManager",
+        combat = check_fun(cache.envs$combat),
+        harmony = check_fun(cache.envs$harmony),
+        mnn = check_fun(cache.envs$mnn),
+        bbknn = check_fun(cache.envs$bbknn),
+        scvi = check_fun(cache.envs$scvi),
+        scanvi = check_fun(cache.envs$scanvi),
+        scanorama = check_fun(cache.envs$scanorama),
+        trvae = check_fun(cache.envs$trvae))
+  )
+  return(conman)
 }
 
 #' @importFrom methods new
