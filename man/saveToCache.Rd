@@ -2,9 +2,12 @@
 % Please edit documentation in R/conda_S4_methods.R
 \name{saveToCache}
 \alias{saveToCache}
+\alias{saveToCache,CondaEnvManager-method}
 \title{Save a conda environment manager to cache}
 \usage{
 saveToCache(x, ..., verbose = getOption("verbose"))
+
+\S4method{saveToCache}{CondaEnvManager}(x)
 }
 \arguments{
 \item{x}{a \linkS4class{CondaEnvManager} object}

@@ -2,9 +2,23 @@
 % Please edit documentation in R/utils.R
 \name{GetNeighborsPerBatch}
 \alias{GetNeighborsPerBatch}
+\alias{GetNeighboursPerBatch}
+\alias{GetNeighborsPerBatch,Seurat,character-method}
+\alias{GetNeighborsPerBatch,Seurat,data.frame-method}
+\alias{GetNeighborsPerBatch,Graph,ANY-method}
+\alias{GetNeighborsPerBatch,matrix,ANY-method}
+\alias{GetNeighborsPerBatch,Neighbor,ANY-method}
+\alias{GetNeighborsPerBatch,Matrix,ANY-method}
 \title{Calculate number of nearest neighbours between batches}
 \usage{
 GetNeighborsPerBatch(
+  object,
+  batch.var,
+  graph.name = "RNA_nn",
+  count.self = TRUE
+)
+
+\S4method{GetNeighborsPerBatch}{Seurat,character}(
   object,
   batch.var,
   graph.name = "RNA_nn",
@@ -40,3 +54,4 @@ cells of batch 1 have cells of batch 3 in their nn is matrix[1,3]
 The classes \code{\link[SeuratObject:Graph]{Graph}} and
 \code{\link[SeuratObject:Neighbor]{Neighbor}}
 }
+\keyword{internal}

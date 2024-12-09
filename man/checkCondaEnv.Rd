@@ -5,6 +5,14 @@
 \alias{checkCondaEnvPath}
 \alias{checkCondaEnvName}
 \alias{checkCondaEnv}
+\alias{checkCondaBin,CondaEnvSlot-method}
+\alias{checkCondaBin,CondaEnv-method}
+\alias{checkCondaEnvPath,CondaEnvSlot-method}
+\alias{checkCondaEnvPath,CondaEnv-method}
+\alias{checkCondaEnvName,CondaEnvSlot-method}
+\alias{checkCondaEnvName,CondaEnv-method}
+\alias{checkCondaEnv,CondaEnv-method}
+\alias{checkCondaEnv,CondaEnvManager-method}
 \title{Check the validity of conda environment's components}
 \usage{
 checkCondaBin(x, ..., verbose = getOption("verbose"))
