@@ -484,6 +484,7 @@ setMethod("SymmetrizeKnn", "Neighbor",
 #' section)
 #'
 #' @export
+#' @aliases GetNeighboursPerBatch
 #' @details
 #' The output matrix will likely not be symmetrical. This is due to the approximate
 #' nature of the nearest neighbour search algorithm used to compute the knn
@@ -498,7 +499,7 @@ setGeneric("GetNeighborsPerBatch",
              standardGeneric("GetNeighborsPerBatch"),
            signature = c("object", "batch.var"))
 
-#' @keywords internal
+#' @rdname GetNeighborsPerBatch
 setMethod("GetNeighborsPerBatch", c("Seurat", "character"),
   function(object, batch.var, graph.name = "RNA_nn", count.self = TRUE) {
     batch.var <- object[[]][, batch.var, drop = FALSE]
@@ -507,14 +508,18 @@ setMethod("GetNeighborsPerBatch", c("Seurat", "character"),
                          count.self = count.self)
 })
 
+#' @rdname GetNeighborsPerBatch
 #' @keywords internal
+#' @usage NULL
 setMethod("GetNeighborsPerBatch", c("Seurat", "data.frame"),
   function(object, batch.var, graph.name = "RNA_nn", count.self = TRUE){
     GetNeighborsPerBatch(object = object[[graph.name]], batch.var = batch.var,
                          count.self = count.self)
 })
 
+#' @rdname GetNeighborsPerBatch
 #' @keywords internal
+#' @usage NULL
 setMethod("GetNeighborsPerBatch", "Graph",
   function(object, batch.var, count.self) {
     knnmat <- as.dgcmatrix(object > 0)
@@ -522,10 +527,14 @@ setMethod("GetNeighborsPerBatch", "Graph",
                          count.self = count.self)
 })
 
+#' @rdname GetNeighborsPerBatch
 #' @keywords internal
+#' @usage NULL
 setMethod("GetNeighborsPerBatch", "matrix", getMethod("GetNeighborsPerBatch", "Graph"))
 
+#' @rdname GetNeighborsPerBatch
 #' @keywords internal
+#' @usage NULL
 setMethod("GetNeighborsPerBatch", "Neighbor",
   function(object, batch.var, count.self){
     graph <- as.Graph(object)
@@ -533,9 +542,11 @@ setMethod("GetNeighborsPerBatch", "Neighbor",
                          count.self = count.self)
 })
 
+#' @rdname GetNeighborsPerBatch
 #' @importFrom stats as.formula
 #' @importFrom Matrix sparse.model.matrix
 #' @keywords internal
+#' @usage NULL
 setMethod("GetNeighborsPerBatch", "Matrix",
   function(object, batch.var, count.self) {
     batch.var.nm <- colnames(batch.var)[1]

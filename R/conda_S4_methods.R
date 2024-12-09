@@ -99,6 +99,8 @@ setGeneric("updateEnv", function(x, ...)
 #                                                                              #
 
 # Dispatch methods
+#' @rdname checkCondaEnv
+#' @usage NULL
 setMethod("checkCondaBin", "CondaEnvSlot", function(x) {
   bin.path <- tryCatch(conda_binary(x@value),
                        error = function(e) NULL)
@@ -106,6 +108,8 @@ setMethod("checkCondaBin", "CondaEnvSlot", function(x) {
   x@valid <- bin.path %iff% TRUE %||% FALSE
   x
 })
+#' @rdname checkCondaEnv
+#' @usage NULL
 setMethod("checkCondaBin", "CondaEnv", function(x) {
   if (x@needs.conda) {
     x@conda.bin <- checkCondaBin(x@conda.bin)
@@ -115,6 +119,8 @@ setMethod("checkCondaBin", "CondaEnv", function(x) {
   x
 })
 
+#' @rdname checkCondaEnv
+#' @usage NULL
 setMethod("checkCondaEnvPath", "CondaEnvSlot", function(x, ...) {
   env.exists <- condaenv_exists(x@value, ...) & file.exists(x@value)
   x@valid <- env.exists
@@ -123,6 +129,8 @@ setMethod("checkCondaEnvPath", "CondaEnvSlot", function(x, ...) {
   }
   x
 })
+#' @rdname checkCondaEnv
+#' @usage NULL
 setMethod("checkCondaEnvPath", "CondaEnv", function(x, ...) {
   if (x@needs.conda) {
     x@conda.env.path <- checkCondaEnvPath(x@conda.env.path,
@@ -133,11 +141,15 @@ setMethod("checkCondaEnvPath", "CondaEnv", function(x, ...) {
   x
 })
 
+#' @rdname checkCondaEnv
+#' @usage NULL
 setMethod("checkCondaEnvName", "CondaEnvSlot", function(x, ...) {
   env.exists <- condaenv_exists(x@value, ...)
   x@valid <- env.exists
   x
 })
+#' @rdname checkCondaEnv
+#' @usage NULL
 setMethod("checkCondaEnvName", "CondaEnv", function(x, ...) {
   if (x@needs.conda) {
     x@conda.env.name <- checkCondaEnvName(x@conda.env.name,
@@ -148,6 +160,8 @@ setMethod("checkCondaEnvName", "CondaEnv", function(x, ...) {
   x
 })
 
+#' @rdname checkCondaEnv
+#' @usage NULL
 #' @importFrom utils setTxtProgressBar capture.output
 setMethod("checkCondaEnv", "CondaEnv", function(x, ...) {
   if (pb$onAttach) {
@@ -192,6 +206,8 @@ setMethod("checkCondaEnv", "CondaEnv", function(x, ...) {
   x@is.valid <- all(are.valid)
   x
 })
+#' @rdname checkCondaEnv
+#' @usage NULL
 setMethod("checkCondaEnv", "CondaEnvManager", function(x, ...) {
   list.of.envs <- lapply(x, checkCondaEnv)
   invisible(lapply(names(list.of.envs), function(env) {
@@ -239,6 +255,7 @@ setMethod("unsetSlot", "CondaEnv", function(x, slot = c('conda.bin',
   x
 })
 
+#' @rdname saveToCache
 setMethod("saveToCache", "CondaEnvManager", function(x) {
   cache <- as.data.frame(x)
   saveRDS(cache, getCachePath(include.file = TRUE),

@@ -95,24 +95,30 @@ setMethod('as.numeric_lisi', 'list', function(x) {
 setMethod('as.numeric_lisi', 'logical', function(x) {
   as.numeric_lisi(as.numeric(x))
 })
+#' Convert a numeric vector to a `numeric_lisi` vector
+#' @param x a numeric vector
+#' @rdname numeric_lisi-methods
 setMethod('as.numeric', 'numeric_lisi', function(x) {
   as.numeric(unclass(x))
 })
 
 
-#' Indexing method (keep `@N` slot)
+#' Indexing method for `numeric_lisi` (keep `@N` slot)
 #' @importFrom methods callNextMethod
-#' @keywords internal
-#' @noRd
+#' @param x a numeric_lisi vector
+#' @param i indices specifying elements to extract or replace
+#' @rdname numeric_lisi-methods
 setMethod('[', 'numeric_lisi', function(x, i) {
   numeric_lisi(callNextMethod(), N(x))
 })
 
 
-#' Replicating method (keep `@N` slot)
+#' Replicate method for numeric_lisi (keep `@N` slot)
 #' @importFrom methods callNextMethod
 #' @keywords internal
-#' @noRd
+#' @param x a numeric_lisi vector
+#' @param ... passed to rep.numeric
+#' @rdname numeric_lisi-methods
 setMethod('rep', 'numeric_lisi', function(x, ...) {
   numeric_lisi(callNextMethod(), N(x))
 })
@@ -133,10 +139,12 @@ pick_N <- function(x, y) {
   return(picked.N)
 }
 
-#' Value replacement method (check `@N` slot compatibility)
+#' Value replacement method for `numeric_lisi` (check `@N` slot compatibility)
 #' @importFrom methods callNextMethod
-#' @keywords internal
-#' @noRd
+#' @param x a numeric_lisi vector
+#' @param i indices specifying elements to extract or replace
+#' @param value value to replace with
+#' @rdname numeric_lisi-methods
 setMethod('[<-', 'numeric_lisi', function(x, i, value) {
   if ('numeric_lisi' %in% class(value)) {
     picked_N <- pick_N(x, value)
@@ -144,7 +152,7 @@ setMethod('[<-', 'numeric_lisi', function(x, i, value) {
   numeric_lisi(callNextMethod(), picked_N)
 })
 
-#' Meadian method (keep `@N` slot)
+#' Median method (keep `@N` slot)
 #' @keywords internal
 #' @noRd
 #' @method median numeric_lisi
