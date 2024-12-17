@@ -1,8 +1,3 @@
-#' @export
-conda_status <- new.env(parent = emptyenv())
-
-pb <- new.env(parent = parent.frame())
-
 .onLoad <- function(libname = find.package(.packageName), pkgname = .packageName) {
   cache.path <-  getCachePath(include.file = TRUE)
   pb$onLoad <- TRUE
