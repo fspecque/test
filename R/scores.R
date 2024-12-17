@@ -438,6 +438,7 @@ IntegrationScores <- function(object, scaled = FALSE) {
 #' order of integrations in the legend (and on the y-axis for lolliplop and
 #' table plots). Scores are ordered by decreasing overall score by default,
 #' by name or by row-order when setting 'name' and 'asis' respectively.
+#' @param hide.zeros whether zero(ed) scores should be visible on the plot.
 #' @param include.integration name of the integration(s) to include. The
 #' default value (\code{NULL}) enable to include them all.
 #' @param exclude.integration name of the integration(s) to exclude. The default

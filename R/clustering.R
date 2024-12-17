@@ -12,6 +12,8 @@
 #' @param cluster.name a (optionally 'glue') string used as the new metadata
 #' column name (see \strong{Details} section)
 #' @param resolutions the resolutions to compute clusters for
+#' @param optimisation.metric one of "nmi" or "ari" or both (default).
+#' The metric(s) to use to check clustering results against the \code{cell.var}.
 #'
 #' @return the updated seurat object with the new metadata column(s)
 #'
@@ -37,7 +39,7 @@
 #' @importFrom dplyr %>% select rename bind_cols
 #' @export
 #'
-#' #' @references Luecken, M. D., Büttner, M., Chaichoompu, K., Danese, A.,
+#' @references Luecken, M. D., Büttner, M., Chaichoompu, K., Danese, A.,
 #' Interlandi, M., Mueller, M. F., Strobl, D. C., Zappia, L., Dugas, M.,
 #' Colomé-Tatché, M. & Theis, F. J. Benchmarking atlas-level data integration in
 #' single-cell genomics. Nat Methods 19, 41–50 (2021).
