@@ -9,3 +9,4 @@
 ^.*\.html$
 ^vignettes/img$
 ^TODO$
+^LICENSE\.md$
