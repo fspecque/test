@@ -577,9 +577,9 @@ CellCycleScoringPerBatch <- function(object, batch.var = NULL,
   batch.var <- batch.var %||% {
     layers <- Layers(object, search = layer, assay = assay)
     df.mtdt <- df.mtdt %>% left_join(
-      Seurat:::CreateIntegrationGroups(object = object[[assay]],
-                                       layers = layers,
-                                       scale.layer = scale.layer) %>%
+      CreateIntegrationGroups(object = object[[assay]],
+                              layers = layers,
+                              scale.layer = scale.layer) %>%
         rownames_to_column(idcol), by = idcol
     )
     "group"

@@ -147,7 +147,7 @@ DoIntegrateSingle <- function (object, method, use.hvg = TRUE, use.future = TRUE
     call_ns(method_expr) %||% environmentName(environment(fun = get(method_fun)))},
     error = function(e) "Unknown")
   if (inherits(assay.use, 'SCTAssay') && method_env_name == .packageName) {
-    groups <- Seurat:::CreateIntegrationGroups(assay.use)
+    groups <- CreateIntegrationGroups(assay.use)
     assay.use <- suppressMessages(suppressWarnings(
       split(assay.use, f = groups$group, layers = c("counts", "data"))))
   }

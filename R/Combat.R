@@ -97,9 +97,9 @@ CombatIntegration <- function(
   layers <- Layers(object = object, search = layers %||% "data")
   scale.layer <- scale.layer %||% "scale.data"
 
-  groups <- groups %||% Seurat:::CreateIntegrationGroups(object = object,
-                                                         layers = layers,
-                                                         scale.layer = scale.layer)
+  groups <- groups %||% CreateIntegrationGroups(object = object,
+                                                layers = layers,
+                                                scale.layer = scale.layer)
   groups.name <- groups.name %||% colnames(groups)[1]
   groups.name <- intersect(colnames(groups), groups.name)
   if (! length(x = groups.name)) {

@@ -222,10 +222,9 @@ scANVIIntegration <- function(
     groups <- as.data.frame(groups)
   }
   groups.name %||% {
-    groups <- cbind(groups,
-                    Seurat:::CreateIntegrationGroups(object = object,
-                                                     layers = layers,
-                                                     scale.layer = scale.layer))
+    groups <- cbind(groups, CreateIntegrationGroups(object = object,
+                                                    layers = layers,
+                                                    scale.layer = scale.layer))
     groups.name <- colnames(groups)[ncol(groups)]
   }
   groups.name <- intersect(colnames(groups), groups.name)

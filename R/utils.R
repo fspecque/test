@@ -709,3 +709,33 @@ could.be.connectivity.Matrix <- function(object, check.symmetry = T) {
     (! check.symmetry || isSymmetric(object))
   return(res)
 }
+
+
+# Creates data.frame with cell group assignments for integration
+# uses SCT models if SCTAssay and layers otherwise
+#' @importFrom SeuratObject EmptyDF Cells
+#' @importFrom methods slot
+#' @keywords internal
+#' @noRd
+############ Copy-paste
+# https://github.com/satijalab/seurat/blob/1549dcb3075eaeac01c925c4b4bb73c73450fc50/R/integration5.R#L659-L677
+CreateIntegrationGroups <- function(object, layers, scale.layer) {
+  groups <- if (inherits(x = object, what = 'SCTAssay')) {
+    df <- EmptyDF(n = ncol(x = object))
+    row.names(x = df) <- colnames(x = object)
+    for (model in levels(x = object)) {
+      cc <- Cells(x = object, layer = model)
+      df[cc, "group"] <- model
+    }
+    df
+  } else if (length(x = layers) > 1L) {
+    cmap <- slot(object = object, name = 'cells')[, layers]
+    as.data.frame(x = labels(
+      object = cmap,
+      values = Cells(x = object, layer = scale.layer)
+    ))
+  }
+  names(x = groups) <- 'group'
+  return(groups)
+}
+############

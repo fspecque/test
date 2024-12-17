@@ -174,9 +174,9 @@ bbknnIntegration <- function(
     abort(message = paste(sQuote(x = scale.layer), "not in object layers"))
   }
 
-  groups <- groups %||% Seurat:::CreateIntegrationGroups(object = object,
-                                                         layers = layers,
-                                                         scale.layer = scale.layer)
+  groups <- groups %||% CreateIntegrationGroups(object = object,
+                                                layers = layers,
+                                                scale.layer = scale.layer)
   groups.name <- groups.name %||% colnames(groups)[1]
   groups.name <- intersect(colnames(groups), groups.name)
   if (! length(x = groups.name)) {

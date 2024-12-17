@@ -175,9 +175,9 @@ scVIIntegration <- function(
 
   layers <- Layers(object = object, search = layers %||% "counts")
   scale.layer <- scale.layer %||% "scale.data"
-  groups <- groups %||% Seurat:::CreateIntegrationGroups(object = object,
-                                                         layers = layers,
-                                                         scale.layer = scale.layer)
+  groups <- groups %||% CreateIntegrationGroups(object = object,
+                                                layers = layers,
+                                                scale.layer = scale.layer)
   if (! inherits(x = groups, what = "data.frame")) {
     # groups is supposedly a vector, a matrix or a list
     groups <- as.data.frame(groups)
