@@ -4,6 +4,7 @@
 ## usethis namespace: start
 #' @importFrom rlang %||% check_installed abort
 #' @importFrom SeuratObject %iff%
+#' @import rlang
 ## usethis namespace: end
 
 #' @name integration-method
