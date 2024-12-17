@@ -255,6 +255,7 @@ setGeneric(".CutKnn",
              standardGeneric(".CutKnn"))
 
 #' @importFrom Matrix diag drop0 rowSums
+#' @importFrom utils getS3method
 #' @importFrom SeuratObject as.Graph
 #' @keywords internal
 #' @noRd
@@ -277,7 +278,9 @@ setMethod(".CutKnn", "Matrix",
                               k.max + 1, k_msg)[verbose], appendLF = FALSE)
               if (k.const) {
                 # :::as.Neighbor.Graph => avoid error when object is Matrix
-                object <- SeuratObject:::as.Neighbor.Graph(object) # faster
+                as.Neighbor.Graph <- getS3method(
+                  "as.Neighbor", "Graph", envir = asNamespace("SeuratObject"))
+                object <- as.Neighbor.Graph(object) # faster
               }
               object <- .cut.knn(object, k.max = k.max, assay = assay)
             }
