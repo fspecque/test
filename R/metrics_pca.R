@@ -329,7 +329,8 @@ ScoreRegressPC.CellCycle <- function(object, batch.var = NULL,
                                      compute.cc = TRUE,
                                      s.features = NULL, g2m.features = NULL,
                                      assay = NULL, weight.by = c("var", "stdev"),
-                                     adj.r2 = FALSE) {
+                                     adj.r2 = FALSE,
+                                     approx = FALSE) {
   assay <- assay %||% DefaultAssay(object)
   weight.by <- tolower(weight.by)
   weight.by <- match.arg(weight.by)
@@ -384,9 +385,11 @@ ScoreRegressPC.CellCycle <- function(object, batch.var = NULL,
                                      g2m.features = g2m.features, ctrl = NULL,
                                      set.ident = FALSE)
     }
-    sub.object[['pca.batch']] <- RunPCA(ref[dims.use, cells, drop=F], assay = assay,
-                                        npcs = npcs, verbose = FALSE,
-                                        reduction.key = "boulgiboulga_")
+    sub.object[['pca.batch']] <- RunPCA(ref[dims.use, cells, drop=F],
+                                        assay = assay, npcs = npcs,
+                                        verbose = FALSE,
+                                        reduction.key = "boulgiboulga_",
+                                        approx = approx)
 
     s.var <- s.var %||% "S.Score"
     g2m.var <- g2m.var %||% "G2M.Score"
@@ -425,12 +428,13 @@ AddScoreRegressPC.CellCycle <- function(object, integration,
                                         s.features = NULL, g2m.features = NULL,
                                         assay = NULL,
                                         weight.by = c("var", "stdev"),
-                                        adj.r2 = FALSE) {
+                                        adj.r2 = FALSE,
+                                        approx = FALSE) {
   scores <- ScoreRegressPC.CellCycle(
     object, batch.var = batch.var, what = what, dims.use = dims.use, npcs = npcs,
     s.var = s.var, g2m.var = g2m.var, compute.cc = compute.cc,
     s.features = s.features, g2m.features = g2m.features, assay = assay,
-    weight.by = weight.by, adj.r2 = adj.r2)
+    weight.by = weight.by, adj.r2 = adj.r2, approx = approx)
 
   object <- check_misc(object)
   object <- SetMiscScore(object, integration = integration,
