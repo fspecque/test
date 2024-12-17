@@ -1,4 +1,5 @@
 #' @include metrics_pca.R
+#' @include utils.R
 NULL
 
 #' Score an embedding or a count matrix with the average silhouette width
@@ -148,7 +149,7 @@ ScoreASW <- function(object, cell.var,  what, assay = NULL,
   }
 
   if (metric %in% c('cosine', 'angular')) { # L2 norm (M / rowwise(sqrt(sum(M^2))))
-    mat <- Seurat:::L2Norm(mat = mat, MARGIN = 1L)
+    mat <- NormaliseL2(mat = mat, MARGIN = 1L)
     # euclidean distance on mat -> ~ 'angular', i.e. 'cosine' of FindNeighbors (AnnoyAngular)
   }
 
@@ -296,7 +297,7 @@ ScoreASWBatch <- function(object, batch.var = NULL, cell.var = NULL,  what,
   }
 
   if (metric %in% c('cosine', 'angular')) { # L2 norm (M / rowwise(sqrt(sum(M^2))))
-    mat <- Seurat:::L2Norm(mat = mat, MARGIN = 1L)
+    mat <- NormaliseL2(mat = mat, MARGIN = 1L)
     # euclidean distance on mat -> ~ 'angular', i.e. 'cosine' of FindNeighbors (AnnoyAngular)
   }
 
