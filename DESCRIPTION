@@ -16,7 +16,7 @@ Depends:
     R (>= 3.5.0),
     Seurat (>= 5.0.0)
 Imports: 
-    rlang,
+    rlang (>= 1.1.0),
     SeuratObject,
     sva,
     batchelor,
@@ -60,6 +60,7 @@ Collate:
     'Scanorama.R'
     'SeuratIntegrate-package.R'
     'bbknn.R'
+    'clustering.R'
     'conda_S4_definitions.R'
     'conda_S4_methods.R'
     'conda_S4_helpers.R'
@@ -68,6 +69,9 @@ Collate:
     'do_integrate.R'
     'expand_knn_graph.R'
     'globals.R'
+    'import-standalone-obj-type.R'
+    'import-standalone-types-check.R'
+    'internals.R'
     'kwargs.R'
     'metrics_ari.R'
     'metrics_connectivity.R'
