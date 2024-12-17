@@ -19,8 +19,10 @@
 #' computed on the output of bbknn, then a ridge regression is performed to
 #' remove technical variables while preserving biological variables. Then, a new
 #' bbknn run is performed.
-#' @param graph.use Which graph of bbknn to output. One of "\code{connectivities}"
-#' (default, recommended) or "\code{distances}"
+#' @param graph.use Which graph(s) of bbknn to output. At least one of
+#' "\code{connectivities}" or "\code{distances}". If both are provided (default)
+#' and \code{ridge_regression = TRUE}, the first one ("\code{connectivities}" by
+#' default, recommended) is used as input for computing clusters.
 #' @param ... Additional arguments to be passed to \code{bbknn.bbknn()}. When
 #' \code{ridge_regression = TRUE}, also accepts arguments to pass to
 #' \code{Seurat::FindClusters()}, \code{Seurat::RunPCA()} and
@@ -28,15 +30,21 @@
 #'
 #' @return A list containing at least one of:
 #' \itemize{
-#'   \item a new Graph of name [\code{new_graph}]_scale.data corresponding to
-#'   the output of the first run of \pkg{bbknn}
+#'   \item 1 or 2 new Graph(s) of name
+#'   [\code{new_graph}]_scale.data_[\code{graph.use}]
+#'   corresponding to the output(s) of the first run of \pkg{bbknn}
 #'   \item a new Assay of name \code{reconstructed.assay} with corrected counts
 #'   for each feature from \code{scale.layer}.
 #'   \item a new DimReduc (PCA) of name \code{new.reduction} (key set to
 #'   \code{reduction.key})
-#'   \item a new Graph of name [\code{new_graph}]_ridge.residuals corresponding
-#'   to the output of the first run of \pkg{bbknn}
+#'   \item 1 or 2 new Graph(s) of name
+#'   [\code{new_graph}]_ridge.residuals_[\code{graph.use}]
+#'   corresponding to the output(s) of the second run of \pkg{bbknn}
 #' }
+#'
+#' [\code{graph.use}] can take two values (either "\code{connectivities}" or
+#' "\code{distances}"), depending on the \code{graph.use} parameter.
+#'
 #' When called via \code{\link[Seurat]{IntegrateLayers}}, a Seurat object with
 #' the new reduction and/or assay is returned
 #'
@@ -110,7 +118,7 @@ bbknnIntegration <- function(
     seed.use = 42L,
     ...
 ) {
-  graph.use <- match.arg(graph.use)
+  graph.use <- match.arg(graph.use, several.ok = TRUE)
   seed.use <- seed.use %iff% as.integer(seed.use)
 
   args.bbknn <- c("trim", "annoy_n_trees", "pynndescent_n_neighbors",
@@ -210,21 +218,23 @@ bbknnIntegration <- function(
   do.call(bbknn$bbknn, args)
   message("done.\n"[verbose], appendLF = FALSE)
 
-  bbknn_conn <- reticulate::py_to_r(x = adata$obsp[graph.use])
-  dimnames(bbknn_conn) <- list(
-    reticulate::py_to_r(x = adata$obs_names$values),
-    reticulate::py_to_r(x = adata$obs_names$values)
-  )
-  bbknn_graph <- as.Graph(x = bbknn_conn)
-  bbknn_graph@assay.used <- "RNA"
+  bbknn_graphs <- sapply(graph.use, function(graph.key) {
+    bbknn_graph <- reticulate::py_to_r(x = adata$obsp[graph.key])
+    dimnames(bbknn_graph) <- list(
+      as.character(reticulate::py_to_r(x = adata$obs_names$values)),
+      as.character(reticulate::py_to_r(x = adata$obs_names$values))
+    )
+    bbknn_graph <- as.Graph(x = bbknn_graph)
+    bbknn_graph@assay.used <- "RNA"
+    bbknn_graph
+  }, simplify = FALSE)
 
-  graph.name <- sprintf(fmt = "%s_scale.data", new.graph)
-  output.list <- list()
-  output.list[[graph.name]] <- bbknn_graph
+  graph.name <- sprintf(fmt = "%s_scale.data_%s", new.graph, graph.use)
+  output.list <- setNames(bbknn_graphs, graph.name)
 
   if (ridge_regression) {
     message("Computing clusters..."[verbose], appendLF = FALSE)
-    args <- c(list(object = bbknn_graph, verbose = verbose,
+    args <- c(list(object = bbknn_graphs[[1]], verbose = verbose,
                    random.seed = seed.use),
               varargs[intersect(names(varargs), args.findCluster)])
     clusters4ridge <- do.call(FindClusters, args)
@@ -265,24 +275,26 @@ bbknnIntegration <- function(
     do.call(bbknn$bbknn, args)
     message("done.\n"[verbose], appendLF = FALSE)
 
-    bbknn_conn <- reticulate::py_to_r(x = adata$obsp[graph.use])
-    dimnames(bbknn_conn) <- list(
-      reticulate::py_to_r(x = adata$obs_names$values),
-      reticulate::py_to_r(x = adata$obs_names$values)
-    )
-    bbknn_graph <- as.Graph(x = bbknn_conn)
-    bbknn_graph@assay.used <- reconstructed.assay
-    # avoid later error when converting to graph
-    # invalid class “Neighbor” object: invalid object for slot "cell.names" in class "Neighbor": got class "array", should be or extend class "character"
-    bbknn_graph@Dimnames <- lapply(bbknn_graph@Dimnames, as.character)
+    bbknn_graphs <- sapply(graph.use, function(graph.key) {
+      bbknn_graph <- reticulate::py_to_r(x = adata$obsp[graph.key])
+      dimnames(bbknn_graph) <- list(
+        as.character(reticulate::py_to_r(x = adata$obs_names$values)),
+        as.character(reticulate::py_to_r(x = adata$obs_names$values))
+      )
+      bbknn_graph <- as.Graph(x = bbknn_graph)
+      bbknn_graph@assay.used <- "RNA"
+      bbknn_graph
+    }, simplify = FALSE)
     if (return.new.assay) {
       output.list[[reconstructed.assay]] <- bbknn_assay
     }
     if (return.ridge.reduc) {
       output.list[[new.reduction]] <- bbknn_ridgePCA
     }
-    graph.name <- sprintf(fmt = "%s_ridge.residuals", new.graph)
-    output.list[[graph.name]] <- bbknn_graph
+    graph.name <- sprintf(fmt = "%s_ridge.residuals_%s", new.graph, graph.use)
+    for (i in 1:length(graph.name)) {
+      output.list[[graph.name[i]]] <- bbknn_graphs[[i]]
+    }
   }
 
   return(output.list)
