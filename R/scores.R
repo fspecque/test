@@ -473,6 +473,7 @@ IntegrationScores <- function(object, scaled = FALSE) {
 PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
                        split.by.score.type = TRUE,
                        order.by = c('score', 'name', 'asis'),
+                       hide.zeros = FALSE,
                        include.integration = NULL,
                        exclude.integration = NULL,
                        include.score = NULL,
@@ -539,7 +540,7 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
     gsub(pattern = '[\\._]+', replacement = ' ', x = x)
   }
 
-  lo.cap <- c(0, NA)[(plot.type == 'dot') + 1]
+  lo.cap <- c(0, NA)[hide.zeros + 1]
   scaled.scores <- scaled.scores %>%
     mutate(Integration = if(order.by == "asis") {
       factor(Integration, levels = unique(Integration))
