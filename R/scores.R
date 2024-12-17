@@ -1,4 +1,5 @@
 #' @include numeric_lisi_class.R
+#' @include import-standalone-types-check.R
 NULL
 
 #' Ensures a Seurat object has 'si_scores' in Misc
@@ -592,12 +593,12 @@ PlotScoresRadar <- function(scaled.scores, split.by.score.type) {
     theta <- tolower(theta)
     theta <- arg_match(theta)
     r <- c('x', 'y')[(theta == 'x') + 1]
-    ggplot2:::check_bool(r.axis.inside, allow_null = TRUE)
-    ggplot2:::check_bool(expand)
-    ggplot2:::check_bool(rotate.angle)
-    ggplot2:::check_number_decimal(start, allow_infinite = FALSE)
-    ggplot2:::check_number_decimal(end, allow_infinite = FALSE, allow_null = TRUE)
-    ggplot2:::check_number_decimal(inner.radius, min = 0, max = 1, allow_infinite = FALSE)
+    check_bool(r.axis.inside, allow_null = TRUE)
+    check_bool(expand)
+    check_bool(rotate.angle)
+    check_number_decimal(start, allow_infinite = FALSE)
+    check_number_decimal(end, allow_infinite = FALSE, allow_null = TRUE)
+    check_number_decimal(inner.radius, min = 0, max = 1, allow_infinite = FALSE)
     end <- end %||% (start + 2 * pi)
     if (start > end) {
       n_rotate <- ((start - end)%/%(2 * pi)) + 1
