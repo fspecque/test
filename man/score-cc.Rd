@@ -19,7 +19,8 @@ ScoreRegressPC.CellCycle(
   g2m.features = NULL,
   assay = NULL,
   weight.by = c("var", "stdev"),
-  adj.r2 = FALSE
+  adj.r2 = FALSE,
+  approx = FALSE
 )
 
 AddScoreRegressPC.CellCycle(
@@ -36,7 +37,8 @@ AddScoreRegressPC.CellCycle(
   g2m.features = NULL,
   assay = NULL,
   weight.by = c("var", "stdev"),
-  adj.r2 = FALSE
+  adj.r2 = FALSE,
+  approx = FALSE
 )
 }
 \arguments{
@@ -74,6 +76,8 @@ standard deviation respectively). Use the variance or the standard deviation
 explained by the principal components to weight the each PC's score.}
 
 \item{adj.r2}{Whether to use the adjusted R2 instead of the raw R2}
+
+\item{approx}{Use truncated singular value decomposition to approximate PCA}
 
 \item{integration}{name of the integration to score}
 }

@@ -68,8 +68,10 @@ computed on the output of bbknn, then a ridge regression is performed to
 remove technical variables while preserving biological variables. Then, a new
 bbknn run is performed.}
 
-\item{graph.use}{Which graph of bbknn to output. One of "\code{connectivities}"
-(default, recommended) or "\code{distances}"}
+\item{graph.use}{Which graph(s) of bbknn to output. At least one of
+"\code{connectivities}" or "\code{distances}". If both are provided (default)
+and \code{ridge_regression = TRUE}, the first one ("\code{connectivities}" by
+default, recommended) is used as input for computing clusters.}
 
 \item{verbose}{Print messages. Set to \code{FALSE} to disable}
 
@@ -84,15 +86,21 @@ Set \code{seed.use = NULL} to disable}
 \value{
 A list containing at least one of:
 \itemize{
-  \item a new Graph of name [\code{new_graph}]_scale.data corresponding to
-  the output of the first run of \pkg{bbknn}
+  \item 1 or 2 new Graph(s) of name
+  [\code{new_graph}]_scale.data_[\code{graph.use}]
+  corresponding to the output(s) of the first run of \pkg{bbknn}
   \item a new Assay of name \code{reconstructed.assay} with corrected counts
   for each feature from \code{scale.layer}.
   \item a new DimReduc (PCA) of name \code{new.reduction} (key set to
   \code{reduction.key})
-  \item a new Graph of name [\code{new_graph}]_ridge.residuals corresponding
-  to the output of the first run of \pkg{bbknn}
+  \item 1 or 2 new Graph(s) of name
+  [\code{new_graph}]_ridge.residuals_[\code{graph.use}]
+  corresponding to the output(s) of the second run of \pkg{bbknn}
 }
+
+[\code{graph.use}] can take two values (either "\code{connectivities}" or
+"\code{distances}"), depending on the \code{graph.use} parameter.
+
 When called via \code{\link[Seurat]{IntegrateLayers}}, a Seurat object with
 the new reduction and/or assay is returned
 }

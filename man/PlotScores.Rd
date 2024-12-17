@@ -9,6 +9,7 @@ PlotScores(
   plot.type = c("dot", "radar", "lollipop"),
   split.by.score.type = TRUE,
   order.by = c("score", "name", "asis"),
+  hide.zeros = FALSE,
   include.integration = NULL,
   exclude.integration = NULL,
   include.score = NULL,
@@ -35,6 +36,8 @@ are mixed in a single figure.}
 order of integrations in the legend (and on the y-axis for lolliplop and
 table plots). Scores are ordered by decreasing overall score by default,
 by name or by row-order when setting 'name' and 'asis' respectively.}
+
+\item{hide.zeros}{whether zero(ed) scores should be visible on the plot.}
 
 \item{include.integration}{name of the integration(s) to include. The
 default value (\code{NULL}) enable to include them all.}
