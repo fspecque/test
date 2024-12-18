@@ -17,6 +17,9 @@ vignette: >
 .darker-code {
   color: #2f2f2f;
 }
+.red-warn {
+  color: red;
+}
 ```
 
 ```{r, include = FALSE}
@@ -62,7 +65,7 @@ library(SeuratIntegrate)
 Have look at your `CondaEnvManager`:
 
 ```{r, eval=FALSE}
-conda_status$current
+getCache()
 ```
 ```{r png-conda-unset, echo=FALSE, out.width='100%', fig.align='center'}
 knitr::include_graphics('./img/conda_envs_unset.png')
@@ -79,7 +82,7 @@ Conversely, if you want to add an existing conda environment, directly go to the
 
 ### Option 1: Create new conda environments with `SeuratIntegrate` {#create_env}
 
-**Note that the commands below have only been tested on Linux disributions**
+**Note that the commands below have only been tested on Linux distributions**
 
 Try the following commands (be aware that execution might take time):
 
@@ -99,7 +102,7 @@ run both `UpdateEnvCache('scvi')` and `UpdateEnvCache('scanvi')`
 Have look at your `CondaEnvManager`:
 
 ```{r, eval=FALSE}
-conda_status$current
+getCache()
 ```
 ```{r png-conda-set, echo=FALSE, out.width='100%', fig.align='center'}
 knitr::include_graphics('./img/conda_envs_set.png')
@@ -152,15 +155,265 @@ Now you can use the python-based methods !
 
 If you want to update a `conda` environment, use
 ```{r, eval=FALSE}
+# change 'method' by the name of the method
 UpdateEnvCache(method = 'method', overwrite.env = TRUE, ...)
 ```
 
 To unset an environment, use
 ```{r, eval=FALSE}
+# change 'method' by the name of the method
 resetCache(method = 'method')
 ```
 
-<!-- ## Usage -->
+## Troubleshouting with conda
+
+### Common issues with setting up environments {#install_problem}
+
+It can happen that a conda environment cannot be installed on a specific machine
+or os. In this case, there is hardly anything better to do than browse the
+internet in hope that someone else has experienced a similar problem and that
+the solution is public. Otherwise, try to modify the set of packages to install,
+be more or less stringent with package versions to install, etc. You can also
+create a conda environment with python and pip, and then to try to install
+packages with pip rather than conda.
+
+Once the problem is solved (if it can be), you can save the new environment to
+the `CondaEnvManager` with
+```{r, eval=FALSE}
+# change 'method' by the name of the method
+# change'difficult_conda_env' by the name of the working conda environment
+UpdateEnvCache(method = 'method', conda.env = 'difficult_conda_env')
+```
+
+
+### Possible issues with activating environments {#load_problem}
+
+It can happen that a conda environment does not work (or stops working) on a
+specific machine. Below are some potential causes of conflicts between Python
+libraries, conda itself or other components that could lead to malfunctions
+(non exhaustive list):
+
+1. **with rmarkdown/knitr**
+
+<ol><details>
+  <summary>*How to check*</summary>
+Check if the same command works outside of an rmarkdown (e.g. in a R script),
+once you have closed any Rmardown file and closed the R session (and restrated
+RStudio). This is something to consider notably when you encounter an error like:
+
+```{r class.source='red-warn', eval=FALSE, highlight=FALSE}
+ImportError: /opt/conda/envs/[env_name]/lib/python3.10/site-packages/PIL/../../../libtiff.so.6: undefined symbol: jpeg12_write_raw_data, version LIBJPEG_8.0
+```
+</details></ol>
+<ol><details>
+  <summary>*How to fix*</summary>
+Close any Rmardown file in the source panel, quit the R session (close RStudio)
+and work from a R script.
+</details></ol>
+
+2. **with RStudio**
+
+<ol><details>
+  <summary>*How to check*</summary>
+Check if the same command works outside of RStudio.
+For instance, if there is an error during an integration because scanpy cannot
+be imported, try:
+
+```
+# from a terminal
+R
+```
+```{r, eval=FALSE}
+> library(reticulate)
+> use_condaenv('[conda_env_name]')
+> scanpy <- import("scanpy", convert = FALSE)
+# error here ?
+> 
+```
+
+</details></ol>
+<ol><details>
+  <summary>*How to fix*</summary>
+Lunch the integration outside of RStudio (from a terminal for example).
+</details></ol>
+
+
+3. **with reticulate**
+
+<ol><details>
+  <summary>*How to check*</summary>
+Check if the conda environment loads properly in a pure python session.
+For instance, if there is an error during an integration because scanpy cannot
+be imported, try to:
+
+```
+conda activate [conda_env_name]
+python
+```
+```{python, eval = FALSE}
+>>> import scanpy
+# error here ?
+>>>
+```
+
+</details></ol>
+<ol><details>
+  <summary>*How to fix*</summary>
+First, try to update reticulate. If it doesn't work any better, check if someone
+has encountered the same issue (browse the web or the issues on the reticulate
+github repository. If nothing works, either post an issue on the reticulate
+github repos or retry to import after you have installed different python
+package versions.
+
+If this is a problem with `mkl`, install the conda environment
+again with the arguments `nomkl` (and `-c conda-forge` if not already).
+</details></ol>
+
+4. **between python packages**
+
+<ol><details>
+  <summary>*How to check*</summary>
+This is more tricky. But some packages are know to be incompatible. For instance,
+jax and jaxlib work better when their versions are identical. In my experience,
+the `scvi-tools` environment can be set up with two discrepant versions of jax
+and jaxlib. To check, try:
+
+```
+conda list -n [conda_env_name] jax
+```
+
+</details></ol>
+<ol><details>
+  <summary>*How to fix*</summary>
+If this is a problem with jax and jaxlib, try to force install them with
+identical versions. Otherwise, search your error on the web.
+</details></ol>
+
+5. **between your local os and the list of packages to be installed by
+SeuratIntegrate**
+
+<ol><details>
+  <summary>*How to check*</summary>
+This is more an installation problem usually. Check the [previous section](#install_problem).
+</details></ol>
+<ol><details>
+  <summary>*How to fix*</summary>
+This is more an installation problem usually. Check the [previous section](#install_problem).
+</details></ol>
+
+## Subtleties of using Future
+
+If the following bullet points seem obscure, further explanations are given in
+the sections below. In brief,
+
+<blockquote style="font-size: 1em;">
+-   **disable future** for R-based methods (`DoIntegrate([...], use.future = FALSE)`)
+-   **never use** `CCA` and `RPCA` integration methods with multisession
+(previous advice prevents this, especially for Windows users)
+-   multicore futures are faster and less memory-intensive than multisession,
+but unstable on RStudio and **unavailable on Windows**
+-   to force `DoIntegrate()` to use a multicore framework (at your own risk),
+set `options(parallelly.fork.enable = FALSE)`. **Unavailable on Windows**
+</blockquote>
+
+
+### Why SeuratIntegrate uses Future ?
+
+A R session can only initialise one Python environment at a time via reticulate.
+This [known](https://datascience.stackexchange.com/questions/109823/multiple-conda-enviroments-in-r-functions-using-reticulate#110554)
+[limitation](https://rstudio.github.io/reticulate/reference/use_python.html#caveats-1)
+of `reticualte` is overcome by launching a "*background session*" using `Future`.
+The environment is initialised there instead of the main user's R session. This
+feature is embedded in `DoIntegrate()`.
+
+Futures are therefore useless for R-based methods and should be disabled with
+`DoIntegrate([...], use.future = FALSE)`. Worse, it is **discouraged** with
+`CCAIntegration` and `RPCAIntegration` (explanations are in the final part of
+the vignette)
+
+### Inconveniences
+
+In the vast majority of cases, the impact of the "*futures*" is insignificant.
+The most obvious are the few needed seconds to launch the future session and
+export globals, in addition to the [reordering of stdout and message output](https://cran.r-project.org/web/packages/future/vignettes/future-2-output.html),
+resulting in messy and less informative print statements intended for the user.
+
+### Tweaks
+
+The package implements sequential, multicore, multisession, and cluster futures.
+`SeuratIntegrate` only uses the multicore and multisession ones. `DoIntegrate()`
+automatically picks the preferred one based on the output of
+
+```{r, echo=FALSE}
+options(parallelly.fork.enable = FALSE)
+```
+```{r}
+parallelly::supportsMulticore()
+```
+
+Here multicore is not supported, thus `DoIntegrate()` would start a multisession.
+Further explanations regarding settings giving priority to multicore are
+available in the function's help (the important part is in the disclosure widget
+`?supportsMulticore`)
+
+```{r help-command, eval=FALSE}
+help('supportsMulticore', package = 'parallelly')
+```
+
+<details>
+  <summary>`?supportsMulticore`</summary>
+```{r help-extract, echo=FALSE}
+help_file <- utils:::.getHelpFile(help('supportsMulticore', 'parallelly'))
+out_file <- tempfile(fileext = ".html")
+tools:::Rd2HTML(helpfile, out = out_file)
+lines_html <- readLines(outfile)
+h_idx <- intersect(grep("^<h3>", lines_html), grep("fork|Example", lines_html))
+lines_html <- lines_html[h_idx[1]:(h_idx[length(h_idx)] - 1)]
+lines_html <- sub("<h3>", "<h4>", lines_html)
+
+knitr::asis_output('<blockquote style="font-size: 1em;">')
+knitr::asis_output(htmltools::htmlPreserve(paste(lines_html, collapse="\n")))
+knitr::asis_output('</blockquote>')
+```
+</details>
+
+<br />In a nutshell, multicore is
+
+-   unavailable on Windows
+-   discouraged (considered unstable) in some R environments, notably RStudio
+-   always used on Unix-like operating systems when
+`options(parallelly.fork.enable = TRUE)` 
+
+The main reason for using multicore is that FORKing is considered to be faster
+and result in a lower memory overhead than PSOCK (i.e. multisession) (see [there](https://r-bayesian-networks.org/articles/multiprocessing.html#fork-vs--psock)
+for technical details)
+
+Furthermore, `DoIntegrate()` uses not only future, but also NSE
+(non-standard evaluation), enabling to specify arguments within each integration
+function call. Briefly, each call inside `DoIntegrate()`
+(such as `DoIntegrate(bbknnIntegration())`) is not directly executed but
+*captured* to be executed later on (so that the proper value for the `object`
+parameter can be passed on to `bbknnIntegration` for instance). Further details
+are available in the book
+[Advanced R](http://adv-r.had.co.nz/Computing-on-the-language.html) by Hadley
+Wickham.
+
+The important part is that, unlike for multicore, on a multisession future,
+`DoIntegrate()` evaluates each argument before launching the integration on the
+background R session. Thus, a Seurat Assay object is passed as a `str`ucture
+(output of `str(object)`). This takes time and makes the call extremely long.
+
+It has a unexpected side-effect. It slows down `CCAIntegration` and
+`RPCAIntegration` a lot when they are input with Seurat objects normalised with
+`SCTransform()`. Indeed, they both call `FindIntegrationAnchors()` -> `merge()`
+-> `merge.SCTAssay()`. The latter performs a `grep` on the previous calls
+(output of `sys.calls()`). In a multisession future, big objects such as the
+Seurat Assay object are passed as a `str`ucture and the `grep` can be
+unnecessarily time-consuming. To avoid this, one can either specify
+`use.future = FALSE` for the R-based method (this is always preferable) or at
+least ban the use of `CCA` and `RPCA` integrations with a multisession future
+(note that Windows users can only pick the first option).
+
 
 <!-- Now you can use the python-based methods ! -->
 
