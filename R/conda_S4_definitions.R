@@ -39,6 +39,7 @@ needs.conda <- sapply(known.methods, function(method) ifelse(
 
 
 .conda_requirements$osx <- .conda_requirements$default
+.conda_requirements$osx$bbknn$pip <- "bbknn"
 .conda_requirements$osx$scvi$packages <- c("python", "scipy", "scanpy",
                                            "scvi-tools", "setuptools", "cmake")
 .conda_requirements$osx$trvae$packages <- c("python", "pip", "numpy",
