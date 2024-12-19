@@ -365,8 +365,8 @@ help('supportsMulticore', package = 'parallelly')
 ```{r help-extract, echo=FALSE}
 help_file <- utils:::.getHelpFile(help('supportsMulticore', 'parallelly'))
 out_file <- tempfile(fileext = ".html")
-tools:::Rd2HTML(helpfile, out = out_file)
-lines_html <- readLines(outfile)
+tools:::Rd2HTML(help_file, out = out_file)
+lines_html <- readLines(out_file)
 h_idx <- intersect(grep("^<h3>", lines_html), grep("fork|Example", lines_html))
 lines_html <- lines_html[h_idx[1]:(h_idx[length(h_idx)] - 1)]
 lines_html <- sub("<h3>", "<h4>", lines_html)
