@@ -2,7 +2,7 @@
 R package gathering a set of wrappers to apply various integration methods to Seurat objects and rate integration obtained with such methods
 
 ## Installation
-### 1) Remotly from github with R
+### 1) Remotely from github with R
 Install SeuratIntegrate from github directly:
 ```R
 install.packages(c("remotes", "BiocManager"))
