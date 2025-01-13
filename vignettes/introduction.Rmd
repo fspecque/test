@@ -1,5 +1,5 @@
 ---
-title: "Introduction: Integration of scRNA-seq data and evaluation"
+title: "Integration example with of the pbmcsca data"
 output:
   html_document:
     theme: flatly
@@ -8,7 +8,7 @@ output:
     toc_float:
       collapsed: false
 vignette: >
-  %\VignetteIndexEntry{Introduction: Integration of scRNA-seq data and evaluation}
+  %\VignetteIndexEntry{Integration example with of the pbmcsca data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -28,7 +28,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, warning=FALSE, results='hide'}
 library(SeuratIntegrate)
 ```
 
@@ -60,14 +60,14 @@ Have a look at the metadata:
 rmarkdown::paged_table(head(seu[[]], n = 10))
 ```
 
-The `Method` column seems to contain the cells' batch of origin.
+The column `Method` provides information about the single-cell technology used
+to acquire each cell's trancriptome. We consider it as the batch of origin.
 
 ```{r}
 table(seu$Method)
 ```
 
-There's also a `CellType` column that contains cell-types estimates that we will
-use later on.
+The column `CellType` contains cell-types annotation that we will use later on.
 
 ```{r}
 rmarkdown::paged_table(as.data.frame(table(seu$CellType)))
@@ -80,17 +80,19 @@ batch.var <- 'Method'   # available in the metadata of the object
 cell.var <- 'CellType'  # available in the metadata of the object
 ```
 
-## Process the data in a standard fashion
+## Seurat data processing - Standard workflow
 
-For now, our Seurat object is not split. Each layer contains cells from all
-batches.
+The current Seurat object is not split, meaning that each layer contains cells
+from all batches.
 ```{r}
 cat('Layers before split:', paste(Layers(seu), collapse = ", "), '\n')
 ```
 
 
-We pick the `Method` column and separate the cell batches accordingly.
-This way, we obtain one layer per batch.
+We select the column `Method` to separate the cells into batch-specific layers.
+This step is indispensable to run integration methods and enables to normalise 
+each batch (i.e. layer) independently.
+
 ```{r split-batch}
 seu[['RNA']] <- split(seu[['RNA']], f = seu$Method)
 
@@ -108,21 +110,36 @@ seu <- RunPCA(seu, verbose = F)
 seu <- FindNeighbors(seu, reduction = "pca", dims = 1:30, k.param = 20L)
 ```
 
+We now further process the object until we can visualise the dispersion of cells
+on a UMAP dimension reduction.
+
 ```{r umap, warning=FALSE}
 seu <- FindClusters(seu, graph.name = 'SCT_snn', resolution = .5)
 seu <- RunUMAP(seu, dims = 1:30, reduction = 'pca')
 ```
 
 ```{r, fig.height=5}
+#| fig.alt: UMAP of unintegrated pbmcsca data with cells colored by cluster
 DimPlot(seu, label = T) + NoLegend() + ggplot2::coord_fixed(ratio = .7)
 ```
 
-```{r, fig.width=10, fig.height=4}
+Let's colour cells according to batch and cell-type label.
+
+```{r, fig.width=12.5, fig.height=5}
+#| fig.alt: >
+#|   UMAP of unintegrated pbmcsca data with cells colored by sequencing method
+#|   (i.e. batch) and cell type label
 DimPlot(seu, group.by = batch.var) +
   DimPlot(seu, group.by = cell.var) & ggplot2::coord_fixed(ratio = .7)
 ```
 
-## Integrate batches
+Albeit moderately, the dispersion of cells on the UMAP seems to be influenced by
+a batch effect. According to the "CellType" variable, B cells from 10x and
+CEL-Seq2 are not gathered together and monocyte cells do not fully overlap.
+
+Now, we want to correct these technical differences.
+
+## Integrate batches - SeuratIntegrate workflow
 
 The integration commands are to some extent similar to the
 [Seurat V5 vignette](https://satijalab.org/seurat/articles/seurat5_integration).
@@ -130,22 +147,22 @@ The purpose of this package is to extend the set of available integration method
 See the bottom of `?IntegrateLayers` to have a comprehensive list of relevant
 methods.
 
-Many methods are implemented in python, and the wrappers developed for this
-package rely on the `reticulate` package and `conda` environments. If you are
-not familiar with the `CondaEnvManager`, have a look at the vignette
-**setup_and_tips**.
+Many methods supported by SeuratIntegrate are implemented in Python, and the
+wrappers provided rely on the `reticulate` package and `conda` environments. If
+you are not familiar with the `CondaEnvManager`, have a look at the
+`vignette("setup_and_tips")`.
 
-Let's perform a few integrations. To this purpose, one might:
+Here are some important considerations before performing an integration:
 
--   use the function `DoIntegrate()` from SeuratIntegrate with integration
-methods
+-   use the interface `DoIntegrate()` from SeuratIntegrate to integrate the cell
+batches (see the next [section](##do_integrate))
 -   check the method-specific arguments (e.g. `?bbknnIntegration`)
--   first set up the `CondaEnvManager` before using python-based methods (check
-the vignette **setup_and_tips**)
--   when a method requires a `conda` environment, the conda environment from the
-manager is called by default (`conda_env = NULL`) . Inputting a path to a conda
-environment or its name overrides the default behaviour by loading the specified
-environment.
+-   set up conda environments to use Python-based methods:
+    -   with the `CondaEnvManager` via `UpdateEnvCache()` (check the
+    `vignette("setup_and_tips")`)
+    -   with a custom conda environment by passing its path - or its name - to
+    the `conda_env` parameter. This overrides the default behaviour by loading
+    the specified environment instead of fetching the `CondaEnvManager`'s cache.
 
 Some methods expect a raw count matrix, others expect the scaled counts of the
 variable features, etc. To help you with the choice, look at the table below
@@ -179,18 +196,18 @@ Layers:
 <br /> <strong style='color:red;'> /!\\ IMPORTANT /!\\ </strong> To use all features when calling an integration method with `IntegrateLayers()`: `IntegrateLayers(object, features = Features(object), scale.layer = NULL)`. Does not work for a `SCTAssay`.
 
 
-### DoIntegrate philosophy
+### DoIntegrate philosophy (#do_integrate)
 
 The function `DoIntegrate()` is a very handy way to run multiple integrations
 in a single command. Note that:
 
 -   `...` is the place to specify the integration commands to run.
 -   integration commands are expected to be **function calls**, i.e. of the form
-`FooIntegration()`, `BarIntegration()`.
+`FooIntegration()`, `BarIntegration()`, etc.
 -   Calls accept method-specific argument (e.g.
 `FooIntegration(layers = "data")`)
 -   `use.hvg = TRUE` results in using variable features
--   `use.future = TRUE` is useful to run python-based methods (a normal R
+-   `use.future = TRUE` is useful to run Python-based methods (a normal R
 session cannot load more than one conda instance, while `future` enables
 to launch background sessions, preventing the main on to load any conda
 environment.). **It is highly recommended to set it to `FALSE` for R-based
@@ -245,6 +262,8 @@ seu <- DoIntegrate(
 )
 ```
 
+*Note*: We use `SeuratIntegrate::` before `HarmonyIntegration` to avoid any
+confusion with `Seurat::HarmonyIntegration()`.
 
 ### Integration part 2)  Using python-based methods
 ```{r  integrate-python-methods, warning=FALSE}
@@ -252,11 +271,11 @@ seu <- DoIntegrate(
   object = seu,
   bbknnIntegration(orig = "pca", layers = "data", ndims = 30),
   ScanoramaIntegration(orig = "pca", ncores = ncores),
-  SeuratIntegrate::scANVIIntegration(groups = seu[[]], groups.name = "Method",
-                                     labels.name = "CellType", layers = "counts",
-                                     torch.intraop.threads = ncores,
-                                     torch.interop.threads = ncores,
-                                     max_epochs = 20L),
+  scANVIIntegration(groups = seu[[]], groups.name = "Method",
+                    labels.name = "CellType", layers = "counts",
+                    torch.intraop.threads = ncores,
+                    torch.interop.threads = ncores,
+                    max_epochs = 20L),
   use.future = TRUE,  # Python-based
   use.hvg = c(TRUE, TRUE, FALSE)
 )
@@ -278,8 +297,10 @@ cat("Reduction dimensions:", paste(Reductions(seu), collapse = ", "), "\n")
 cat("Assays:", paste(Assays(seu), collapse = ", "), "\n")
 ```
 
-Now, we will process each integration's output(s) to obtain assessable
-representations to score.
+Great! We have successfully performed several integrations! However, stopping
+here would be unsatisfactory because we still need to process each integration's
+output(s) to obtain at least one UMAP projection for each. Here, we will also
+aim at generating assessable representations to score.
 
 ## Score integrations
 
@@ -293,17 +314,18 @@ instance Scanorama produces corrected counts and a dimension reduction).
 The type of output is important to consider, because scoring metrics are not
 compatible with all output types. The simplest strategy is to process each
 output separately in order to obtain at least a PCA out of it, or even a knn
-graph (indispensable to compute clusters). Note that most scores cannot be
-computed on knn graphs, hence knn graph outputs (e.g. BBKNN) can only be
-evaluated by a reduced set of metrics.
+graph (essential to compute clusters). Note that most scores cannot be computed
+on knn graphs, hence knn graph outputs (e.g. BBKNN) can only be evaluated by a
+reduced set of metrics.
 
-Below is a summary for each output type (bracketed steps are not always necessary):
+Below is a summary of post-processing steps for each output type (bracketed
+steps are not always necessary):
 
 -   corrected counts: [`ScaleData()`] -> `RunPCA()` -> [`FindNeighbors()` -> `FindOptimalClusters()`]
--   Dimension reduction: [`RunPCA()`] -> [`FindNeighbors()` -> `FindOptimalClusters()`]
+-   dimension reduction: [`RunPCA()`] -> [`FindNeighbors()` -> `FindOptimalClusters()`]
 -   knn graph:  [`FindOptimalClusters()`]
 
-`RunPCA()` is sometimes ran even on dimension reduction objects (within scoring
+`RunPCA()` is sometimes run even on dimension reduction objects (within scoring
 functions) because some scores require a variance associated with each dimension.
 
 Let's process all the outputs. Here, we will go through all the steps for a more
@@ -313,13 +335,15 @@ step `FindOptimalClusters()` makes the neighbour graph computation step
 scoring metrics, namely ARI and NMI.
 
 Here, we will use `SymmetrizeKnn()` between `FindNeighbors()` and
-`FindOptimalClusters()` because `return.neighbor = TRUE`. This is
-useful to keep the distances between cells in the `KNN` graph rather than what
-`FindNeighbors()` does by default, which is converting the `KNN` graph to an
-adjacency matrix with 0/1s and to a `SNN` network with values bounded between 0
-and 1. This not compulsory, but this is used to stay in line with BBKNN's output.
-To prevent the community detection algorithm to output a high fraction of
-singletons, we "*symmetrize*" the matrix which makes the graph "undirected".
+`FindOptimalClusters()` because we set `return.neighbor = TRUE` in
+`FindNeighbors()`. This is useful to keep the distances between cells in the
+`KNN` graph rather than what `FindNeighbors()` does by default, which is
+converting the `KNN` graph to an adjacency matrix with 0/1s and to a `SNN`
+network with values bounded between 0 and 1. This not compulsory, but this is
+used to stay in line with BBKNN's output. To prevent the community detection
+algorithm to output a high fraction of singletons, we "*symmetrize*" the matrix
+which makes the graph "undirected".
+
 ```{r, warning=FALSE}
 # corrected counts outputs
 DefaultAssay(seu) <- "scanorama.reconstructed"
@@ -400,7 +424,7 @@ assessing each integration output. For this step, one can either use
 `Score[score_name]()` and save scores in separate variables or use
 `AddScore[score_name]()` to directly store scores within the Seurat object. The
 latter is far more convenient and allows to compare scores graphically. This is
-the strategy we are going  to adopt here.
+the strategy we are going to adopt here.
 
 Last but not least, a cell-type variable is used in most scores, hence it is
 highly recommended to have an estimate of each cell's type (or produce such an
@@ -408,7 +432,7 @@ estimate) stored in the Seurat object as a column in the metadata.
 
 
 > Note that if one doesn't have a variable with cell-labels (used as ground
-truth in multiple scores) he will have to do without several scores.
+truth in multiple scores) he will have to produce it or do without several scores.
 Alternatively, one can use automatic cell annotation algorithms (e.g. the
 [Azimuth package](https://github.com/satijalab/azimuth)). One can also have
 multiple cell label variables (e.g. Azimuth typically returns as many cell
@@ -454,6 +478,9 @@ Let's finalise our preparations: :
 installed to run `ScoreKBET()`
 -   To benefit from a faster implementation of the lisi algorithm, install the
 [lisi package](https://github.com/immunogenomics/LISI)
+-   To benefit from a faster implementation of the euclidean distance
+computation, install the
+[distances package](https://doi.com/10.32614/CRAN.package.distances)
 -   To run `ScoreRegressPC.CellCycle()` (score of cell cycle conservation),
 run `CellCycleScoringPerBatch()` beforehand (next chunk)
 
@@ -505,9 +532,12 @@ for (integ in integrations) {
 
 Now that we have computed multiple scores, we can look at them using
 `IntegrationScores()`:
+
 ```{r}
- rmarkdown::paged_table(IntegrationScores(seu))
+rmarkdown::paged_table(IntegrationScores(seu))
 ```
+
+### Compare the integrations
 
 Note that those scores are raw. Let's scale them (and make them comparable):
 
@@ -516,11 +546,15 @@ seu <- ScaleScores(seu)
 ```
 
 Once again, we can print them:
+
 ```{r}
 rmarkdown::paged_table(IntegrationScores(seu, scaled = TRUE))
 ```
+
 To readily compare the integrations, let's plot the scores:
-```{r}
+
+```{r, fig.height=6, fig.width=9}
+#| fig.alt: Dot plot to compare performance of integrations based on scores
 PlotScores(seu)
 ```
 
@@ -535,20 +569,26 @@ print(sort(IntegrationScores(seu, scaled = TRUE)$PCA.density))
 Indeed, `PlotScores()` rescales the scores using min-max normalisation by
 default (`rescale = TRUE`). One might chose to disable it:
 
-```{r}
+```{r, fig.height=6, fig.width=9}
+#| fig.alt: Dot plot of scores without min-max rescaling
 PlotScores(seu, rescale = FALSE)
 ```
 
 We notice that PCA based methods output very low scores in this case. Since they
 cannot be computed on knn graphs, scores are biased in favour of BBKNN. You can
 exclude some scores (and recompute overall scores on the fly)
-```{r}
+
+```{r, fig.height=6, fig.width=8.5}
+#| fig.alt: >
+#|   Dot plot of scores without min-max rescaling, excluding non-informative
+#|   scores
 PlotScores(seu, rescale = FALSE, exclude.score = c("pca.density", "pca.regression"))
 ```
 
-
 You can chose a different type of plot (`radar` or `lollipop`):
+
 ```{r, fig.height=8, fig.width=12}
+#| fig.alt: Radar plot of scores
 library(ggplot2)
 PlotScores(seu, plot.type = "radar") +
   # reduce overlap between axis names and figures 
@@ -560,7 +600,9 @@ PlotScores(seu, plot.type = "radar") +
 In this last plot, we also exclude the non-integrated dataset. Since the
 `rescale` argument is true by default, the scores are rescaled without the
 excluded integration's scores.
+
 ```{r, fig.width=9, fig.height=6}
+#| fig.alt: Lollipop plot of scores without the unintegrated case
   PlotScores(seu, plot.type = "lollipop",
              exclude.integration = "unintegrated")
 ```
@@ -579,10 +621,11 @@ for (integ in integrations) {
 
 As BBKNN's output is a graph, we need to use the umap Python package: 
 ```{r , results='hide'}
-library(future)
 if (! reticulate::condaenv_exists('umap_0.5.4')) {
   reticulate::conda_create('umap_0.5.4', packages = 'umap=0.5.4')
 }
+
+library(future)
 plan(multisession)
 seu %<-% {
   reticulate::use_condaenv('umap_0.5.4')
@@ -594,6 +637,9 @@ plan(sequential)
 
 
 ```{r, fig.width=10, fig.height=8}
+#| fig.alt: >
+#|   UMAPs of unintegrated and integrated pbmcsca data with cells colored by
+#|   sequencing method (i.e. batch)
 library(ggplot2)
 plot_list <- sapply(integrations, function(integ) {
   DimPlot(seu, reduction = paste0(integ, ".umap"), group.by = batch.var) +
@@ -605,6 +651,9 @@ patchwork::wrap_plots(plot_list, guides = "collect")
 ```
 
 ```{r, fig.width=10, fig.height=8}
+#| fig.alt: >
+#|   UMAPs of unintegrated and integrated pbmcsca data with cells colored by
+#|   cell type label
 library(ggplot2)
 plot_list <- sapply(integrations, function(integ) {
   DimPlot(seu, reduction = paste0(integ, ".umap"), group.by = cell.var) +
@@ -615,7 +664,7 @@ plot_list <- sapply(integrations, function(integ) {
 patchwork::wrap_plots(plot_list, guides = "collect")
 ```
 
-There several observations to be made here, that require further explanations:
+There are several observations to be made here, that require further explanations:
 
 -   some cells seem to be assigned a wrong label in `CellType`, highlighting
 the importance of having cell annotations of sufficient quality to be considered
@@ -633,3 +682,10 @@ has some drawbacks: it can heavily distort the scale of scores when their
 maximum or minimum are far from 1 or 0 respectively (e.g. all cLISI scores are
 above 0.9). Hence, the **final decision** on whether to use min-max rescaling
 **is left to the user's discretion**.
+
+<details>
+  <summary>**Session info**</summary>
+  ```{r, echo=FALSE}
+  sessionInfo()
+  ```
+</details>

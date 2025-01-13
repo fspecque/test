@@ -1,0 +1,89 @@
+---
+title: "Memo: Integration methods"
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: false
+vignette: >
+  %\VignetteIndexEntry{Memo: Integration methods}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{css, echo=FALSE}
+.darker-code {
+  color: #2f2f2f;
+}
+```
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = FALSE,
+  results = "hold",
+  message = FALSE,
+  class.source  = "darker-code"
+)
+```
+
+SeuratIntegrate provides access to R and Python methods to correct batch effect:
+
+| Method | Type | Implementation | Underlying algorithm | Reference |
+|:-------|:------:|:-------------:|:-------------:|--------------:|
+| ComBat | ![R logo](img/logo_R.svg "R logo"){width="40"} | [sva](https://doi.org/doi:10.18129/B9.bioc.sva) (Bioconductor) | Empirical Bayes adjustment | [Johnson et al., 2007](https://doi.org/10.1093/biostatistics/kxj037) |
+| Harmony | ![R logo](img/logo_R.svg "R logo"){width="40"} | [harmony](https://cran.r-project.org/package=harmony) (CRAN) | Iterative embedding correction | [Korsunsky et al., 2019](https://doi.org/10.1038/s41592-019-0619-0) |
+| MNN | ![R logo](img/logo_R.svg "R logo"){width="40"} | [batchelor](https://doi.org/doi:10.18129/B9.bioc.batchelor) (Bioconductor) | Mutual Nearest Neighbors | [Haghverdi et al., 2018](https://doi.org/10.1038/nbt.4091) |
+| BBKNN | ![Python logo](img/logo_Python.svg "Python logo"){width="40"} | [bbknn](https://github.com/Teichlab/bbknn) (GitHub) | Batch-balanced nearest neighbors | [Polański et al., 2020](https://doi.org/10.1093/bioinformatics/btz625) |
+| scVI | ![Python logo](img/logo_Python.svg "Python logo"){width="40"} | [scvi-tools](https://github.com/scverse/scvi-tools) (GitHub) | Variational autoencoder | [Lopez et al., 2018](https://doi.org/10.1038/s41592-018-0229-2) |
+| scANVI | ![Python logo](img/logo_Python.svg "Python logo"){width="40"} | [scvi-tools](https://github.com/scverse/scvi-tools) (GitHub) | Semi-supervised variational autoencoder | [Xu et al., 2021](https://doi.org/10.15252/msb.20209620) |
+| Scanorama | ![Python logo](img/logo_Python.svg "Python logo"){width="40"} | [scanorama](https://github.com/brianhie/scanorama) (GitHub) | Manifold alignment | [Hie et al., 2019](https://doi.org/10.1038/s41587-019-0113-3) |
+| trVAE | ![Python logo](img/logo_Python.svg "Python logo"){width="40"} | [scArches](https://github.com/theislab/scarches) (GitHub) | Conditional variational autoencoder | [Lotfollahi et al., 2020](https://doi.org/10.1093/bioinformatics/btaa800) |
+
+: Comprehensive overview of the integration methods provided by SeuratIntegrate
+
+SeuratIntegrate provides a new interface to integrate the layers of an object:
+`DoIntegrate()`. Moreover, SeuratIntegrate is compatible with `CCA` and `RPCA`
+(included in [Seurat](https://satijalab.org/seurat/)) and `FastMNN` (from
+[SeuratWrappers](https://github.com/satijalab/seurat-wrappers))
+
+The table below summarizes the integrations methods you can run with
+`DoIntegrate()` along with the expected inputs and produced outputs of each
+method. 
+
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+| Method    | Package         | Function                 | Input                  | Output(s)                                                |
++:==========+:===============:+:========================:+:======================:+=========================================================:+
+| ComBat    | SeuratIntegrate | `CombatIntegration()`    | Layer                  | Layer with corrected counts                              |
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+| Harmony   | SeuratIntegrate | `HarmonyIntegration()`   | PCA                    | DimReduc (corrected PCA)                                 |
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+| MNN       | SeuratIntegrate | `MNNIntegration()`       | Layer                  | Layer with corrected counts                              |
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+| BBKNN     | SeuratIntegrate | `bbknnIntegration()`     | PCA                    | Graphs (edge weights can be distances or connectivities) |
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+| scVI      | SeuratIntegrate | `scVIIntegration()`      | Layer                  | DimReduc (latent space)                                  |
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+| scANVI    | SeuratIntegrate | `scANVIIntegration()`    | Layer                  | DimReduc (latent space)                                  |
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+| Scanorama | SeuratIntegrate | `ScanoramaIntegration()` | Layer                  | Layer with corrected counts                              |
+|           |                 |                          |                        |                                                          |
+|           |                 |                          |                        | DimReduc (corrected embedding)                           |
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+| trVAE     | SeuratIntegrate | `trVAEIntegration()`     | Data layer\            | DimReduc (latent space)                                  |
+|           |                 |                          | (`recon.loss = "mse"`) |                                                          |
+|           |                 |                          |                        |                                                          |
+|           |                 |                          | Counts layer\          |                                                          |
+|           |                 |                          | (otherwise)            |                                                          |
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+| CCA       | Seurat          | `CCAIntegration()`       | PCA                    | DimReduc (corrected PCA)                                 |
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+| RPCA      | Seurat          | `RPCAIntegration()`      | PCA                    | DimReduc (corrected PCA)                                 |
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+| FastMNN   | SeuratWrappers  | `FastMNNIntegration()`   | Layer                  | Layer with corrected counts                              |
+|           |                 |                          |                        |                                                          |
+|           |                 |                          |                        | DimReduc (corrected PCA)                                 |
++-----------+-----------------+--------------------------+------------------------+----------------------------------------------------------+
+
+: Comprehensive overview of inputs and outputs of the integration methods

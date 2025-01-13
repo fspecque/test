@@ -1,0 +1,68 @@
+---
+title: "Memo: Scoring metrics"
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: false
+vignette: >
+  %\VignetteIndexEntry{Memo: Scoring metrics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{css, echo=FALSE}
+.darker-code {
+  color: #2f2f2f;
+}
+```
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = FALSE,
+  results = "hold",
+  message = FALSE,
+  class.source  = "darker-code"
+)
+```
+
+SeuratIntegrate incorporates 11 scoring metrics: 6 quantify the degree of batch
+mixing ![batch correction](img/batch_correction.svg "batch correction"){width="30"}
+(*batch correction*), while 5 assess the preservation of biological differences
+![bio-conservation](img/bio_conservation.svg "bio-conservation"){width="30"}
+(*bio-conservation*) based on ground truth cell type labels.
+
+Below is a table summarising each score's input and type:
+
+| Score name | Require a cell type variable | Require a clustering variable | Input | Score type |
+|:--------------|:-------------:|:-------------:|:-------------:|--------------:|
+| Cell cycle regression |  |  | ![Dimension reduction](img/embedding.svg "Dimension reduction"){width="60"} | ![bio-conservation](img/bio_conservation.svg "bio-conservation"){width="60"} |
+| PCA regression |  |  | ![Dimension reduction](img/embedding.svg "Dimension reduction"){width="60"} | ![batch correction](img/batch_correction.svg "batch correction"){width="60"} |
+| PCA density |  |  | ![Dimension reduction](img/embedding.svg "Dimension reduction"){width="60"} | ![batch correction](img/batch_correction.svg "batch correction"){width="60"} |
+| ASW batch | ![cell-type variable](img/cell_type.svg "cell-type variable") |  | ![Dimension reduction](img/embedding.svg "Dimension reduction"){width="60"} | ![batch correction](img/batch_correction.svg "batch correction"){width="60"} |
+| ASW | ![cell-type variable](img/cell_type.svg "cell-type variable") |  | ![Dimension reduction](img/embedding.svg "Dimension reduction"){width="60"} | ![bio-conservation](img/bio_conservation.svg "bio-conservation"){width="60"} |
+| ARI | ![cell-type variable](img/cell_type.svg "cell-type variable") | ![clustering variable](img/cell_cluster.svg "clustering variable") |  | ![bio-conservation](img/bio_conservation.svg "bio-conservation"){width="60"} |
+| NMI | ![cell-type variable](img/cell_type.svg "cell-type variable") | ![clustering variable](img/cell_cluster.svg "clustering variable") |  | ![bio-conservation](img/bio_conservation.svg "bio-conservation"){width="60"} |
+| cLISI | ![cell-type variable](img/cell_type.svg "cell-type variable") |  | ![Dimension reduction](img/embedding.svg "Dimension reduction"){width="60"} or ![KNN graph](img/network.svg "KNN graph"){width="60"} | ![bio-conservation](img/bio_conservation.svg "bio-conservation"){width="60"} |
+| iLISI | ![cell-type variable](img/cell_type.svg "cell-type variable") |  | ![Dimension reduction](img/embedding.svg "Dimension reduction"){width="60"} or ![KNN graph](img/network.svg "KNN graph"){width="60"} | ![batch correction](img/batch_correction.svg "batch correction"){width="60"} |
+| kBET | ![cell-type variable](img/cell_type.svg "cell-type variable") |  | ![Dimension reduction](img/embedding.svg "Dimension reduction"){width="60"} or ![KNN graph](img/network.svg "KNN graph"){width="60"} | ![batch correction](img/batch_correction.svg "batch correction"){width="60"} |
+| Graph connectivity | ![cell-type variable](img/cell_type.svg "cell-type variable") (`per.component = TRUE`) |  | ![KNN graph](img/network.svg "KNN graph"){width="60"} | ![batch correction](img/batch_correction.svg "batch correction"){width="60"} |
+
+: Table summarising the inputs required for each score, and the type of scores
+it belongs to.
+
+Most scores are computed on an embedding
+![DimReduc object](img/embedding.svg "DimReduc object"){width="30"}
+(`Seurat::DimReduc` object) or a graph
+![Graph or Neighbor object](img/network.svg "Graph or Neighbor object"){width="30"}
+(`Seurat::Neighbor` or `Seurat::Graph` object). The exceptions are ARI and NMI,
+which compare two categorical variables thus don't need anything else than a
+cell-type and a cluster assignment variables.d anything else than a cell-type and a
+cluster assignment variables.
+
+Most scores are based on a cell type label variable. This consists in an
+estimate of each cell's type obtained by analysing each batch separately or by
+using an automatic cell annotation algorithm. This estimate of cell types must
+be of sufficient quality to be considered suitable as ground truth.

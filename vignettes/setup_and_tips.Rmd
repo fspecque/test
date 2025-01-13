@@ -35,8 +35,8 @@ knitr::opts_chunk$set(
 
 `SeuratIntegrate`'s main purpose is to extend the range of scRNA-seq integration
 tools available in R and compatible with `Seurat`. Many of them being solely
-available in python, we developed wrappers leveraging `reticulate` package's
-capabilities. `reticulate` enables to directly call python from  R, give that
+available in Python, we developed wrappers leveraging `reticulate` package's
+capabilities. `reticulate` enables to directly call Python from  R, give that
 conda environments have been set up beforehand.
 
 The purpose of this vignette is to illustrate and ease the installation and the
@@ -68,12 +68,13 @@ Have look at your `CondaEnvManager`:
 getCache()
 ```
 ```{r png-conda-unset, echo=FALSE, out.width='100%', fig.align='center'}
+#| fig.alt: Unset conda environments
 knitr::include_graphics('./img/conda_envs_unset.png')
 ```
 
 It's a handy way to have a glance at all the implemented methods and the status
 of their conda environments. `ComBat`, `Harmony` and `MNN` are R-based methods
-and don't need any conda environment. The rest of them however are python-based
+and don't need any conda environment. The rest of them however are Python-based
 and will function through `reticulate`, hence require conda environments.
 
 If you don't have any conda environments for them, look at the [next sub-section](#create_env).
@@ -105,6 +106,7 @@ Have look at your `CondaEnvManager`:
 getCache()
 ```
 ```{r png-conda-set, echo=FALSE, out.width='100%', fig.align='center'}
+#| fig.alt: Fully set conda environments
 knitr::include_graphics('./img/conda_envs_set.png')
 ```
 
@@ -123,7 +125,7 @@ avoid any misinterpretation, you can use `conda.env.is.path = TRUE` or `FALSE`
 when your input is the path or the name of the environment, respectively.
 **But beware not to make mistakes !!!**
 
-See examples below. You shall adapt the arguments to your situation:
+See examples below. You should adapt the arguments to your situation:
 
 ```{r, eval=FALSE}
 # environment for bbknn
@@ -149,7 +151,7 @@ Note that:
 - `scVI` and `scANVI` share the same environment. Hence, it is not necessary to
 run both `UpdateEnvCache('scvi')` and `UpdateEnvCache('scanvi')`
 
-Now you can use the python-based methods !
+Now you can use the Python-based methods !
 
 ###  Update or reset conda environments
 
@@ -174,7 +176,7 @@ or os. In this case, there is hardly anything better to do than browse the
 internet in hope that someone else has experienced a similar problem and that
 the solution is public. Otherwise, try to modify the set of packages to install,
 be more or less stringent with package versions to install, etc. You can also
-create a conda environment with python and pip, and then to try to install
+create a conda environment with Python and pip, and then to try to install
 packages with pip rather than conda.
 
 Once the problem is solved (if it can be), you can save the new environment to
@@ -242,7 +244,7 @@ Lunch the integration outside of RStudio (from a terminal for example).
 
 <ol><details>
   <summary>*How to check*</summary>
-Check if the conda environment loads properly in a pure python session.
+Check if the conda environment loads properly in a pure Python session.
 For instance, if there is an error during an integration because scanpy cannot
 be imported, try to:
 
@@ -262,14 +264,14 @@ python
 First, try to update reticulate. If it doesn't work any better, check if someone
 has encountered the same issue (browse the web or the issues on the reticulate
 github repository. If nothing works, either post an issue on the reticulate
-github repos or retry to import after you have installed different python
+github repos or retry to import after you have installed different Python
 package versions.
 
 If this is a problem with `mkl`, install the conda environment
 again with the arguments `nomkl` (and `-c conda-forge` if not already).
 </details></ol>
 
-4. **between python packages**
+4. **between Python packages**
 
 <ol><details>
   <summary>*How to check*</summary>
