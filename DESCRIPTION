@@ -95,3 +95,6 @@ Collate:
     'trVAE.R'
     'zzz.R'
 VignetteBuilder: knitr
+Config/Needs/website: rmarkdown
+URL: https://github.com/cbib/Seurat-Integrate
+BugReports: https://github.com/cbib/Seurat-Integrate/issues
