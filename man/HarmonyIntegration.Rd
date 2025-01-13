@@ -107,9 +107,9 @@ function between corrections drops below 1e-4}
 the clustering objective function. TRUE to plot, FALSE to
 suppress. This can be useful for debugging.}
 
-\item{.options}{Advanced parameters of RunHarmony. This must be the
-result from a call to `harmony_options`. See ?`harmony_options`
-for more details.}
+\item{.options}{Setting advanced parameters of RunHarmony. This must be the
+result from a call to `harmony_options`. See ?`harmony_options` for 
+parameters not listed above and more details.}
 
 \item{verbose}{Print messages. Set to \code{FALSE} to disable}
 

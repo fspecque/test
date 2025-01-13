@@ -6,10 +6,32 @@
 \alias{SeuratIntegrate-package}
 \title{SeuratIntegrate: Expands the set of integration methods available to Seurat}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 R package gathering a set of wrappers to apply various integration methods to Seurat objects (and rate such methods). Intended to apply to Seurat V5 objects bearing multiple layers.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/cbib/Seurat-Integrate}
+  \item Report bugs at \url{https://github.com/cbib/Seurat-Integrate/issues}
+}
+
 }
 \author{
 \strong{Maintainer}: Florian Specque \email{florian.specque@u-bordeaux.fr} (\href{https://orcid.org/0000-0002-4449-6381}{ORCID})
+
+Authors:
+\itemize{
+  \item Domitille Chalopin \email{domitille.chalopin-fillot@u-bordeaux.fr} (\href{https://orcid.org/0000-0003-0588-96301}{ORCID})
+}
+
+Other contributors:
+\itemize{
+  \item Macha Nikolski \email{macha.nikolski@u-bordeaux.fr} (\href{https://orcid.org/0000-0001-6059-577X}{ORCID}) [reviewer]
+  \item Aurélien Barré \email{aurelien.barre@u-bordeaux.fr} (\href{https://orcid.org/0009-0006-4773-3369}{ORCID}) [contributor]
+  \item Centre de Bioinformatique de Bordeaux (CBiB) [copyright holder]
+}
 
 }
 \keyword{internal}
