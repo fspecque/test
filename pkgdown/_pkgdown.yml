@@ -1,0 +1,201 @@
+url: ~
+template:
+  bootstrap: 5
+  bslib:
+    font-size-root: 1rem
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, memos, tutorials, news]
+    right: [search, github, lightswitch]
+  components:
+    articles:
+      text: Articles
+      menu:
+        - text: "Integration example: pbmcsca data"
+          href: articles/introduction.html
+        - text: "Advice about conda and future"
+          href: articles/setup_and_tips.html
+    memos:
+      # text: Aide-mémoires
+      icon: fa-sticky-note
+      aria-label: Aide-mémoires
+      menu:
+        - text: Integration methods
+          href: articles/memo_integration.html
+        - text: Scoring metrics
+          href: articles/memo_score.html
+    # articles:
+    #   text: Articles
+    #   menu:
+    #     - text: Integration example: pbmcsca data
+    #     - text: Integration example: pbmcsca data
+    #       href: articles/introduction.html
+    #     - text: Advice about conda and future
+    #     - text: Advice about conda and future
+    #       href: articles/setup_and_tips.html
+
+# articles:
+# - title: Articles
+#   navbar: ~
+#   contents:
+#   - introduction
+#   - setup_and_tips
+# articles:
+#   text: Articles
+#   menu:
+#     - text: Integration example: pbmcsca data
+#     - text: Integration example: pbmcsca data
+#       href: articles/introduction.html
+#     - text: Advice about conda and future
+#     - text: Advice about conda and future
+#       href: articles/setup_and_tips.html
+
+# articles:
+# - title: Articles
+#   navbar: ~
+#   contents:
+#   - introduction
+#   - setup_and_tips
+# memos:
+# - title: Aide-mémoires
+#   navbar: ~
+#   contents:
+#   - memo_integration
+#   - memo_score
+
+# memos:
+# - title: Aide-mémoires
+#   navbar: ~
+#   contents:
+#   - memo_integration
+#   - memo_score
+
+reference:
+- title: Conda environment management
+
+- subtitle: Modification interface
+  desc: >
+    Set, update, remove conda environments
+  contents:
+  - UpdateEnvCache
+  - resetCache
+  - saveToCache
+
+- subtitle: Access interface
+  desc: >
+    Show the current state of environments or the location of cache on disk
+  contents:
+  - starts_with("getCache")
+  - reloadCache
+
+- subtitle: Class constructors
+  contents:
+  - CondaEnv
+  - CondaManager
+
+- subtitle: Checkers
+  desc: >
+    Check usability of conda environments
+  contents:
+  - isValid
+  - starts_with("checkConda")
+
+- title: Data integration
+
+- subtitle: Main interface
+  desc: >
+    Integrate the layers of a Seurat object
+    with one or more methods
+  contents:
+  - DoIntegrate
+
+- subtitle: Methods included in SeuratIntegrate
+  contents:
+  - ends_with("Integration")
+
+- subtitle: Compatible methods from other packages
+  contents:
+  - Seurat::RPCAIntegration()
+  - Seurat::CCAIntegration()
+  - SeuratWrappers::FastMNNIntegration()
+
+- title: Scoring
+
+- subtitle: Preprocessing
+  desc: >
+    Useful functions to preprocess outputs before scoring
+  contents:
+  - FindOptimalClusters
+  - CellCycleScoringPerBatch
+
+- subtitle: Scoring
+  desc: >
+    Functions to score integrations
+  contents:
+  - starts_with("AddScore")
+
+- subtitle: Postprocessing
+  desc: >
+    Once `AddScore[..]` functions have been run,
+    scores are to be scaled then plotted
+  contents:
+  - ScaleScores
+  - PlotScores
+
+- subtitle: General getters and setters of score table
+  desc: >
+    Get, set, modify scores in a more flexible way
+  contents:
+  - IntegrationScores
+  - contains("Misc")
+
+- title: Graph-based utilities
+
+- subtitle: Graph manipulation
+  desc: >
+    Handy functions to manipulate and modify graphs
+  contents:
+  - SymmetrizeKnn
+  - CutKnn
+  - ExpandNeighbours
+  - GetConnectivities
+
+- subtitle: Connectivity between batches
+  desc: >
+    Handy functions to overview inter- and intra-batches connections
+    in a knn graph
+  contents:
+  - matches("^GetPropInt..Batch")
+
+- title: Utility functions for matrices
+  desc: >
+    Functions designed for smaller-scale, auxiliary tasks on matrices.
+
+- subtitle: Matrix normalisation
+  contents:
+  - NormaliseL2
+
+- subtitle: Matrix sorting
+  contents:
+  - colSort
+  - rowSort
+  - colSorted
+  - rowSorted
+
+- subtitle: Sparse matrix symmetry
+  contents:
+  - matches("^symmetrize.pm...sparse")
+
+- subtitle: Matrix sorting
+  contents:
+  - colSort
+  - rowSort
+  - colSorted
+  - rowSorted
+
+- subtitle: Conversion of matrix indices
+  contents:
+  - idx2col
+  - idx2row
+  - rowcol2idx
