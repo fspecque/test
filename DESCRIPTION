@@ -96,5 +96,8 @@ Collate:
     'zzz.R'
 VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
-URL: https://github.com/cbib/Seurat-Integrate
+URL: https://github.com/cbib/Seurat-Integrate, https://cbib.github.io/Seurat-Integrate/
 BugReports: https://github.com/cbib/Seurat-Integrate/issues
+Remotes: github::satijalab/seurat-data
+Remotes: github::theislab/kBET
+Remotes: github::immunogenomics/LISI
