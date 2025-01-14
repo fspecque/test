@@ -98,4 +98,6 @@ VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
 URL: https://github.com/cbib/Seurat-Integrate, https://cbib.github.io/Seurat-Integrate/
 BugReports: https://github.com/cbib/Seurat-Integrate/issues
-Remotes: github::satijalab/seurat-data, github::theislab/kBET, github::immunogenomics/LISI
+Remotes: SeuratData=github::satijalab/seurat-data,
+  github::theislab/kBET,
+  lisi=github::immunogenomics/LISI
