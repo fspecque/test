@@ -8,6 +8,7 @@
 #' Can be called via \code{SeuratIntegrate::HarmonyIntegration()} or
 #' \code{HarmonyIntegration.fix()}
 #'
+#'
 #' @inheritParams integration-method
 #' @inheritParams harmony::RunHarmony.default
 #' @param dims Dimensions of dimensional reduction to use for integration.

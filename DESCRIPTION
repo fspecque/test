@@ -101,3 +101,4 @@ BugReports: https://github.com/cbib/Seurat-Integrate/issues
 Remotes: SeuratData=github::satijalab/seurat-data,
   github::theislab/kBET,
   lisi=github::immunogenomics/LISI
+  
