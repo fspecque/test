@@ -1,0 +1,13 @@
+pandoc: 3.1.11
+pkgdown: 2.1.1
+pkgdown_sha: ~
+articles:
+  introduction: introduction.html
+  memo_integration: memo_integration.html
+  memo_score: memo_score.html
+  setup_and_tips: setup_and_tips.html
+  SeuratIntegrate: SeuratIntegrate.html
+last_built: 2025-01-27T14:58Z
+urls:
+  reference: https://fspecque.github.io/test/reference
+  article: https://fspecque.github.io/test/articles
