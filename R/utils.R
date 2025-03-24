@@ -284,6 +284,7 @@ setMethod(".CutKnn", "Matrix",
               }
               object <- .cut.knn(object, k.max = k.max, assay = assay)
             }
+
             return(as.Graph(object))
           })
 
