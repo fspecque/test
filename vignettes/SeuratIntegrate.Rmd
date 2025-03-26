@@ -195,11 +195,11 @@ compatible with Seurat:
 
 ```{r, echo=FALSE}
 if (! reticulate::condaenv_exists('umap_0.5.4')) {
-  reticulate::conda_create('umap_0.5.4', packages = 'umap=0.5.4')
+  reticulate::conda_create('umap_0.5.4', packages = 'umap-learn=0.5.4')
 }
 ```
 ```{r, eval=FALSE}
-reticulate::conda_create('umap_0.5.4', packages = 'umap=0.5.4')
+reticulate::conda_create('umap_0.5.4', packages = 'umap-learn=0.5.4')
 ```
 
 

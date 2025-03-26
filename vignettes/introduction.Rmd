@@ -266,7 +266,7 @@ seu <- DoIntegrate(
 confusion with `Seurat::HarmonyIntegration()`.
 
 ### Integration part 2)  Using python-based methods
-```{r  integrate-python-methods, warning=FALSE}
+```{r integrate-python-methods, warning=FALSE}
 seu <- DoIntegrate(
   object = seu,
   bbknnIntegration(orig = "pca", layers = "data", ndims = 30),
@@ -622,7 +622,7 @@ for (integ in integrations) {
 As BBKNN's output is a graph, we need to use the umap Python package: 
 ```{r , results='hide'}
 if (! reticulate::condaenv_exists('umap_0.5.4')) {
-  reticulate::conda_create('umap_0.5.4', packages = 'umap=0.5.4')
+  reticulate::conda_create('umap_0.5.4', packages = 'umap-learn=0.5.4')
 }
 
 library(future)
