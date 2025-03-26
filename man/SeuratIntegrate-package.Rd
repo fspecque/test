@@ -14,6 +14,7 @@ R package gathering a set of wrappers to apply various integration methods to Se
 Useful links:
 \itemize{
   \item \url{https://github.com/cbib/Seurat-Integrate}
+  \item \url{https://cbib.github.io/Seurat-Integrate/}
   \item Report bugs at \url{https://github.com/cbib/Seurat-Integrate/issues}
 }
 

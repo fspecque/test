@@ -1,0 +1,37 @@
+name: 'setup-conda'
+description: 'Action to install miniconda and environments for SeuratIntegrate'
+author: Florian Specque (@fspecque)
+
+runs:
+  using: "composite"
+  steps:
+      - name: Install miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-activate-base: true
+          activate-environment: ""
+      
+      - name: Setup envs
+        run: |
+          conda create -n umap_0.5.4 umap-learn=0.5.4 -c conda-forge -y
+          conda create -n SeuratIntegrate_bbknn python scipy scanpy bbknn libtiff=4.5.1 -c conda-forge -c bioconda -y
+          conda create -n SeuratIntegrate_scanorama python scanorama scipy libtiff=4.5.1 -c conda-forge -c bioconda -y
+          conda create -n SeuratIntegrate_scvi-tools python scipy scanpy 'scvi-tools>1.0' mkl mkl-include setuptools cmake libtiff=4.5.1 pip -c conda-forge
+          conda activate SeuratIntegrate_scvi-tools
+          pip install jaxlib==0.4.27
+          conda deactivate
+        shell: bash -l {0}
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Save conda envs
+        run: |
+          library(SeuratIntegrate)
+          print(getCache())
+
+          integration_methods <- c("bbknn", "scanorama", "scvi")#, "trvae")
+          for (method in integration_methods) {
+            UpdateEnvCache(method = method)
+          }
+          print(getCache())
+        shell: Rscript {0}
+        working-directory: ${{ inputs.working-directory }}
