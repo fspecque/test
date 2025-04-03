@@ -1,6 +1,7 @@
 url: https://cbib.github.io/Seurat-Integrate/
 template:
   bootstrap: 5
+  math-rendering: mathjax
   bslib:
     font-size-root: 1rem
 
