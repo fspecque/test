@@ -50,7 +50,9 @@ Imports:
     parallelly,
     methods,
     scales,
-    cli
+    cli,
+    pbapply,
+    matrixStats
 Suggests: 
     SeuratData,
     lisi,
@@ -89,6 +91,7 @@ Collate:
     'metrics_kbet.R'
     'metrics_lisi.R'
     'metrics_nmi.R'
+    'metrics_scGraph.R'
     'metrics_silhouette.R'
     'scANVI.R'
     'scVI.R'

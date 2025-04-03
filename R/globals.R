@@ -6,4 +6,5 @@ if (getRversion() >= "2.15.1")
                     "method", "var", "H", "proba", "sigmas", "rhos",
                     "rows", "cols", "vals", "distances",
                     "Integration", "Overall.score", "Score", "y", "Score.type",
-                    "RECT_x", "RECT_y", "sub.object", "df.score"))
+                    "RECT_x", "RECT_y", "sub.object", "df.score",
+                    "celltype", "cells_keep", "batches_keep"))

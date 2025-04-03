@@ -28,7 +28,8 @@ check_misc <- function(object) {
       ASW.batch = empty_dbl,
       NMI = empty_dbl,
       ARI = empty_dbl,
-      Graph.connectivity = empty_dbl
+      Graph.connectivity = empty_dbl,
+      scGraph = empty_dbl
     )
     slot(object = object, name = 'misc')[['si_scores']] <- empty_scores
   }
@@ -211,7 +212,8 @@ get.score.types <- function(col_names, batch = FALSE) {
       tolower(col_names)[tolower(col_names) %in% tolower('cell.cycle.conservation')],
       col_names[grep("^ARI|^NMI", col_names, T)],
       col_names[grep("^ASW(?![[:punct:][:blank:]]*batch)", col_names, T, T)],
-      col_names[grep('^cLISI', col_names, T)]
+      col_names[grep('^cLISI', col_names, T)],
+      col_names[grep('^scGraph', col_names, T)]
     )
   }
   return(found.colnames)
@@ -375,12 +377,14 @@ ScaleScores <- function(object, ref = "Unintegrated", rescale = FALSE,
   cLISI <- function(x, y) (N(x) - x) / (N(x) - 1)
   iLISI <- function(x, y) (x - 1) / (N(x) - 1)
   kBET <- function(x, y) 1 - x
+  scGraph <- function(x, y) rescale(x, from = c(-1, 1), to = c(0, 1))
 
   scaling <- c(
     scaling,
     sapply(colnames(raw.scores)[grep("cLISI", colnames(raw.scores), T)], function(x) cLISI, simplify = F),
     sapply(colnames(raw.scores)[grep("iLISI", colnames(raw.scores), T)], function(x) iLISI, simplify = F),
-    sapply(colnames(raw.scores)[grep("kBET", colnames(raw.scores), T)], function(x) kBET, simplify = F))
+    sapply(colnames(raw.scores)[grep("kBET", colnames(raw.scores), T)], function(x) kBET, simplify = F),
+    sapply(colnames(raw.scores)[grep("scGraph", colnames(raw.scores), T)], function(x) scGraph, simplify = F))
 
   scaling <- c(
     scaling,
