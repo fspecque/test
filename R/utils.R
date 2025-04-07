@@ -749,7 +749,7 @@ could.be.connectivity.Matrix <- function(object, check.symmetry = T) {
 #' @importFrom methods slot
 #' @keywords internal
 #' @noRd
-############ Copy-paste
+############ Adpated from
 # https://github.com/satijalab/seurat/blob/1549dcb3075eaeac01c925c4b4bb73c73450fc50/R/integration5.R#L659-L677
 CreateIntegrationGroups <- function(object, layers, scale.layer) {
   groups <- if (inherits(x = object, what = 'SCTAssay')) {
@@ -762,10 +762,18 @@ CreateIntegrationGroups <- function(object, layers, scale.layer) {
     df
   } else if (length(x = layers) > 1L) {
     cmap <- slot(object = object, name = 'cells')[, layers]
-    as.data.frame(x = labels(
-      object = cmap,
-      values = Cells(x = object, layer = scale.layer)
-    ))
+    n_layers_per_cell <- rowSums(cmap)
+    if (all(n_layers_per_cell < 2)) {
+      cmap <- as.matrix(cmap)[n_layers_per_cell == 1, ]  # drop cell when rowsum is 0
+      intmap <- cmap %*% matrix(seq_along(layers), ncol = 1)
+      intmap <- intmap[match(Cells(x = object, layer = scale.layer), rownames(intmap), nomatch = 0), 1, drop = TRUE]
+      setNames(as.data.frame(setNames(layers[intmap], names(intmap))), "group")
+    } else {
+      as.data.frame(x = labels(
+        object = cmap,
+        values = Cells(x = object, layer = scale.layer)
+      ))
+    }
   }
   names(x = groups) <- 'group'
   return(groups)
