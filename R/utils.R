@@ -741,6 +741,20 @@ could.be.connectivity.Matrix <- function(object, check.symmetry = T) {
     (! check.symmetry || isSymmetric(object))
   return(res)
 }
+#' @keywords internal
+#' @noRd
+choose_matrix_format <- function(mat) {
+  max_int_32bit <- 2^31 - 1
+  if (all(c(ncol(mat), nrow(mat)) <= max_int_32bit)) { # should always be TRUE
+    n_0s <- n_zeros_mat(mat = mat)
+    if ( (n_0s > max_int_32bit) | (n_0s/length(mat) < .35) ) {
+      mat <- as.matrix(mat)
+    } else {
+      as.dgcmatrix(mat)
+    }
+  }
+  return(mat)
+}
 
 
 # Creates data.frame with cell group assignments for integration

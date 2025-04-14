@@ -145,7 +145,7 @@ CombatIntegration <- function(
   colnames(corrected.mat) <- colnames(data)
   output.list <- list()
   output.list[[reconstructed.assay]] <- CreateAssayObject(
-    data = as(corrected.mat, "sparseMatrix"),
+    data = choose_matrix_format(corrected.mat),
     key = key.assay)
   if(use.scaled) {
     output.list[[reconstructed.assay]] <- SetAssayData(

@@ -111,7 +111,7 @@ MNNIntegration <- function(
 
   # Add reconstructed matrix (gene x cell)
   reconstructed_assay <- CreateAssayObject(
-    data = as(object = assay(x = out), Class = "sparseMatrix"),
+    data = choose_matrix_format(mat = assay(x = out)),
   )
   # Add variable features
   VariableFeatures(object = reconstructed_assay) <- features

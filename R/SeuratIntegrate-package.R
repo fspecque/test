@@ -2,9 +2,11 @@
 "_PACKAGE"
 
 ## usethis namespace: start
+#' @import rlang
+#' @importFrom Rcpp sourceCpp
 #' @importFrom rlang %||% check_installed abort
 #' @importFrom SeuratObject %iff%
-#' @import rlang
+#' @useDynLib SeuratIntegrate, .registration = TRUE
 ## usethis namespace: end
 
 #' @name integration-method

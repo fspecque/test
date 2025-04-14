@@ -52,7 +52,8 @@ Imports:
     scales,
     cli,
     pbapply,
-    matrixStats
+    matrixStats,
+    Rcpp
 Suggests: 
     SeuratData,
     lisi,
@@ -67,6 +68,7 @@ Collate:
     'Combat.R'
     'Harmony.R'
     'MNN.R'
+    'RcppExports.R'
     'Scanorama.R'
     'SeuratIntegrate-package.R'
     'bbknn.R'
@@ -104,3 +106,6 @@ BugReports: https://github.com/cbib/Seurat-Integrate/issues
 Remotes: SeuratData=github::satijalab/seurat-data,
   github::theislab/kBET,
   lisi=github::immunogenomics/LISI
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo

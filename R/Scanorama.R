@@ -220,7 +220,7 @@ ScanoramaIntegration <- function(
   }
   if (cntcor) {
     output.list[[reconstructed.assay]] <- CreateAssayObject(
-      data = t( as(cnts.scano, "sparseMatrix") )
+      data = t( choose_matrix_format(cnts.scano) )
     )
     VariableFeatures(object = output.list[[reconstructed.assay]]) <- features
   }
