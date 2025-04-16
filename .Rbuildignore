@@ -16,3 +16,4 @@
 ^vignettes/articles$
 ^\.github$
 ^pkgdown/_pkgdown\.yml$
+^Makefile$
