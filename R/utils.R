@@ -743,6 +743,14 @@ could.be.connectivity.Matrix <- function(object, check.symmetry = T) {
 }
 #' @keywords internal
 #' @noRd
+n_zeros_mat <- function(mat) {
+  n <- if(is.matrix(mat)) n_zeros_dense_mat(mat)
+       else if (inherits(mat, what = "sparseMatrix")) n_zeros_sparse_mat(mat)
+       else tryCatch(sum(mat == 0, na.rm = TRUE), error = function(e) NA)
+  return(n)
+}
+#' @keywords internal
+#' @noRd
 choose_matrix_format <- function(mat) {
   max_int_32bit <- 2^31 - 1
   if (all(c(ncol(mat), nrow(mat)) <= max_int_32bit)) { # should always be TRUE

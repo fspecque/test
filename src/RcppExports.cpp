@@ -11,20 +11,32 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// n_zeros_mat
-int64_t n_zeros_mat(const arma::mat& mat);
-RcppExport SEXP _SeuratIntegrate_n_zeros_mat(SEXP matSEXP) {
+// n_zeros_dense_mat
+int64_t n_zeros_dense_mat(const arma::mat& mat);
+RcppExport SEXP _SeuratIntegrate_n_zeros_dense_mat(SEXP matSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type mat(matSEXP);
-    rcpp_result_gen = Rcpp::wrap(n_zeros_mat(mat));
+    rcpp_result_gen = Rcpp::wrap(n_zeros_dense_mat(mat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// n_zeros_sparse_mat
+int64_t n_zeros_sparse_mat(const arma::sp_mat& mat);
+RcppExport SEXP _SeuratIntegrate_n_zeros_sparse_mat(SEXP matSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat(matSEXP);
+    rcpp_result_gen = Rcpp::wrap(n_zeros_sparse_mat(mat));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_SeuratIntegrate_n_zeros_mat", (DL_FUNC) &_SeuratIntegrate_n_zeros_mat, 1},
+    {"_SeuratIntegrate_n_zeros_dense_mat", (DL_FUNC) &_SeuratIntegrate_n_zeros_dense_mat, 1},
+    {"_SeuratIntegrate_n_zeros_sparse_mat", (DL_FUNC) &_SeuratIntegrate_n_zeros_sparse_mat, 1},
     {NULL, NULL, 0}
 };
 
