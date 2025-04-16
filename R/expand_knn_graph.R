@@ -20,13 +20,13 @@ NULL
 #' See \strong{Details} section for further explanations
 #' @param algo One of "dijkstra" or "diffusion". "diffusion" is suited for
 #' connectivity matrices only
-#' @param which.dijkstra one of "igraph", "fast" or "slow". "auto" (default)
-#' chooses for you. See \strong{Details} section
+#' @param which.dijkstra one of "cpp", "igraph", "fast" or "slow". "auto"
+#' (default) chooses for you. See \strong{Details} section
 #' @param dijkstra.ncores number of cores to use for Dijkstra's algorithm.
 #' Ignored when \code{which.dijkstra = "igraph"}
 #' @param dijkstra.tol number of sequential iterations with identical best
 #' neighbours found to consider that Dijkstra's algorithm should be stopped.
-#' Ignored when \code{which.dijkstra = "igraph"}
+#' Ignored when \code{which.dijkstra = "igraph" | "cpp"}
 #' @param diffusion.iter maximum number of iterations to reach \code{k.target}
 #' @param verbose whether to print progress messages
 #'
@@ -43,9 +43,28 @@ NULL
 #'
 #' One can choose to keep the graph as it is and consider it as a directed graph
 #' (\code{do.symmetrize = FALSE}).
+#'
 #' The alternative solution is to use all computed distances to extend the knn
 #' graph by making the matrix symmetric. Note that connectivity graphs are
 #' already symmetric, so the argument value should have no effect on the result.
+#'
+#' The choice of Dijkstra's algorithm implementation (\code{which.dijkstra}) is
+#' handled automatically by default. The igraph implementation is only preferred
+#' when the number of cells is low (1,000 at most). However, for a large
+#' \code{k.target} value (from approximately 1,000), igraph is faster on a single
+#' thread and thus can be imposed by setting \code{which.dijkstra = 'igraph'}.
+#'
+#' "fast" and "slow" are pure R implementations. "fast" is faster than "slow"
+#' but is not accurate on symmetric graph because it is suited for knn graphs
+#' with a constant k value. "slow" is slower but more accurate. No matter,
+#' \strong{"slow" and "fast" are both much slower than "cpp" and are deprecated}.
+#' They remain available in the even that some users have trouble running the
+#' "cpp" implementation.
+#'
+#' @note
+#' igraph implementation of Dijkstra's algorithm is single threaded only.
+#'
+#' "cpp" implementation is parallelized with OpenMP
 #'
 #' @importFrom SeuratObject DefaultAssay Cells as.Graph
 #'
@@ -56,7 +75,7 @@ setGeneric("ExpandNeighbours",
                     graph.type = c("distances", "connectivities"),
                     k.target = 90L, do.symmetrize = FALSE,
                     algo = c("dijkstra", "diffusion"),
-                    which.dijkstra = c("auto", "igraph", "fast", "slow"),
+                    which.dijkstra = c("auto", "cpp", "igraph", "fast", "slow"),
                     dijkstra.ncores = 1L, dijkstra.tol = 1L, diffusion.iter = 26L,
                     assay = NULL, verbose = TRUE)
              standardGeneric("ExpandNeighbours"))
@@ -68,7 +87,7 @@ setMethod("ExpandNeighbours", "Seurat",
                    graph.type = c("distances", "connectivities"),
                    k.target = 90L, do.symmetrize = FALSE,
                    algo = c("dijkstra", "diffusion"),
-                   which.dijkstra = c("auto", "igraph", "fast", "slow"),
+                   which.dijkstra = c("auto", "cpp", "igraph", "fast", "slow"),
                    dijkstra.ncores = 1L, dijkstra.tol = 1L, diffusion.iter = 26L,
                    assay = NULL, verbose = TRUE) {
             assay <- assay %||% DefaultAssay(object)
@@ -118,18 +137,19 @@ setMethod("ExpandNeighbours", "Seurat",
 setGeneric("expand_neighbours_dijkstra",
            function(object, graph.type = c("distances", "connectivities"),
                     k.target = 90L, do.symmetrize = FALSE,
-                    which.dijkstra = c("auto", "igraph", "fast", "slow"),
+                    which.dijkstra = c("auto", "cpp", "igraph", "fast", "slow"),
                     ncores = 1L, tol = 1L, verbose = TRUE)
              standardGeneric("expand_neighbours_dijkstra"))
 
 #' @importFrom SeuratObject as.Neighbor
-#' @importFrom Matrix sparseMatrix drop0
+#' @importFrom Matrix sparseMatrix t drop0
+#' @importFrom RhpcBLASctl omp_get_max_threads omp_set_num_threads
 #' @keywords internal
 #' @noRd
 setMethod("expand_neighbours_dijkstra", "Matrix",
           function(object, graph.type = c("distances", "connectivities"),
                    k.target = 90L, do.symmetrize = FALSE,
-                   which.dijkstra = c("auto", "igraph", "fast", "slow"),
+                   which.dijkstra = c("auto", "cpp", "igraph", "fast", "slow"),
                    ncores = 1L, tol = 1L, verbose = TRUE) {
             n <- ncol(object)
             const.k <- is.kconstant(object)
@@ -142,13 +162,16 @@ setMethod("expand_neighbours_dijkstra", "Matrix",
             }
 
             if (which.dijkstra == "auto") {
-              if (n <= 1e4) {
-                which.dijkstra <- "igraph"
-              } else if (const.k) {
-                which.dijkstra <- "fast"
+              which.dijkstra <- if (n <= 1e4) {
+                "igraph"
               } else {
-                which.dijkstra <- "slow"
+                "cpp"
               }
+            }
+            if (which.dijkstra == "cpp") {
+              oomp <- omp_get_max_threads()
+              omp_set_num_threads(ncores)
+              on.exit(omp_set_num_threads(oomp))
             }
             object.symmetry <- const.k.symmetry <- NULL
             igraph.mode <- "directed"
@@ -189,7 +212,7 @@ setMethod("expand_neighbours_dijkstra", "Matrix",
                 warning("When all cells have the same number k of nearest ",
                         "neighbors, ", sQuote("fast"), " implementation of ",
                         "Dijkstra's algorithm is recommended")
-              } else {
+              } else if (which.dijkstra == "fast"){
                 object <- as.Neighbor(x = object)
               }
             } else if (which.dijkstra == "fast") {
@@ -204,6 +227,7 @@ setMethod("expand_neighbours_dijkstra", "Matrix",
             message(msg[verbose], appendLF = F)
             beginning <- Sys.time()
             res <- switch (which.dijkstra,
+              cpp = dijkstra_cpp(m = t(drop0(object)), k = k.target),
               igraph = dijkstra.igraph(knnmat = object, k.target = k.target,
                                        mode = igraph.mode, weighted = T,
                                        diag = F),
@@ -225,17 +249,31 @@ setMethod("expand_neighbours_dijkstra", "Matrix",
             i <- rep(1:nrow(res$knn.idx), k.target)
             j <- as.vector(res$knn.idx)
             x <- as.vector(res$knn.dist)
-            # correct igraph output when not enough neighbours
-            infs <- which(is.infinite(x))
-            if (length(infs) > 0) {
-              x[is.infinite(x)] <- 0
-              warning('Dijkstra (igraph) : could not find enough neighbours',
-                      ' for ', length(infs), ' cell(s) ',
-                      paste0(infs, collapse = ', '),
-                      call. = F, immediate. = F)
+            if (which.dijkstra == "igraph") {
+              # correct igraph output when not enough neighbours
+              infs <- which(is.infinite(x))
+              if (length(infs) > 0) {
+                less_neighbours <- sort(unique(i[infs]))
+                i <- i[-infs]
+                j <- j[-infs]
+                x <- x[-infs]
+                warning('Dijkstra (igraph): could not find enough neighbours',
+                        ' for ', length(less_neighbours), ' cell(s) ',
+                        paste0(less_neighbours, collapse = ', '),
+                        call. = F, immediate. = F)
+              }
             }
+
             expanded.mat <- sparseMatrix(i = i, j = j, x = x, dims = rep(n, 2))
-            expanded.mat <- drop0(expanded.mat)
+            if (which.dijkstra == "cpp") {
+              less_neighbours <- which(get.k(expanded.mat, 'all') < k.target)
+              if (length(less_neighbours) > 0) {
+                warning('Dijkstra (cpp): could not find enough neighbours',
+                        ' for ', length(less_neighbours), ' cell(s) ',
+                        paste0(less_neighbours, collapse = ', '),
+                        call. = F, immediate. = F)
+              }
+            }
             if(do.symmetrize && which.dijkstra == "fast") {
               expanded.mat <- SymmetrizeKnn(expanded.mat, use.max = FALSE)
             }
@@ -249,7 +287,7 @@ setMethod("expand_neighbours_dijkstra", "Matrix",
 setMethod("expand_neighbours_dijkstra", "Neighbor",
           function(object, graph.type = c("distances", "connectivities"),
                    k.target = 90L, do.symmetrize = FALSE,
-                   which.dijkstra = c("auto", "igraph", "fast", "slow"),
+                   which.dijkstra = c("auto", "cpp", "igraph", "fast", "slow"),
                    ncores = 1L, tol = 1L, verbose = TRUE) {
 
             return(expand_neighbours_dijkstra(as.Graph(object),

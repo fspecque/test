@@ -13,7 +13,7 @@ ExpandNeighbours(
   k.target = 90L,
   do.symmetrize = FALSE,
   algo = c("dijkstra", "diffusion"),
-  which.dijkstra = c("auto", "igraph", "fast", "slow"),
+  which.dijkstra = c("auto", "cpp", "igraph", "fast", "slow"),
   dijkstra.ncores = 1L,
   dijkstra.tol = 1L,
   diffusion.iter = 26L,
@@ -29,7 +29,7 @@ ExpandNeighbours(
   k.target = 90L,
   do.symmetrize = FALSE,
   algo = c("dijkstra", "diffusion"),
-  which.dijkstra = c("auto", "igraph", "fast", "slow"),
+  which.dijkstra = c("auto", "cpp", "igraph", "fast", "slow"),
   dijkstra.ncores = 1L,
   dijkstra.tol = 1L,
   diffusion.iter = 26L,
@@ -57,15 +57,15 @@ See \strong{Details} section for further explanations}
 \item{algo}{One of "dijkstra" or "diffusion". "diffusion" is suited for
 connectivity matrices only}
 
-\item{which.dijkstra}{one of "igraph", "fast" or "slow". "auto" (default)
-chooses for you. See \strong{Details} section}
+\item{which.dijkstra}{one of "cpp", "igraph", "fast" or "slow". "auto"
+(default) chooses for you. See \strong{Details} section}
 
 \item{dijkstra.ncores}{number of cores to use for Dijkstra's algorithm.
 Ignored when \code{which.dijkstra = "igraph"}}
 
 \item{dijkstra.tol}{number of sequential iterations with identical best
 neighbours found to consider that Dijkstra's algorithm should be stopped.
-Ignored when \code{which.dijkstra = "igraph"}}
+Ignored when \code{which.dijkstra = "igraph" | "cpp"}}
 
 \item{diffusion.iter}{maximum number of iterations to reach \code{k.target}}
 
@@ -94,7 +94,26 @@ nearest neighbours.
 
 One can choose to keep the graph as it is and consider it as a directed graph
 (\code{do.symmetrize = FALSE}).
+
 The alternative solution is to use all computed distances to extend the knn
 graph by making the matrix symmetric. Note that connectivity graphs are
 already symmetric, so the argument value should have no effect on the result.
+
+The choice of Dijkstra's algorithm implementation (\code{which.dijkstra}) is
+handled automatically by default. The igraph implementation is only preferred
+when the number of cells is low (1,000 at most). However, for a large
+\code{k.target} value (from approximately 1,000), igraph is faster on a single
+thread and thus can be imposed by setting \code{which.dijkstra = 'igraph'}.
+
+"fast" and "slow" are pure R implementations. "fast" is faster than "slow"
+but is not accurate on symmetric graph because it is suited for knn graphs
+with a constant k value. "slow" is slower but more accurate. No matter,
+\strong{"slow" and "fast" are both much slower than "cpp" and are deprecated}.
+They remain available in the even that some users have trouble running the
+"cpp" implementation.
+}
+\note{
+igraph implementation of Dijkstra's algorithm is single threaded only.
+
+"cpp" implementation is parallelized with OpenMP
 }

@@ -11,6 +11,18 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// dijkstra_cpp
+List dijkstra_cpp(const arma::sp_mat& m, const int k);
+RcppExport SEXP _SeuratIntegrate_dijkstra_cpp(SEXP mSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::sp_mat& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(dijkstra_cpp(m, k));
+    return rcpp_result_gen;
+END_RCPP
+}
 // n_zeros_dense_mat
 int64_t n_zeros_dense_mat(const arma::mat& mat);
 RcppExport SEXP _SeuratIntegrate_n_zeros_dense_mat(SEXP matSEXP) {
@@ -35,6 +47,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_SeuratIntegrate_dijkstra_cpp", (DL_FUNC) &_SeuratIntegrate_dijkstra_cpp, 2},
     {"_SeuratIntegrate_n_zeros_dense_mat", (DL_FUNC) &_SeuratIntegrate_n_zeros_dense_mat, 1},
     {"_SeuratIntegrate_n_zeros_sparse_mat", (DL_FUNC) &_SeuratIntegrate_n_zeros_sparse_mat, 1},
     {NULL, NULL, 0}

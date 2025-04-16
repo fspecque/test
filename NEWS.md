@@ -1,5 +1,8 @@
 # SeuratIntegrate (development version)
 
+* Speed up Dijkstra's algorithm-like used in `ExpandNeighbours` with a new c++
+implementation
+
 * The most suited matrix format is automatically chosen for corrected counts
 output by integration methods (should be dense matrix most of the time)
 
