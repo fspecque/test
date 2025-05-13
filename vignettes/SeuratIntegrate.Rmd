@@ -237,6 +237,9 @@ DimPlot(liver_small, group.by = cell.var)
 
 # Integration with SeuratIntegrate
 
+```{r, echo=FALSE}
+options(parallelly.fork.enable = FALSE)
+```
 
 ```{r integrate, warning=FALSE}
 liver_small <-

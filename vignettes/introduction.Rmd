@@ -266,6 +266,11 @@ seu <- DoIntegrate(
 confusion with `Seurat::HarmonyIntegration()`.
 
 ### Integration part 2)  Using python-based methods
+```{r, echo=FALSE}
+options(parallelly.fork.enable = FALSE)
+```
+
+
 ```{r integrate-python-methods, warning=FALSE}
 seu <- DoIntegrate(
   object = seu,
