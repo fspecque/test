@@ -10,6 +10,7 @@
 <url><loc>https://fspecque.github.io/test/articles/setup_and_tips.html</loc></url>
 <url><loc>https://fspecque.github.io/test/authors.html</loc></url>
 <url><loc>https://fspecque.github.io/test/index.html</loc></url>
+<url><loc>https://fspecque.github.io/test/news/index.html</loc></url>
 <url><loc>https://fspecque.github.io/test/reference/CellCycleScoringPerBatch.html</loc></url>
 <url><loc>https://fspecque.github.io/test/reference/CombatIntegration.html</loc></url>
 <url><loc>https://fspecque.github.io/test/reference/CondaEnv-class.html</loc></url>
@@ -60,6 +61,7 @@
 <url><loc>https://fspecque.github.io/test/reference/score-lisi.html</loc></url>
 <url><loc>https://fspecque.github.io/test/reference/score-nmi.html</loc></url>
 <url><loc>https://fspecque.github.io/test/reference/score-regressPC.html</loc></url>
+<url><loc>https://fspecque.github.io/test/reference/score-scgraph.html</loc></url>
 <url><loc>https://fspecque.github.io/test/reference/trVAEIntegration.html</loc></url>
 </urlset>
 
