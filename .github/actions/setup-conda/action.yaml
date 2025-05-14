@@ -16,7 +16,7 @@ runs:
           conda create -n umap_0.5.4 umap-learn=0.5.4 -c conda-forge -y
           conda create -n SeuratIntegrate_bbknn python scipy scanpy bbknn -c conda-forge -c bioconda -y
           conda create -n SeuratIntegrate_scanorama python scanorama scipy -c conda-forge -c bioconda -y
-          conda create -n SeuratIntegrate_scvi-tools python scipy scanpy scvi-tools mkl mkl-include setuptools cmake pip -c conda-forge
+          conda create -n SeuratIntegrate_scvi-tools python=3.12 scipy scanpy scvi-tools mkl mkl-include setuptools cmake pip -c conda-forge
         shell: bash -l {0}
         working-directory: ${{ inputs.working-directory }}
 
