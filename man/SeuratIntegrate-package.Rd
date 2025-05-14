@@ -24,7 +24,7 @@ Useful links:
 
 Authors:
 \itemize{
-  \item Domitille Chalopin \email{domitille.chalopin-fillot@u-bordeaux.fr} (\href{https://orcid.org/0000-0003-0588-96301}{ORCID})
+  \item Domitille Chalopin \email{domitille.chalopin-fillot@u-bordeaux.fr} (\href{https://orcid.org/0000-0003-0588-9630}{ORCID})
 }
 
 Other contributors:
