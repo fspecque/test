@@ -10,15 +10,20 @@ runs:
         with:
           auto-activate-base: true
           activate-environment: ""
-      
+
       - name: Setup envs
         run: |
           conda create -n umap_0.5.4 umap-learn=0.5.4 -c conda-forge -y
-          conda create -n SeuratIntegrate_bbknn python scipy scanpy bbknn libtiff=4.5.1 -c conda-forge -c bioconda -y
-          conda create -n SeuratIntegrate_scanorama python scanorama scipy libtiff=4.5.1 -c conda-forge -c bioconda -y
-          conda create -n SeuratIntegrate_scvi-tools python scipy scanpy 'scvi-tools>1.0' mkl mkl-include setuptools cmake libtiff=4.5.1 pip -c conda-forge
-          conda activate SeuratIntegrate_scvi-tools
-          pip install jaxlib==0.4.27
+          conda create -n SeuratIntegrate_bbknn python scipy scanpy bbknn -c conda-forge -c bioconda -y
+          conda activate SeuratIntegrate_bbknn
+          pip install bbknn
+          conda deactivate
+          conda create -n SeuratIntegrate_scanorama python scanorama scipy -c conda-forge -c bioconda -y
+          conda create -n SeuratIntegrate_scvi-tools python=3.12 pip -c conda-forge
+          conda activate  SeuratIntegrate_scvi-tools
+          pip install jax
+          pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install scvi-tools scanpy
           conda deactivate
         shell: bash -l {0}
         working-directory: ${{ inputs.working-directory }}
