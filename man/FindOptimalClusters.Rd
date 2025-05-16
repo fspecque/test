@@ -14,7 +14,6 @@ FindOptimalClusters(
   node.sizes = NULL,
   resolutions = seq(from = 0.1, to = 2, by = 0.1),
   optimisation.metric = c("nmi", "ari"),
-  method = "matrix",
   algorithm = 1,
   n.start = 10,
   n.iter = 10,
@@ -39,19 +38,20 @@ column name (see \strong{Details} section)}
 
 \item{modularity.fxn}{Modularity function (1 = standard; 2 = alternative).}
 
-\item{initial.membership, node.sizes}{Parameters to pass to the Python leidenalg function.}
+\item{initial.membership}{Passed to the `initial_membership` parameter
+of `leidenbase::leiden_find_partition`.}
+
+\item{node.sizes}{Passed to the `node_sizes` parameter of
+`leidenbase::leiden_find_partition`.}
 
 \item{resolutions}{the resolutions to compute clusters for}
 
 \item{optimisation.metric}{one of "nmi" or "ari" or both (default).
 The metric(s) to use to check clustering results against the \code{cell.var}.}
 
-\item{method}{Method for running leiden (defaults to matrix which is fast for small datasets).
-Enable method = "igraph" to avoid casting large data to a dense matrix.}
-
 \item{algorithm}{Algorithm for modularity optimization (1 = original Louvain
 algorithm; 2 = Louvain algorithm with multilevel refinement; 3 = SLM
-algorithm; 4 = Leiden algorithm). Leiden requires the leidenalg python.}
+algorithm; 4 = Leiden algorithm).}
 
 \item{n.start}{Number of random starts.}
 
