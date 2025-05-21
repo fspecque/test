@@ -1,5 +1,9 @@
 # SeuratIntegrate (development version)
 
+* Revised score rescaling with a new option enabling min-max rescaling of ranks
+(default) rather than scores directly (as in
+[Luecken *et al.*, 2021](https://doi.org/10.1038/s41592-021-01336-8))
+
 * Speed up Dijkstra's algorithm-like used in `ExpandNeighbours` with a new c++
 implementation
 

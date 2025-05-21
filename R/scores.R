@@ -196,6 +196,23 @@ SetMiscScore <- function(object, integration, score.name, score.value, ...) {
   return(object)
 }
 
+
+#' Compute ranks of a vector and rescale between 0 and 1
+#' @description
+#' Compute ranks of a vector with \code{NA}s kept in their original positions.
+#' The ranks are then adjusted by adding half the number of code{NA} values.
+#' Those adjusted ranks are then normalised by the length of the vector, such
+#' that resulting values are bounded between 0 and 1 when there is no \code{NA}.
+#' The range of the output values shrinks as the number of \code{NA}s increases.
+#'
+#' @param x a numerical vector
+#' @keywords internal
+#' @noRd
+adj_rank_scaled <- function(x) {
+  adj_rank <- rank(x, na.last = 'keep') + sum(is.na(x)) / 2
+  return(adj_rank / length(x))
+}
+
 #' @keywords internal
 #' @noRd
 get.score.types <- function(col_names, batch = FALSE) {
@@ -279,12 +296,22 @@ compute.overall.scores <- function(scaled.scores, batch.scores, bio.scores,
 #' @param ref the name of the integration to use as a reference for scaling.
 #' Useful for PCA regression (and density) and cell cycle conservation scores.
 #' @param rescale whether to rescale each score between 0 and 1 using min-max
-#' normalisation before computing overall scores. This ensures that each metric
-#' equally contributes to the overall scores. \code{TRUE by default}
+#' normalisation before computing overall scores. One of 'none' (default, no
+#' rescaling), 'rank' or 'score', corresponding to no min-max normalisation of
+#' ranks or scores respectively. Beware that the argument of
+#' \code{\link{PlotScores()}} \strong{overrides the choice here} (see
+#' \strong{Details} sections).
 #' @param batch.coeff the weight of batch correction performance evaluation
 #' scores in the overall score.
 #' @param bio.coeff the weight of bio-conservation performance evaluation scores
 #' in the overall score.
+#'
+#' @details
+#' It is recommended to keep the default parameter \code{rescale = "none"} to
+#' retain the possibility to plot scores without min-max rescaling later with
+#' \code{\link{PlotScores()}}.
+#'
+#' @seealso \code{\link{PlotScores()}} for further details on rescaling
 #'
 #' @importFrom SeuratObject Misc
 #' @importFrom dplyr %>% select arrange filter summarise across mutate bind_rows rowwise c_across ungroup case_when
@@ -292,13 +319,20 @@ compute.overall.scores <- function(scaled.scores, batch.scores, bio.scores,
 #' @importFrom rlang sym syms data_syms !! !!!
 #' @importFrom scales rescale
 #' @export
-ScaleScores <- function(object, ref = "Unintegrated", rescale = FALSE,
+ScaleScores <- function(object, ref = "Unintegrated",
+                        rescale = c("none", "rank", "score"),
                         batch.coeff = .4, bio.coeff = .6) {
   ref <- ref %||% "Unintegrated"
   Misc(object, slot = 'si_scores') %||%
     abort("No scores. Please compute scores before.")
   raw.scores <- Misc(object, slot = 'si_scores') %>%
     select(Integration, !Integration) # put Integration column 1st
+  rescale <- rescale %||% "none"
+  if (is.logical(rescale)) {
+    rescale <- c("none", "rank")[rescale + 1]
+  }
+  rescale <- tolower(rescale)
+  rescale <- match.arg(rescale)
 
   # ensure sum of coefficients is 1 (to keep overall scores between 0 and 1)
   sum.coeff <- batch.coeff + bio.coeff
@@ -400,9 +434,15 @@ ScaleScores <- function(object, ref = "Unintegrated", rescale = FALSE,
     purrr::map2(colnames(.), ~ scaling[[.y]](.x, raw.scores$Integration)) %>%
     bind_rows()
 
-  if (rescale) {
+  if (rescale != "none") {
+    warning(sprintf("only %s enables plotting non-rescaled scores with `%s`",
+                    sQuote("rescale = 'none'"), "PlotScores()"),
+            call. = TRUE, immediate. = TRUE)
     scaled.scores <- scaled.scores %>%
-      mutate(across(!Integration, ~ rescale(x = .x, to = c(0,1))) )
+      mutate(across(!Integration, ~ switch(rescale,
+                                           "rank" = adj_rank_scaled(x = .x),
+                                           "score" = rescale(x = .x, to = c(0,1))
+                                           )) )
   }
 
   bio.scores <- get.score.types(colnames(scaled.scores), batch = FALSE)
@@ -452,12 +492,15 @@ IntegrationScores <- function(object, scaled = FALSE) {
 #' @param exclude.score name of the score(s) to exclude. The default value
 #' (\code{NULL}) enable to include them all.
 #' @param recompute.overall.scores whether to recompute overall scores. Useful
-#' when there is a restriction on scores to plot. When \code{FALSE},
+#' when some scores or integrations are excluded. When \code{FALSE},
 #' coefficient parameters have no impact.
 #' @param rescale whether to rescale each score between 0 and 1 using min-max
-#' normalisation before computing overall scores. This ensures that each metric
-#' equally contributes to the overall scores. Has no effect when
-#' \code{recompute.overall.scores = FALSE}. \code{TRUE by default}
+#' normalisation before computing overall scores. One of 'rank' (default),
+#' 'score' or 'none'. The first two enable rescaling on ranks and scores
+#' respectively, while 'none' disables rescaling. Rescaling ensures that each
+#' metric equally contributes to the overall scores. 'rank' is more stable to
+#' changes in integrations included. Has no effect when
+#' \code{recompute.overall.scores = FALSE}.
 #' @param point.max.size inoperative unless \code{plot.type = 'table'} and
 #' \code{use.ggforce = FALSE}. Determine the maximum size of the points
 #' (only achieved for a score of 1) to fit the plotting area (handled
@@ -467,6 +510,32 @@ IntegrationScores <- function(object, scaled = FALSE) {
 #' installed
 #'
 #' @return a ggplot object
+#'
+#' @details
+#' The \code{rescale} parameter controls how scores are rescaled prior to
+#' computing overall scores. Thus, when \code{rescale != 'none'},
+#' \code{recompute.overall.scores} should be \code{TRUE} (default). Otherwise,
+#' the overall scores will no longer match the scores displayed on the plot.
+#'
+#' Albeit the min-max rescaling of scores in Luecken M.D. \emph{et al.}, 2022 is
+#' achievable with \code{rescale = 'score'}, min-max rescaling on ranks
+#' (\code{rescale = 'rank'}) is the default. Indeed, it results in more stable
+#' rankings of overall scores when the list of integrations to plot is
+#' modified.
+#'
+#' To plot non-rescaled scores, make sure to use
+#' \code{\link{ScaleScores}(..., rescale = "none")} beforehand. To plot rescaled
+#' scores however, the \code{rescale} parameter of \code{\link{ScaleScores}} has
+#' no impact on the scores obtained for plotting.
+#'
+#' @seealso \code{\link{ScaleScores()}}
+#'
+#' @references Luecken, M. D., Büttner, M., Chaichoompu, K., Danese, A.,
+#' Interlandi, M., Mueller, M. F., Strobl, D. C., Zappia, L., Dugas, M.,
+#' Colomé-Tatché, M. & Theis, F. J. Benchmarking atlas-level data integration in
+#' single-cell genomics. Nat Methods 19, 41–50 (2021).
+#' \href{https://doi.org/10.1038/s41592-021-01336-8}{DOI}
+#'
 #' @importFrom rlang is_installed !!
 #' @importFrom SeuratObject Misc
 #' @importFrom dplyr %>% mutate across where case_when desc select filter
@@ -484,7 +553,7 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
                        include.score = NULL,
                        exclude.score = NULL,
                        recompute.overall.scores = TRUE,
-                       rescale = TRUE,
+                       rescale = c("rank", "score", "none"),
                        batch.coeff = .4, bio.coeff = .6,
                        point.max.size = 20L,
                        use.ggforce = is_installed('ggforce')) {
@@ -493,6 +562,12 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
   plot.type <- match.arg(plot.type)
   order.by <- tolower(order.by %||% 'asis')
   order.by <- match.arg(order.by)
+  rescale <- rescale %||% "none"
+  if (is.logical(rescale)) {
+    rescale <- c("none", "rank")[rescale + 1]
+  }
+  rescale <- tolower(rescale)
+  rescale <- match.arg(rescale)
 
   scaled.scores <- Misc(object, slot = 'si_scaled.scores')
 
@@ -521,9 +596,12 @@ PlotScores <- function(object, plot.type = c('dot', 'radar', 'lollipop'),
                 'Consider less harsh exclusion or broader inclusion criteria'))
   }
 
-  if (rescale) {
+  if (rescale != 'none') {
     scaled.scores <- scaled.scores %>%
-      mutate(across(!Integration, ~ rescale(x = .x, to = c(0,1))) )
+      mutate(across(!Integration, ~ switch(rescale,
+                                           "rank" = adj_rank_scaled(x = .x),
+                                           "score" = rescale(x = .x, to = c(0,1))
+                                           )) )
   }
 
   bio.scores <- get.score.types(colnames(scaled.scores), batch = FALSE)

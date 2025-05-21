@@ -7,7 +7,7 @@
 ScaleScores(
   object,
   ref = "Unintegrated",
-  rescale = FALSE,
+  rescale = c("none", "rank", "score"),
   batch.coeff = 0.4,
   bio.coeff = 0.6
 )
@@ -19,8 +19,11 @@ ScaleScores(
 Useful for PCA regression (and density) and cell cycle conservation scores.}
 
 \item{rescale}{whether to rescale each score between 0 and 1 using min-max
-normalisation before computing overall scores. This ensures that each metric
-equally contributes to the overall scores. \code{TRUE by default}}
+normalisation before computing overall scores. One of 'none' (default, no
+rescaling), 'rank' or 'score', corresponding to no min-max normalisation of
+ranks or scores respectively. Beware that the argument of
+\code{\link{PlotScores()}} \strong{overrides the choice here} (see
+\strong{Details} sections).}
 
 \item{batch.coeff}{the weight of batch correction performance evaluation
 scores in the overall score.}
@@ -33,4 +36,12 @@ Once the scores of interest have been computed and saved in the score tibble,
 they can be scaled to make them comparable by bounding them between 0 and 1
 and harmonise their direction (0 and 1 always mean bad and good performance
 respectively). This is also a prerequisite for plotting.
+}
+\details{
+It is recommended to keep the default parameter \code{rescale = "none"} to
+retain the possibility to plot scores without min-max rescaling later with
+\code{\link{PlotScores()}}.
+}
+\seealso{
+\code{\link{PlotScores()}} for further details on rescaling
 }

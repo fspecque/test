@@ -15,7 +15,7 @@ PlotScores(
   include.score = NULL,
   exclude.score = NULL,
   recompute.overall.scores = TRUE,
-  rescale = TRUE,
+  rescale = c("rank", "score", "none"),
   batch.coeff = 0.4,
   bio.coeff = 0.6,
   point.max.size = 20L,
@@ -52,13 +52,16 @@ value (\code{NULL}) enable to include them all.}
 (\code{NULL}) enable to include them all.}
 
 \item{recompute.overall.scores}{whether to recompute overall scores. Useful
-when there is a restriction on scores to plot. When \code{FALSE},
+when some scores or integrations are excluded. When \code{FALSE},
 coefficient parameters have no impact.}
 
 \item{rescale}{whether to rescale each score between 0 and 1 using min-max
-normalisation before computing overall scores. This ensures that each metric
-equally contributes to the overall scores. Has no effect when
-\code{recompute.overall.scores = FALSE}. \code{TRUE by default}}
+normalisation before computing overall scores. One of 'rank' (default),
+'score' or 'none'. The first two enable rescaling on ranks and scores
+respectively, while 'none' disables rescaling. Rescaling ensures that each
+metric equally contributes to the overall scores. 'rank' is more stable to
+changes in integrations included. Has no effect when
+\code{recompute.overall.scores = FALSE}.}
 
 \item{batch.coeff}{the weight of batch correction performance evaluation
 scores in the overall score.}
@@ -80,4 +83,31 @@ a ggplot object
 }
 \description{
 Plot the scaled integration scores to compare the obtained integrations
+}
+\details{
+The \code{rescale} parameter controls how scores are rescaled prior to
+computing overall scores. Thus, when \code{rescale != 'none'},
+\code{recompute.overall.scores} should be \code{TRUE} (default). Otherwise,
+the overall scores will no longer match the scores displayed on the plot.
+
+Albeit the min-max rescaling of scores in Luecken M.D. \emph{et al.}, 2022 is
+achievable with \code{rescale = 'score'}, min-max rescaling on ranks
+(\code{rescale = 'rank'}) is the default. Indeed, it results in more stable
+rankings of overall scores when the list of integrations to plot is
+modified.
+
+To plot non-rescaled scores, make sure to use
+\code{\link{ScaleScores}(..., rescale = "none")} beforehand. To plot rescaled
+scores however, the \code{rescale} parameter of \code{\link{ScaleScores}} has
+no impact on the scores obtained for plotting.
+}
+\references{
+Luecken, M. D., Büttner, M., Chaichoompu, K., Danese, A.,
+Interlandi, M., Mueller, M. F., Strobl, D. C., Zappia, L., Dugas, M.,
+Colomé-Tatché, M. & Theis, F. J. Benchmarking atlas-level data integration in
+single-cell genomics. Nat Methods 19, 41–50 (2021).
+\href{https://doi.org/10.1038/s41592-021-01336-8}{DOI}
+}
+\seealso{
+\code{\link{ScaleScores()}}
 }
