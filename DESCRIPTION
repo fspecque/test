@@ -1,7 +1,7 @@
 Package: SeuratIntegrate
 Type: Package
 Title: Expands the set of integration methods available to Seurat
-Version: 0.4.0
+Version: 0.4.1
 Authors@R: c(
   person("Florian", "Specque", , "florian.specque@u-bordeaux.fr",
          role = c("aut", "cre"), comment = c(ORCID = "0000-0002-4449-6381")),
