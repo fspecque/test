@@ -1,0 +1,18 @@
+bibentry(
+  bibtype  = "Article",
+  title    = "SeuratIntegrate: an R package to facilitate the use of integration methods with Seurat",
+  author   = c(
+  person("Florian", "Specque", , "florian.specque@u-bordeaux.fr",
+         role = c("aut", "cre"), comment = c(ORCID = "0000-0002-4449-6381")),
+  person("Domitille", "Chalopin", , "domitille.chalopin-fillot@u-bordeaux.fr",
+         role = c("aut"), comment = c(ORCID = "0000-0003-0588-9630")),
+  person("Macha", "Nikolski", , "macha.nikolski@u-bordeaux.fr",
+         role = c("rev"), comment = c(ORCID = "0000-0001-6059-577X")),
+  person("Aurélien", "Barré", , "aurelien.barre@u-bordeaux.fr",
+         role = c("ctb"), comment = c(ORCID = "0009-0006-4773-3369")),
+  person("Centre de Bioinformatique de Bordeaux (CBiB)",
+         role = c("cph"))),
+  journal  = "bioRxiv",
+  year     = 2024,
+  doi      = "10.1101/2024.12.16.628691"
+)
