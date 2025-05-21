@@ -134,8 +134,7 @@ UMAP:
 -   Dimension reduction: `RunUMAP()`
 -   KNN graph:  `RunUMAP(umap.method = "umap-learn")`
 
-## Scoring
-
+## Performance assessment
 
 SeuratIntegrate incorporates 11 scoring metrics: 6 quantify the degree of batch
 mixing (*batch correction*), while 5 assess the preservation of biological
@@ -155,8 +154,8 @@ seu <- AddScoreRegressPC(seu, integration = "unintegrated", reduction = "pca")
 
 The `AddScore` functions have an advantage over the `Score` functions. They
 allow to then scale the scores between zero and one and to standardize their
-direction (the closer to one, always the better), improving interpretability.
-Then, scores can be plotted to readily compare the different integrations:
+direction (the closer to one, always the better), facilitating their readability.
+Scores can eventually be plotted to readily compare the different integrations:
 
 ```R
 # scale
