@@ -167,8 +167,9 @@ In this example, all integration methods will use the variable features as input
 
 Integration methods produce one or several outputs. Because they can be of different types, the following table indicates the post-processing steps to generate a UMAP.
 
-<caption id="table2" style="margin: auto">Table 2: Output types and processing</caption>
-
+<a id="table2">
+  <caption>Table 2: Output types and processing</caption>
+</a>
 | **Output type**       | **Object name** |                             **Processing** |
 |-----------------------|:---------------:|-------------------------------------------:|
 | Corrected counts      |     `Assay`     |   `ScaleData()` ➔ `RunPCA()` ➔ `RunUMAP()` |
