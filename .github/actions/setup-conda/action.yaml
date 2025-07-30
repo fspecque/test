@@ -19,12 +19,7 @@ runs:
           pip install bbknn
           conda deactivate
           conda create -n SeuratIntegrate_scanorama python scanorama scipy -c conda-forge -c bioconda -y
-          conda create -n SeuratIntegrate_scvi-tools python=3.12 pip -c conda-forge
-          conda activate  SeuratIntegrate_scvi-tools
-          pip install jax
-          pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-          pip install scvi-tools scanpy
-          conda deactivate
+          conda create -n SeuratIntegrate_scvi-tools python pip scvi-tools -c conda-forge
         shell: bash -l {0}
         working-directory: ${{ inputs.working-directory }}
 
