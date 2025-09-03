@@ -185,34 +185,6 @@ symmetrize.pmin.sparse <- function(i, j, x, height) {
 
 }
 
-#' Normalise a matrix using L2 norm
-#'
-#' @description
-#' Normalise the rows or columns of a matrix using L2 norm
-#'
-#' @param mat a matrix (sparse or dense)
-#' @param MARGIN one of 1 or 2, corresponding to normalisation per rows and
-#' columns respectively
-#'
-#' @return the matrix with normalised rows or columns
-#'
-#' @importFrom rlang abort
-#' @importFrom Matrix rowSums colSums
-#' @note
-#' Adapted from \href{https://github.com/satijalab/seurat/blob/1549dcb3075eaeac01c925c4b4bb73c73450fc50/R/utilities.R#L1941-L1956}{Seurat:::L2Norm}
-#' @export
-
-NormaliseL2 <- function(mat, MARGIN = 1) {
-  marSums <- switch (MARGIN,
-                     `1` = rowSums,
-                     `2` = colSums,
-                     NULL
-  ) %||% abort(paste(sQuote(MARGIN), "is not a correct value for 'MARGIN'.",
-                     "Possible values are 1 (rows) or 2 (columns)"))
-  mat.norm <- sweep(mat, MARGIN = MARGIN, STATS = sqrt(marSums(mat^2)), FUN = `/`)
-  mat.norm[!is.finite(mat.norm)] <- 0
-  return(mat.norm)
-}
 ################################################################################
 ################################     NN cut     ################################
 #' Remove excessive number of neighbours in a knn graph
@@ -364,7 +336,7 @@ setMethod(".cut.knn", "Neighbor",
             return(object)
           })
 
-#' Very similar to .cut.knn.Matrix, but doesn't contruct the trimmed knn network
+#' Very similar to .cut.knn.Matrix, but doesn't construct the trimmed knn network
 #' @description
 #' Requires that all cells have at least k.max neighbors
 #'
@@ -554,7 +526,7 @@ setMethod("GetNeighborsPerBatch", c("Seurat", "data.frame"),
 #' @usage NULL
 setMethod("GetNeighborsPerBatch", "Graph",
   function(object, batch.var, count.self) {
-    knnmat <- as.dgcmatrix(object > 0)
+    knnmat <- as.dgcmatrix(as(object > 0, 'dsparseMatrix'))
     GetNeighborsPerBatch(object = knnmat, batch.var = batch.var,
                          count.self = count.self)
 })
@@ -753,17 +725,48 @@ n_zeros_mat <- function(mat) {
 #' @noRd
 choose_matrix_format <- function(mat) {
   max_int_32bit <- 2^31 - 1
-  if (all(c(ncol(mat), nrow(mat)) <= max_int_32bit)) { # should always be TRUE
+  if (all(c(ncol(mat), nrow(mat)) <= max_int_32bit) & length(mat) > 0) { # should always be TRUE
     n_0s <- n_zeros_mat(mat = mat)
-    if ( (n_0s > max_int_32bit) | (n_0s/length(mat) < .35) ) {
+    n_not0s <- length(mat) - n_0s
+    if ( (n_not0s > max_int_32bit) | (n_0s/length(mat) < .35) ) {
       mat <- as.matrix(mat)
     } else {
-      as.dgcmatrix(mat)
+      mat <- as.dgcmatrix(mat)
     }
   }
   return(mat)
 }
 
+################################################################################
+###########################    Seurat extensions    ############################
+#' Normalise a matrix using L2 norm
+#'
+#' @description
+#' Normalise the rows or columns of a matrix using L2 norm
+#'
+#' @param mat a matrix (sparse or dense)
+#' @param MARGIN one of 1 or 2, corresponding to normalisation per rows and
+#' columns respectively
+#'
+#' @return the matrix with normalised rows or columns
+#'
+#' @importFrom rlang abort
+#' @importFrom Matrix rowSums colSums
+#' @note
+#' Adapted from \href{https://github.com/satijalab/seurat/blob/1549dcb3075eaeac01c925c4b4bb73c73450fc50/R/utilities.R#L1941-L1956}{Seurat:::L2Norm}
+#' @export
+
+NormaliseL2 <- function(mat, MARGIN = 1) {
+  marSums <- switch (MARGIN,
+                     `1` = rowSums,
+                     `2` = colSums,
+                     NULL
+  ) %||% abort(paste(sQuote(MARGIN), "is not a correct value for 'MARGIN'.",
+                     "Possible values are 1 (rows) or 2 (columns)"))
+  mat.norm <- sweep(mat, MARGIN = MARGIN, STATS = sqrt(marSums(mat^2)), FUN = `/`)
+  mat.norm[!is.finite(mat.norm)] <- 0
+  return(mat.norm)
+}
 
 # Creates data.frame with cell group assignments for integration
 # uses SCT models if SCTAssay and layers otherwise
@@ -801,3 +804,8 @@ CreateIntegrationGroups <- function(object, layers, scale.layer) {
   return(groups)
 }
 ############
+
+#' @method as.Graph Graph
+as.Graph.Graph <- function(x, ...) {
+  return(x)
+}
